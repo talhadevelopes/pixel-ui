@@ -1,14 +1,15 @@
-import { Geist, Geist_Mono } from "next/font/google"
+import { Outfit } from "next/font/google"
 
 import "@workspace/ui/globals.css"
 import { Providers } from "@/components/providers"
+import { Toaster } from "sonner"
 
-const fontSans = Geist({
+const fontSans = Outfit({
   subsets: ["latin"],
   variable: "--font-sans",
 })
 
-const fontMono = Geist_Mono({
+const fontMono = Outfit({
   subsets: ["latin"],
   variable: "--font-mono",
 })
@@ -23,7 +24,9 @@ export default function RootLayout({
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}
       >
-        <Providers>{children}</Providers>
+        <Providers>{children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )

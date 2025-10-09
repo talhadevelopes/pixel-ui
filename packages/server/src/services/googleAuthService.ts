@@ -1,0 +1,133 @@
+import crypto from "node:crypto";
+
+import { eq } from "drizzle-orm";
+
+import { db } from "../utils/drizzle";
+import { userTable } from "../db/schema";
+import { generateAccessToken, generateRefreshToken, hashPassword } from "../utils/jwt";
+
+const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
+const GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo";
+
+class GoogleAuthError extends Error {
+    statusCode: number;
+
+    constructor(message: string, statusCode = 400) {
+        super(message);
+        this.name = "GoogleAuthError";
+        this.statusCode = statusCode;
+    }
+}
+
+export type GoogleLoginData = {
+    id: string;
+    name: string;
+    email: string;
+    credits: number | null;
+    accessToken: string;
+    refreshToken: string;
+};
+
+export async function handleGoogleCallback(code: string, state?: string): Promise<GoogleLoginData> {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientUrl = process.env.CLIENT_URL ?? "http://localhost:3000";
+    const redirectUri = `${clientUrl}/auth/google/callback`;
+
+    if (!clientId || !clientSecret) {
+        throw new GoogleAuthError("Google OAuth is not configured correctly", 500);
+    }
+
+    const tokenPayload = new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+    });
+
+    const tokenResponse = await fetch(GOOGLE_TOKEN_ENDPOINT, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: tokenPayload.toString(),
+    });
+
+    const tokenJson = await tokenResponse.json().catch(() => null);
+
+    if (!tokenResponse.ok || !tokenJson?.access_token) {
+        const description = tokenJson?.error_description ?? tokenJson?.error ?? "Failed to exchange Google authorization code";
+        throw new GoogleAuthError(description, tokenResponse.status || 400);
+    }
+
+    const googleAccessToken = tokenJson.access_token as string;
+
+    const userinfoResponse = await fetch(GOOGLE_USERINFO_ENDPOINT, {
+        headers: {
+            Authorization: `Bearer ${googleAccessToken}`,
+        },
+    });
+
+    const profile = await userinfoResponse.json().catch(() => null);
+
+    if (!userinfoResponse.ok || !profile?.email) {
+        throw new GoogleAuthError("Failed to fetch Google user profile", userinfoResponse.status || 400);
+    }
+
+    const email: string = profile.email;
+    const name: string = profile.name ?? profile.given_name ?? "Google User";
+
+    const existingUsers = await db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.email, email))
+        .limit(1);
+
+    let user = existingUsers[0];
+
+    if (!user) {
+        const randomPassword = crypto.randomBytes(32).toString("hex");
+        const hashedPassword = await hashPassword(randomPassword);
+
+        const insertedUsers = await db
+            .insert(userTable)
+            .values({
+                name,
+                email,
+                password: hashedPassword,
+                credits: 5,
+            })
+            .returning();
+
+        user = insertedUsers[0];
+    } else if (!user.name && name) {
+        // Optionally update missing name information
+        const updatedUsers = await db
+            .update(userTable)
+            .set({ name })
+            .where(eq(userTable.id, user.id))
+            .returning();
+
+        user = updatedUsers[0] ?? user;
+    }
+
+    const accessToken = generateAccessToken({
+        userId: user.id,
+        email: user.email,
+        credits: user.credits,
+    });
+
+    const refreshToken = generateRefreshToken({
+        userId: user.id,
+    });
+
+    return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        credits: user.credits,
+        accessToken,
+        refreshToken,
+    };
+}
