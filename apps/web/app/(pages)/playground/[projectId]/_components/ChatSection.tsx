@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { Messages } from "../page";
 import { Button } from "@workspace/ui/components/button";
-import { ArrowUpRight, Loader2 } from "lucide-react";
+import { ArrowUpRight, Loader2, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface ChatSectionProps {
     messages: Messages[];
@@ -11,6 +12,7 @@ interface ChatSectionProps {
 
 function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
     const [input, setInput] = useState("");
+    const { theme, setTheme } = useTheme();
 
     const handleSend = useCallback(() => {
         const trimmed = input.trim();

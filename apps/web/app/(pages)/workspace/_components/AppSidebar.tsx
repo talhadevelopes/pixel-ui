@@ -11,15 +11,17 @@ import {
     SidebarGroupLabel,
     SidebarHeader,
 } from "@workspace/ui/components/sidebar";
-import { AxeIcon, LogOut, Plus } from "lucide-react";
+import { AxeIcon, LogOut, Moon, Plus, Sun } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 
 export function AppSidebar() {
     const [projectList, setProjectList] = useState([]);
     const userCredits = 2;
     const totalCredits = 6;
     const creditPercentage = (userCredits / totalCredits) * 100;
+    const { theme, setTheme } = useTheme();
 
     return (
         <Sidebar className="border-r bg-card">
@@ -93,6 +95,21 @@ export function AppSidebar() {
                             : `${userCredits} credit${userCredits !== 1 ? "s" : ""} available`}
                     </p> */}
                 </div>
+
+                {/* Theme Toggle */}
+                <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2"
+                    size="sm"
+                    onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                >
+                    {theme === 'light' ? (
+                        <Moon className="h-4 w-4" />
+                    ) : (
+                        <Sun className="h-4 w-4" />
+                    )}
+                    {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                </Button>
 
                 {/* Logout Button */}
                 <Link href="/logout" className="w-full">

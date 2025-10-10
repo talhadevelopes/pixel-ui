@@ -31,7 +31,8 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-syntax-highlighter": "^15.6.6",
-    "sonner": "^2.0.7"
+    "sonner": "^2.0.7",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@types/node": "^20.19.9",

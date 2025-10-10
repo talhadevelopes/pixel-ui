@@ -223,6 +223,9 @@ export default function PlaygroundPage() {
             }
 
             const cleanedCode = codeBuffer ? stripCodeFences(codeBuffer) : "";
+            if (cleanedCode && cleanedCode !== "undefined") {
+                setGeneratedCode(cleanedCode);
+            }
             const assistantMessage: Messages = cleanedCode
                 ? { role: "assistant", content: "Your Code is Ready" }
                 : { role: "assistant", content: aiResponse.trim() };
@@ -339,7 +342,7 @@ export default function PlaygroundPage() {
                     onSave={handleManualSave}
                     isSaving={isSaving}
                 />
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,2.6fr)] lg:min-h-[calc(100vh-18rem)]">
+               <div className="grid gap-6 lg:grid-cols-[0.8fr_2fr] lg:min-h-[calc(100vh-18rem)]">
                     <ChatSection loading={loading} messages={messages ?? []} onSend={(input) => sendMessage(input)} />
                     <WebsiteDesignSection generatedCode={generatedCode} />
                 </div>

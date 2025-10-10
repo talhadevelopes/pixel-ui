@@ -1,219 +1,346 @@
-import { SwatchBook } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+"use client";
+
+import { useEffect, useState } from 'react';
+import { SwatchBook, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@workspace/ui/components/select";
 import { Input } from "@workspace/ui/components/input";
-import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-group";
-import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { Button } from "@workspace/ui/components/button";
+import { useDesignStore } from "@/app/store/designStore";
 
-
-
-type Props = {
-    selectedEL: HTMLElement,
-    cleanSelection: () => void;
+interface Props {
+    selectedElement: HTMLElement | null;
+    clearSelection: () => void;
 }
 
-function ElementSettingsSection({ selectedEL, cleanSelection }: Props) {
-    const [classes, setClasses] = useState<string[]>([]);
-    const [newClass, setNewClass] = useState("");
-    const [align, setAlign] = React.useState(
-        selectedEL?.style?.textAlign
-    );
+const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelection }) => {
+    // Local state for all style properties
+    const [align, setAlign] = useState('left');
+    const [fontSize, setFontSize] = useState('16px');
+    const [color, setColor] = useState('#000000');
+    const [backgroundColor, setBackgroundColor] = useState('#ffffff');
+    const [borderRadius, setBorderRadius] = useState('0px');
+    const [padding, setPadding] = useState('0px');
+    const [margin, setMargin] = useState('0px');
+    const [elementClasses, setElementClasses] = useState<string[]>([]);
+    const [newClass, setNewClass] = useState('');
     
-    const applyStyle = (property: string, value: string) => {
-        if (selectedEL) {
-            selectedEL.style[property as any] = value;
+    const { iframeRef } = useDesignStore();
+    
+    // Initialize all values from selected element
+    useEffect(() => {
+        if (!selectedElement) {
+            // Reset to defaults when no element selected
+            setAlign('left');
+            setFontSize('16px');
+            setColor('#000000');
+            setBackgroundColor('#ffffff');
+            setBorderRadius('0px');
+            setPadding('0px');
+            setMargin('0px');
+            setElementClasses([]);
+            return;
+        }
+        
+        // Get styles from the passed element data
+        const styles = selectedElement.style || {};
+        
+        setAlign(styles.textAlign || 'left');
+        setFontSize(styles.fontSize || '16px');
+        setColor(styles.color || '#000000');
+        setBackgroundColor(styles.backgroundColor || '#ffffff');
+        setBorderRadius(styles.borderRadius || '0px');
+        setPadding(styles.padding || '0px');
+        setMargin(styles.margin || '0px');
+        
+        // Update classes
+        const classes = (selectedElement.className || '')
+            .split(' ')
+            .filter(c => c.trim() !== '');
+        setElementClasses(classes);
+    }, [selectedElement]);
+    
+    // Handle style changes and send to iframe
+    const handleStyleChange = (property: string, value: string) => {
+        if (!selectedElement || !iframeRef?.current?.contentWindow) {
+            console.error('No element selected or iframe not available');
+            return;
+        }
+
+        try {
+            // Update local state for UI feedback
+            switch (property) {
+                case 'textAlign':
+                    setAlign(value);
+                    break;
+                case 'fontSize':
+                    setFontSize(value);
+                    break;
+                case 'color':
+                    setColor(value);
+                    break;
+                case 'backgroundColor':
+                    setBackgroundColor(value);
+                    break;
+                case 'borderRadius':
+                    setBorderRadius(value);
+                    break;
+                case 'padding':
+                    setPadding(value);
+                    break;
+                case 'margin':
+                    setMargin(value);
+                    break;
+            }
+
+            // Send message directly to iframe to update the selected element
+            iframeRef.current.contentWindow.postMessage({
+                type: 'updateStyle',
+                property: property,
+                value: value
+            }, '*');
+
+            console.log('Sent style update:', property, value);
+
+        } catch (error) {
+            console.error('Error applying style:', error);
         }
     };
     
-    // Update alignment style when toggled
-    React.useEffect(() => {
-        if (selectedEL && align) {
-            selectedEL.style.textAlign = align;
-        }
-    }, [align, selectedEL]);
-    
-    // Keep in sync if element classes are modified elsewhere
-    useEffect(() => {
-        if (!selectedEL) return;
+    // Add a new class
+    const addClass = () => {
+        if (!selectedElement || !newClass.trim() || !iframeRef?.current?.contentWindow) return;
+        
+        const updatedClasses = [...new Set([...elementClasses, newClass.trim()])];
+        
+        // Send to iframe
+        iframeRef.current.contentWindow.postMessage({
+            type: 'addClass',
+            className: newClass.trim()
+        }, '*');
 
-        // set initial classes
-        const currentClasses = selectedEL.className
-            .split(" ")
-            .filter((c) => c.trim() != "");
-        setClasses(currentClasses);
-
-        // watch for future class changes
-        const observer = new MutationObserver(() => {
-            const updated = selectedEL.className
-                .split(" ")
-                .filter((c) => c.trim() != "");
-            setClasses(updated);
-        });
-
-        observer.observe(selectedEL, { attributes: true, attributeFilter: ["class"] });
-        return () => observer.disconnect();
-    }, [selectedEL]);
+        setElementClasses(updatedClasses);
+        setNewClass('');
+    };
     
     // Remove a class
     const removeClass = (cls: string) => {
-        const updated = classes.filter((c) => c != cls);
-        setClasses(updated);
-        selectedEL.className = updated.join(" ");
+        if (!selectedElement || !iframeRef?.current?.contentWindow) return;
+        
+        const updatedClasses = elementClasses.filter(c => c !== cls);
+        
+        // Send to iframe
+        iframeRef.current.contentWindow.postMessage({
+            type: 'removeClass',
+            className: cls
+        }, '*');
+
+        setElementClasses(updatedClasses);
     };
 
-    // Add new class
-    const addClass = () => {
-        const trimmed = newClass.trim();
-        if (!trimmed) return;
-        if (!classes.includes(trimmed)) {
-            const updated = [...classes, trimmed];
-            setClasses(updated);
-            selectedEL.className = updated.join(" ");
-        }
-        setNewClass("");
-    };
+    if (!selectedElement) {
+        return (
+            <div className="p-4 text-center text-gray-500">
+                <p>No element selected</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="w-96 shadow p-4 space-y-4 overflow-auto h-[90vh] rounded-xl mt-2 mr-2">
-            <h2 className="flex gap-2 items-center font-bold">
-                <SwatchBook /> Settings
-            </h2>
-            
-            {/* Font Size + Text Color inline */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
-                    <label className="text-sm">Font Size</label>
-                    <Select 
-                        defaultValue={selectedEL?.style?.fontSize || '24px'}
-                        onValueChange={(value : string) => applyStyle('fontSize', value)}
-                    >
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select Size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {[...Array(53)].map((_, index) => 
-                                <SelectItem value={index + 12 + 'px'} key={index}> 
-                                    {index + 12}px
-                                </SelectItem>
-                            )}
-                        </SelectContent>
-                    </Select>
-                </div>
-                
-                <div>
-                    <label className='text-sm block'>Text Color</label>
-                    <input type='color'
-                        className='w-[40px] h-[40px] rounded-lg mt-1'
-                        value={selectedEL?.style?.color || '#000000'}
-                        onChange={(event) => applyStyle('color', event.target.value)} 
-                    />
-                </div>
-            </div>
-
-            {/* Text Alignment */}
-            <div>
-                <label className='text-sm mb-1 block'>Text Alignment</label>
-                <ToggleGroup
-                    type="single"
-                    value={align}
-                    onValueChange={setAlign}
-                    className="bg-gray-100 rounded-lg p-1 inline-flex w-full justify-between"
+        <div className="space-y-4 p-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                    <SwatchBook className="h-4 w-4" />
+                    Element Settings
+                </h3>
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={clearSelection}
+                    className="text-xs"
                 >
-                    <ToggleGroupItem value="left" className="p-2 rounded hover:bg-gray-200 flex-1">
-                        <AlignLeft size={20} />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="center" className="p-2 rounded hover:bg-gray-200 flex-1">
-                        <AlignCenter size={20} />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="right" className="p-2 rounded hover:bg-gray-200 flex-1">
-                        <AlignRight size={20} />
-                    </ToggleGroupItem>
-                </ToggleGroup>
+                    Clear Selection
+                </Button>
             </div>
 
-            {/* Background Color + Border Radius inline */}
-            <div className="flex items-center gap-4">
+            <div className="space-y-4">
+                {/* Text Alignment */}
                 <div>
-                    <label className='text-sm block'>Background</label>
-                    <input type='color'
-                        className='w-[40px] h-[40px] rounded-lg mt-1'
-                        defaultValue={selectedEL?.style?.backgroundColor || '#ffffff'}
-                        onChange={(event) => applyStyle('backgroundColor', event.target.value)} 
-                    />
+                    <label className="text-sm block mb-2">Text Alignment</label>
+                    <div className="flex gap-2">
+                        <Button 
+                            type="button" 
+                            variant={align === 'left' ? 'default' : 'outline'} 
+                            size="sm" 
+                            onClick={() => handleStyleChange('textAlign', 'left')}
+                        >
+                            <AlignLeft className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                            type="button" 
+                            variant={align === 'center' ? 'default' : 'outline'} 
+                            size="sm" 
+                            onClick={() => handleStyleChange('textAlign', 'center')}
+                        >
+                            <AlignCenter className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                            type="button" 
+                            variant={align === 'right' ? 'default' : 'outline'} 
+                            size="sm" 
+                            onClick={() => handleStyleChange('textAlign', 'right')}
+                        >
+                            <AlignRight className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex-1">
-                    <label className='text-sm'>Border Radius</label>
-                    <input type='text'
-                        placeholder='e.g. 8px'
-                        defaultValue={selectedEL?.style?.borderRadius || ''}
-                        onChange={(e) => applyStyle('borderRadius', e.target.value)}
-                        className='mt-1' 
-                    />
+
+                {/* Font Size + Text Color */}
+                <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                        <label className="text-sm block mb-1">Font Size</label>
+                        <Select 
+                            value={fontSize}
+                            onValueChange={(value: string) => handleStyleChange('fontSize', value)}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select Size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="12px">Small</SelectItem>
+                                <SelectItem value="16px">Normal</SelectItem>
+                                <SelectItem value="20px">Large</SelectItem>
+                                <SelectItem value="24px">X-Large</SelectItem>
+                                <SelectItem value="32px">XX-Large</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    
+                    <div>
+                        <label className='text-sm block mb-1'>Text Color</label>
+                        <input 
+                            type='color'
+                            className='w-10 h-10 rounded-lg cursor-pointer'
+                            value={color}
+                            onChange={(e) => handleStyleChange('color', e.target.value)}
+                        />
+                    </div>
                 </div>
-            </div>
 
-            {/* Padding */}
-            <div>
-                <label className='text-sm'>Padding</label>
-                <input type='text'
-                    placeholder='e.g. 10px 15px'
-                    defaultValue={selectedEL?.style?.padding || ''}
-                    onChange={(e) => applyStyle('padding', e.target.value)}
-                    className='mt-1' 
-                />
-            </div>
+                {/* Background + Border Radius */}
+                <div className="flex items-center gap-4">
+                    <div>
+                        <label className='text-sm block mb-1'>Background</label>
+                        <input 
+                            type='color'
+                            className='w-10 h-10 rounded-lg cursor-pointer'
+                            value={backgroundColor}
+                            onChange={(e) => handleStyleChange('backgroundColor', e.target.value)}
+                        />
+                    </div>
+                    <div className="flex-1">
+                        <label className='text-sm block mb-1'>Border Radius</label>
+                        <Select 
+                            value={borderRadius}
+                            onValueChange={(value: string) => handleStyleChange('borderRadius', value)}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select Border Radius" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="0px">None</SelectItem>
+                                <SelectItem value="4px">Small</SelectItem>
+                                <SelectItem value="8px">Medium</SelectItem>
+                                <SelectItem value="16px">Large</SelectItem>
+                                <SelectItem value="9999px">Full</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
 
-            <div>
-                <label className='text-sm'>Margin</label>
-                <Input type='text'
-                    placeholder='e.g. 10px 15px'
-                    defaultValue={selectedEL?.style?.margin || ''}
-                    onChange={(e) => applyStyle('margin', e.target.value)}
-                    className='mt-1'
-                />
-            </div>
+                {/* Padding + Margin */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className='text-sm block mb-1'>Padding</label>
+                        <Select 
+                            value={padding}
+                            onValueChange={(value: string) => handleStyleChange('padding', value)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Padding" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="0px">None</SelectItem>
+                                <SelectItem value="4px 8px">Small</SelectItem>
+                                <SelectItem value="8px 16px">Medium</SelectItem>
+                                <SelectItem value="16px 24px">Large</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <label className='text-sm block mb-1'>Margin</label>
+                        <Select 
+                            value={margin}
+                            onValueChange={(value: string) => handleStyleChange('margin', value)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Margin" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="0px">None</SelectItem>
+                                <SelectItem value="4px 8px">Small</SelectItem>
+                                <SelectItem value="8px 16px">Medium</SelectItem>
+                                <SelectItem value="16px 24px">Large</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
 
-            {/* Class Manager */}
-            <div>
-                <label className='text-sm font-medium'>Classes</label>
-                
-                {/* Existing classes as removable chips */}
-                <div className='flex flex-wrap gap-2 mt-2'>
-                    {classes.length > 0 ? (
-                        classes.map((cls) => (
-                            <span
-                                key={cls}
-                                className='flex text-xs items-center gap-1 px-2 py-1 text-sm rounded-full bg-gray-100'
-                            >
-                                {cls}
-                                <button
-                                    onClick={() => removeClass(cls)}
-                                    className='mt-1 text-red-500 hover:text-red-700'
+                {/* Custom Classes */}
+                <div>
+                    <label className='text-sm font-medium block mb-2'>Custom Classes</label>
+                    <div className='flex flex-wrap gap-2 mb-2 min-h-8'>
+                        {elementClasses.length > 0 ? (
+                            elementClasses.map((cls) => (
+                                <span
+                                    key={cls}
+                                    className='flex items-center gap-1 px-2 py-1 text-sm rounded-full bg-gray-100'
                                 >
-                                    ×
-                                </button>
-                            </span>
-                        ))
-                    ) : (
-                        <span className='text-gray-400 text-sm'>No classes applied</span>
-                    )}
-                </div>
-                
-                {/* Add new class input */}
-                <div className='flex gap-2 mt-3'>
-                    <Input
-                        value={newClass}
-                        onChange={(e) => setNewClass(e.target.value)}
-                        placeholder='Add class...'
-                    />
-                    <Button type="button" onClick={addClass}>
-                        Add
-                    </Button>
+                                    {cls}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeClass(cls)}
+                                        className='ml-1 text-gray-500 hover:text-red-500 rounded-full hover:bg-gray-200 p-0.5'
+                                        aria-label={`Remove ${cls}`}
+                                    >
+                                        ×
+                                    </button>
+                                </span>
+                            ))
+                        ) : (
+                            <span className='text-gray-400 text-sm'>No classes applied</span>
+                        )}
+                    </div>
+                    <div className='flex gap-2'>
+                        <Input
+                            value={newClass}
+                            onChange={(e) => setNewClass(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && addClass()}
+                            placeholder='e.g. text-blue-500'
+                            className='flex-1'
+                        />
+                        <Button 
+                            type="button" 
+                            onClick={addClass}
+                            disabled={!newClass.trim()}
+                            variant="outline"
+                        >
+                            Add
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
     );
-}
+};
 
 export default ElementSettingsSection;
