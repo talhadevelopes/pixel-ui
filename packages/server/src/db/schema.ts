@@ -21,6 +21,7 @@ export const projectTable = pgTable("projects", {
 export const frameTable = pgTable("frames", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     frameId: varchar("frameId").notNull(),
+    designCode: text(),
     projectId: varchar("projectId").notNull().references(() => projectTable.projectId), // Keep it as varchar
     createdAt: timestamp("created_at").defaultNow(),
 });
@@ -28,6 +29,7 @@ export const frameTable = pgTable("frames", {
 export const chatTable = pgTable("chats", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     chatMessage: json("chatMessage"),
+    frameId: varchar().references(() => frameTable.frameId),
     createdBy: varchar("createdBy").notNull().references(() => userTable.email),
     createdAt: timestamp("created_at").defaultNow(),
 });

@@ -11,4 +11,11 @@ export const API = {
     projects: {
         create: "/api/projects",
     },
+    frames: {
+        base: "/api/frames",
+    },
+    chat: {
+        completions: "/api/chat/completions",
+        messages: "/api/chat/messages",
+    },
 };

@@ -82,7 +82,8 @@ function HeroSection() {
                 throw new Error(errorBody?.message ?? "Failed to create project");
             }
 
-            await response.json();
+            const result = await response.json();
+            console.log("Project created:", result);
             toast.success("Project created successfully");
             router.push(`/playground/${projectId}?frameId=${frameId}`);
         } catch (error) {

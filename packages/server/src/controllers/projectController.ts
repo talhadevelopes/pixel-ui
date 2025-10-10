@@ -53,6 +53,7 @@ export class ProjectController {
                 .values({
                     chatMessage: messages,
                     createdBy,
+                    frameId: frameId,
                 })
                 .returning();
 

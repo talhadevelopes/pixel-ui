@@ -20,6 +20,7 @@
     "@neondatabase/serverless": "^1.0.2",
     "@types/express": "^5.0.3",
     "@types/hpp": "^0.2.6",
+    "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

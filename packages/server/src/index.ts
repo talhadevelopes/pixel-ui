@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes'
 import projectRoutes from './routes/projectRoutes'
+import frameRoutes from './routes/frameRoutes'
+import chatRoute from './routes/chatRoute'
 
 const app = express();
 
@@ -24,6 +26,8 @@ app.use('/health', (req, res) => {
 });
 app.use('/api/auth', authRoutes)
 app.use('/api/projects', projectRoutes)
+app.use('/api/frames', frameRoutes)
+app.use('/api/chat', chatRoute)
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
