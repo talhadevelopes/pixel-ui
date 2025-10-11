@@ -10,6 +10,7 @@ export const API = {
     },
     projects: {
         create: "/api/projects",
+        list: "/api/projects",
     },
     frames: {
         base: "/api/frames",

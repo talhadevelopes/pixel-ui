@@ -1,5 +1,5 @@
 import { NextFunction, Response } from "express";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import z from "zod";
 
 import { AuthRequest } from "../middleware/auth";
@@ -73,10 +73,173 @@ export class ProjectController {
             return sendSuccess(res, {
                 project: projectRecord,
                 frame: frameRecord,
-                chat,
             }, "Project created successfully", 201);
         } catch (error) {
             console.error("Create project error:", error);
+            return sendError(res, "Server Error", 500);
+        }
+    }
+
+    static async getProjects(req: AuthRequest, res: Response, _next: NextFunction) {
+        try {
+            const createdBy = req.user?.email;
+
+            if (!createdBy) {
+                return sendError(res, "Authenticated user email missing", 401);
+            }
+
+            const projects = await db
+                .select({
+                    id: projectTable.id,
+                    projectId: projectTable.projectId,
+                    createdAt: projectTable.createdAt,
+                    updatedAt: projectTable.updatedAt,
+                })
+                .from(projectTable)
+                .where(eq(projectTable.createdBy, createdBy))
+                .orderBy(desc(projectTable.id));
+
+            type FrameRecord = {
+                frameId: string;
+                designCode: string | null;
+                createdAt: Date | null;
+            };
+
+            type ChatRecord = {
+                id: number;
+                chatMessage: unknown;
+                createdBy: string;
+                createdAt: Date | null;
+                frameId: string | null;
+            };
+
+            const results: {
+                id: number;
+                projectId: string;
+                createdAt: Date | null;
+                updatedAt: Date | null;
+                frames: {
+                    frameId: string;
+                    designCode: string | null;
+                    createdAt: Date | null;
+                    chats: ChatRecord[];
+                }[];
+            }[] = [];
+
+            for (const project of projects) {
+                const frames = await db
+                    .select({
+                        frameId: frameTable.frameId,
+                        designCode: frameTable.designCode,
+                        createdAt: frameTable.createdAt,
+                    })
+                    .from(frameTable)
+                    .where(eq(frameTable.projectId, project.projectId)) as FrameRecord[];
+
+                const frameIds = frames.map((frame) => frame.frameId);
+
+                let chatsByFrame: Record<string, ChatRecord[]> = {};
+
+                if (frameIds.length > 0) {
+                    const chats = await db
+                        .select({
+                            id: chatTable.id,
+                            chatMessage: chatTable.chatMessage,
+                            createdBy: chatTable.createdBy,
+                            createdAt: chatTable.createdAt,
+                            frameId: chatTable.frameId,
+                        })
+                        .from(chatTable)
+                        .where(inArray(chatTable.frameId, frameIds)) as ChatRecord[];
+
+                    chatsByFrame = chats.reduce<Record<string, ChatRecord[]>>((acc, chat) => {
+                        if (!chat.frameId) {
+                            return acc;
+                        }
+
+                        if (!acc[chat.frameId]) {
+                            acc[chat.frameId] = [];
+                        }
+
+                        acc[chat.frameId].push(chat);
+                        return acc;
+                    }, {});
+                }
+
+                results.push({
+                    id: project.id,
+                    projectId: project.projectId,
+                    createdAt: project.createdAt,
+                    updatedAt: project.updatedAt,
+                    frames: frames.map((frame) => ({
+                        frameId: frame.frameId,
+                        designCode: frame.designCode,
+                        createdAt: frame.createdAt,
+                        chats: chatsByFrame[frame.frameId] ?? [],
+                    })),
+                });
+            }
+
+            return sendSuccess(res, results, "Projects fetched successfully");
+        } catch (error) {
+            console.error("Get projects error:", error);
+            return sendError(res, "Server Error", 500);
+        }
+    }
+
+    static async deleteProject(req: AuthRequest, res: Response, _next: NextFunction) {
+        try {
+            const createdBy = req.user?.email;
+            const { projectId } = req.params;
+
+            if (!createdBy) {
+                return sendError(res, "Authenticated user email missing", 401);
+            }
+
+            if (!projectId) {
+                return sendError(res, "projectId is required", 400);
+            }
+
+            const project = await db
+                .select()
+                .from(projectTable)
+                .where(and(
+                    eq(projectTable.projectId, projectId),
+                    eq(projectTable.createdBy, createdBy),
+                ))
+                .limit(1)
+                .then((rows) => rows[0] ?? null);
+
+            if (!project) {
+                return sendError(res, "Project not found", 404);
+            }
+
+            const frames = await db
+                .select({ frameId: frameTable.frameId })
+                .from(frameTable)
+                .where(eq(frameTable.projectId, projectId));
+
+            const frameIds = frames
+                .map((frame) => frame.frameId)
+                .filter((frameId): frameId is string => Boolean(frameId));
+
+            if (frameIds.length > 0) {
+                await db
+                    .delete(chatTable)
+                    .where(inArray(chatTable.frameId, frameIds));
+            }
+
+            await db
+                .delete(frameTable)
+                .where(eq(frameTable.projectId, projectId));
+
+            await db
+                .delete(projectTable)
+                .where(eq(projectTable.projectId, projectId));
+
+            return sendSuccess(res, null, "Project deleted successfully");
+        } catch (error) {
+            console.error("Delete project error:", error);
             return sendError(res, "Server Error", 500);
         }
     }

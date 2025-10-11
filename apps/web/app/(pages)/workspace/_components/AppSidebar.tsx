@@ -13,11 +13,11 @@ import {
 } from "@workspace/ui/components/sidebar";
 import { AxeIcon, LogOut, Moon, Plus, Sun } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { useTheme } from "next-themes";
 
+import { ProjectHistory } from "./ProjectsHistory";
+
 export function AppSidebar() {
-    const [projectList, setProjectList] = useState([]);
     const userCredits = 2;
     const totalCredits = 6;
     const creditPercentage = (userCredits / totalCredits) * 100;
@@ -52,25 +52,7 @@ export function AppSidebar() {
                     <SidebarGroupLabel className="px-2 text-xs uppercase tracking-wide text-muted-foreground">
                         Projects
                     </SidebarGroupLabel>
-                    <div className="space-y-2">
-                        {projectList.length === 0 ? (
-                            <div className="rounded-md bg-muted/50 px-3 py-8 text-center">
-                                <p className="text-sm text-muted-foreground">No projects yet</p>
-                                <p className="text-xs text-muted-foreground">
-                                    Create your first project to get started
-                                </p>
-                            </div>
-                        ) : (
-                            projectList.map((project: any) => (
-                                <div
-                                    key={project.id}
-                                    className="rounded-md px-3 py-2 text-sm hover:bg-accent cursor-pointer transition-colors"
-                                >
-                                    {project.name}
-                                </div>
-                            ))
-                        )}
-                    </div>
+                    <ProjectHistory />
                 </SidebarGroup>
             </SidebarContent>
 
