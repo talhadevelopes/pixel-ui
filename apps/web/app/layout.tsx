@@ -2,6 +2,7 @@ import { Outfit } from "next/font/google"
 import "@workspace/ui/globals.css"
 import { Providers } from "@/components/providers"
 import { Toaster } from "sonner"
+import { RequireAuth } from "@/components/require-auth"
 
 const fontSans = Outfit({
   subsets: ["latin"],
@@ -24,7 +25,10 @@ export default function RootLayout({
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}
       >
-        <Providers>{children}
+        <Providers>
+          <RequireAuth>
+            {children}
+          </RequireAuth>
           <Toaster />
         </Providers>
       </body>

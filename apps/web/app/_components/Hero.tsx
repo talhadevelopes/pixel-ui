@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import { Button } from "@workspace/ui/components/button";
 import { HomeIcon, ImagePlus, LayoutDashboard, Send } from "lucide-react";
 
-import { API, BASE_URL } from "@/service/api";
 import { getAccessToken } from "@/lib/auth-storage";
+import { useCreateProjectMutation } from "@/mutations/useProjectsMutations";
 
 type ChatMessage = {
     role: "user" | "assistant" | "system";
@@ -39,8 +39,8 @@ const generateFrameId = () => `frame-${Math.random().toString(36).slice(2, 8)}`;
 
 function HeroSection() {
     const [userInput, setUserInput] = useState<string>("");
-    const [isGenerating, setIsGenerating] = useState(false);
     const router = useRouter();
+    const createProjectMutation = useCreateProjectMutation();
 
     const handleGenerate = async () => {
         const trimmedInput = userInput.trim();
@@ -56,8 +56,6 @@ function HeroSection() {
             return;
         }
 
-        setIsGenerating(true);
-
         const projectId = generateProjectId();
         const frameId = generateFrameId();
         const messages: ChatMessage[] = [
@@ -68,29 +66,16 @@ function HeroSection() {
         ];
 
         try {
-            const response = await fetch(`${BASE_URL}${API.projects.create}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ projectId, frameId, messages }),
+            await createProjectMutation.mutateAsync({
+                payload: { projectId, frameId, messages },
+                accessToken: token,
             });
 
-            if (!response.ok) {
-                const errorBody = await response.json().catch(() => null);
-                throw new Error(errorBody?.message ?? "Failed to create project");
-            }
-
-            const result = await response.json();
-            console.log("Project created:", result);
             toast.success("Project created successfully");
             router.push(`/playground/${projectId}?frameId=${frameId}`);
         } catch (error) {
             console.error("Create project failed", error);
             toast.error(error instanceof Error ? error.message : "Failed to create project");
-        } finally {
-            setIsGenerating(false);
         }
     };
 
@@ -137,10 +122,10 @@ function HeroSection() {
                             <Button
                                 size="sm"
                                 onClick={handleGenerate}
-                                disabled={!userInput.trim() || isGenerating}
+                                disabled={!userInput.trim() || createProjectMutation.isPending}
                                 className="gap-2"
                             >
-                                {isGenerating ? (
+                                {createProjectMutation.isPending ? (
                                     <>
                                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                                         Generating...

@@ -5,23 +5,56 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { getAccessToken } from "@/lib/auth-storage";
 
-const PUBLIC_PATHS = new Set(["/", "/login", "/register", "/logout"]);
+const PUBLIC_PATHS = new Set(["/", "/login", "/register"]);
+const AUTH_REDIRECT_PATHS = new Set(["/login", "/register"]);
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
     const [isChecking, setIsChecking] = useState(true);
+    const [hasToken, setHasToken] = useState<boolean>(() => {
+        if (typeof window === "undefined") {
+            return false;
+        }
+        return Boolean(getAccessToken());
+    });
 
     useEffect(() => {
-        const token = getAccessToken();
+        if (typeof window === "undefined") {
+            return;
+        }
 
-        if (!token && !PUBLIC_PATHS.has(pathname)) {
-            router.replace("/login");
+        const handleAuthChange = () => {
+            setHasToken(Boolean(getAccessToken()));
+        };
+
+        window.addEventListener("auth-change", handleAuthChange);
+        handleAuthChange();
+
+        return () => {
+            window.removeEventListener("auth-change", handleAuthChange);
+        };
+    }, []);
+
+    useEffect(() => {
+        const isPublicRoute = PUBLIC_PATHS.has(pathname);
+
+        if (!hasToken) {
+            if (!isPublicRoute) {
+                router.replace("/login");
+            }
+            setIsChecking(false);
+            return;
+        }
+
+        if (AUTH_REDIRECT_PATHS.has(pathname)) {
+            router.replace("/workspace");
+            setIsChecking(false);
             return;
         }
 
         setIsChecking(false);
-    }, [router, pathname]);
+    }, [hasToken, pathname, router]);
 
     if (isChecking && !PUBLIC_PATHS.has(pathname)) {
         return (

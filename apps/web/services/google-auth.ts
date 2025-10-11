@@ -1,36 +1,13 @@
-import { API, BASE_URL } from "@/service/api";
 import { setAuthTokens } from "@/lib/auth-storage";
+import {
+    exchangeGoogleCode as requestGoogleCallback,
+    type GoogleCallbackResponse,
+} from "./auth.api";
 
-export type GoogleCallbackResponse = {
-    id: string;
-    name: string;
-    email: string;
-    credits: number | null;
-    accessToken: string;
-    refreshToken: string;
-};
+export type { GoogleCallbackResponse } from "./auth.api";
 
 export async function exchangeGoogleCode(code: string, state?: string) {
-    const response = await fetch(`${BASE_URL}${API.auth.googleCallback}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code, state }),
-    });
-
-    const body = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message = body?.message ?? "Failed to complete Google login";
-        throw new Error(message);
-    }
-
-    const data = body?.data as GoogleCallbackResponse | undefined;
-
-    if (!data?.accessToken) {
-        throw new Error("Invalid response from Google login");
-    }
+    const data = await requestGoogleCallback(code, state);
 
     setAuthTokens({
         accessToken: data.accessToken,

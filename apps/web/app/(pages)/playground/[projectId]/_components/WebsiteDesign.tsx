@@ -53,18 +53,18 @@ const stripTrailingMetadata = (code: string) => {
 };
 
 export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProps) {
-    console.log("WebsiteDesignSection received generatedCode:", generatedCode?.substring(0, 100), "Type:", typeof generatedCode, "Length:", generatedCode?.length);
-    
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [selectedScreenSize, setSelectedScreenSize] = useState<string>('web');
     const [showSettings, setShowSettings] = useState(false);
     const { selectedElement, setSelectedElement, setIframeRef } = useDesignStore();
-    
+    const [renderedCode, setRenderedCode] = useState(generatedCode);
+    const [isIframeReady, setIsIframeReady] = useState(false);
+
     useEffect(() => {
         if (iframeRef.current) {
             setIframeRef(iframeRef);
         }
-        
+
         return () => {
             setSelectedElement(null);
         };
@@ -89,11 +89,19 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
         }
     };
 
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setRenderedCode(generatedCode);
+        }, 150);
+
+        return () => window.clearTimeout(timer);
+    }, [generatedCode]);
+
     const [lastCode, setLastCode] = useState("");
 
     useEffect(() => {
         console.log("=== IFRAME UPDATE EFFECT ===");
-        console.log("generatedCode:", generatedCode?.substring(0, 100));
+        console.log("renderedCode:", renderedCode?.substring(0, 100));
         console.log("iframeRef.current:", iframeRef.current);
         
         if (!iframeRef.current) {
@@ -103,10 +111,10 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
 
         let processedCode = "";
         
-        if (generatedCode && generatedCode.length > 0 && generatedCode !== "undefined") {
-            console.log("Processing code, length:", generatedCode.length);
+        if (renderedCode && renderedCode.length > 0 && renderedCode !== "undefined") {
+            console.log("Processing code, length:", renderedCode.length);
             try {
-                processedCode = stripTrailingMetadata(generatedCode);
+                processedCode = stripTrailingMetadata(renderedCode);
                 console.log("After stripTrailingMetadata, length:", processedCode.length);
                 
                 processedCode = stripFences(processedCode);
@@ -130,6 +138,7 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
             return;
         }
         setLastCode(processedCode);
+        setIsIframeReady(false);
 
         const html = `
             <!DOCTYPE html>
@@ -257,6 +266,7 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
 
         console.log("Setting iframe srcdoc, length:", html.length);
         iframeRef.current.srcdoc = html;
+        iframeRef.current.onload = () => setIsIframeReady(true);
 
         const handleMessage = (event: MessageEvent) => {
             if (event.data?.type === 'elementSelected') {
@@ -267,7 +277,7 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
 
-    }, [generatedCode, setSelectedElement]);
+    }, [renderedCode, setSelectedElement]);
 
     const handleClearSelection = () => {
         setSelectedElement(null);
@@ -325,8 +335,8 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
                     <div className={`mx-auto ${getScreenSizeClass(selectedScreenSize)}`}>
                         <iframe
                             ref={iframeRef}
-                            className="w-full border border-gray-200 bg-white rounded-lg shadow-sm"
-                            style={{ minHeight: '90vh' }}
+                            className="w-full border border-gray-200 bg-white rounded-lg shadow-sm transition-opacity duration-200"
+                            style={{ minHeight: '90vh', opacity: isIframeReady ? 1 : 0.4 }}
                             title="Design Preview"
                             sandbox="allow-same-origin allow-scripts"
                         />

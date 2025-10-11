@@ -6,8 +6,11 @@ import { WebsiteDesignSection } from "./_components/WebsiteDesign";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ChatSection from "./_components/ChatSection";
 import { toast } from "sonner";
-import { API, BASE_URL } from "@/service/api";
 import { getAccessToken } from "@/lib/auth-storage";
+import { fetchFrameDetails, saveFrameMessages, updateFrameDesign } from "@/services/frames.api";
+import { createChatCompletion } from "@/services/chat.api";
+import { useAuthToken } from "@/hooks/useAuthToken";
+import { parseChatCompletionStream, stripCodeFences } from "@/utils/chat-stream";
 
 export interface FrameDetails {
     frameId: string;
@@ -59,12 +62,6 @@ Example:
 - User: "Hi" ⟹ Response: "Hello! How can I help you today?"
 - User: "Build a responsive landing page with Tailwind CSS" ⟹ Response: [Generate full HTML code as per instructions above]`;
 
-const stripCodeFences = (code: string) =>
-    code
-        .replace(/```html/gi, "")
-        .replace(/```/g, "")
-        .trim();
-
 export default function PlaygroundPage() {
     const params = useParams();
     const projectIdParam = params?.projectId as string | string[] | undefined;
@@ -74,70 +71,40 @@ export default function PlaygroundPage() {
     const [loading, setLoading] = useState(false);
     const [messages, setMessages] = useState<Messages[]>([]);
     const [generatedCode, setGeneratedCode] = useState<string>("");
-    const [isSaving, setIsSaving] = useState(false);
+    const accessToken = useAuthToken();
     const autoTriggerRef = useRef(false);
     const sendMessageRef = useRef<((input: string, options?: { appendUserMessage?: boolean; presetMessages?: Messages[] }) => Promise<void>) | null>(null);
 
+    const [isSaving, setIsSaving] = useState(false);
+
     const saveGeneratedCode = useCallback(async (code: string) => {
         if (!frameId || !projectId) return;
+        if (!accessToken) {
+            toast.error("Please log in again");
+            return;
+        }
 
         try {
-            const token = getAccessToken();
-            if (!token) {
-                toast.error("Please log in again");
-                return;
-            }
-
-            const response = await fetch(`${BASE_URL}${API.frames.base}?frameId=${frameId}&projectId=${projectId}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ designCode: code }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to save generated code (${response.status})`);
-            }
-
+            await updateFrameDesign({ frameId, projectId, designCode: code }, accessToken);
             toast.success("Website is ready");
         } catch (error) {
             console.error("Failed to save generated code", error);
-            toast.error("Failed to save generated code");
+            throw error;
         }
-    }, [frameId, projectId]);
+    }, [accessToken, frameId, projectId]);
 
     const saveMessages = useCallback(async (updatedMessages: Messages[]) => {
         if (!frameId) return;
+        if (!accessToken) {
+            return;
+        }
 
         try {
-            const token = getAccessToken();
-            if (!token) {
-                return;
-            }
-
-            const response = await fetch(`${BASE_URL}${API.chat.messages}?frameId=${frameId}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ chatMessage: updatedMessages }),
-            });
-
-            if (response.status === 401) {
-                toast.error("Session expired. Please log in again");
-                return;
-            }
-
-            if (!response.ok) {
-                throw new Error(`Failed to save messages (${response.status})`);
-            }
+            await saveFrameMessages({ frameId, messages: updatedMessages }, accessToken);
         } catch (error) {
             console.error("Failed to save messages", error);
         }
-    }, [frameId]);
+    }, [accessToken, frameId]);
 
     const formatUserPrompt = useCallback((content: string) => {
         if (content.includes("Instructions:")) {
@@ -173,69 +140,35 @@ export default function PlaygroundPage() {
         );
 
         try {
-            const token = getAccessToken();
-            if (!token) {
+            if (!accessToken) {
                 toast.error("Please log in again");
                 return;
             }
 
-            const response = await fetch(`${BASE_URL}${API.chat.completions}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    frameId,
-                    messages: messagesForApi,
-                }),
+            const response = await createChatCompletion({
+                accessToken,
+                frameId,
+                messages: messagesForApi,
             });
 
-            if (!response.ok) {
-                throw new Error("Failed to fetch AI response");
+            const { code: cleanedCode, raw } = await parseChatCompletionStream(response, {
+                onPartialCode: (partial) => setGeneratedCode(partial),
+            });
+
+            const finalCode = cleanedCode && cleanedCode !== "undefined" ? cleanedCode : "";
+            if (finalCode) {
+                setGeneratedCode(finalCode);
             }
-
-            const reader = response.body?.getReader();
-            if (!reader) {
-                throw new Error("Streaming reader unavailable");
-            }
-
-            const decoder = new TextDecoder();
-            let aiResponse = "";
-            let codeBuffer = "";
-            let isCode = false;
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value, { stream: true });
-                aiResponse += chunk;
-
-                if (!isCode && aiResponse.includes("```html")) {
-                    isCode = true;
-                    const index = aiResponse.indexOf("```html") + 7;
-                    codeBuffer += aiResponse.slice(index);
-                    setGeneratedCode(stripCodeFences(codeBuffer));
-                } else if (isCode) {
-                    codeBuffer += chunk;
-                    setGeneratedCode(stripCodeFences(codeBuffer));
-                }
-            }
-
-            const cleanedCode = codeBuffer ? stripCodeFences(codeBuffer) : "";
-            if (cleanedCode && cleanedCode !== "undefined") {
-                setGeneratedCode(cleanedCode);
-            }
-            const assistantMessage: Messages = cleanedCode
+            const assistantMessage: Messages = finalCode
                 ? { role: "assistant", content: "Your Code is Ready" }
-                : { role: "assistant", content: aiResponse.trim() };
+                : { role: "assistant", content: raw };
 
             const finalMessages = [...workingMessages, assistantMessage];
             setMessages(finalMessages);
 
-            if (cleanedCode) {
-                setGeneratedCode(cleanedCode);
-                await saveGeneratedCode(cleanedCode);
+            if (finalCode) {
+                setGeneratedCode(finalCode);
+                await saveGeneratedCode(finalCode);
             } else if (options?.appendUserMessage !== false) {
                 setGeneratedCode("");
             }
@@ -247,67 +180,55 @@ export default function PlaygroundPage() {
         } finally {
             setLoading(false);
         }
-    }, [BASE_URL, API.chat.completions, frameId, formatUserPrompt, messages, saveGeneratedCode, saveMessages]);
+    }, [accessToken, frameId, formatUserPrompt, messages, saveGeneratedCode, saveMessages]);
 
     useEffect(() => {
         sendMessageRef.current = sendMessage;
     }, [sendMessage]);
 
-    const getFrameDetails = useCallback(async () => {
+    useEffect(() => {
         if (!frameId || !projectId) {
             setMessages([]);
             setGeneratedCode("");
             return;
         }
 
-        try {
-            const token = getAccessToken();
-            if (!token) {
-                setMessages([]);
-                setGeneratedCode("");
-                toast.error("Please log in again");
-                return;
+        const loadFrame = async () => {
+            try {
+                if (!accessToken) {
+                    toast.error("Please log in again");
+                    return;
+                }
+
+                const data = await fetchFrameDetails({ frameId, projectId }, accessToken);
+
+                const existingMessages = data.chatMessages ?? [];
+                setMessages(existingMessages);
+
+                const designCode = data.designCode ?? "";
+                if (designCode) {
+                    setGeneratedCode(stripCodeFences(designCode));
+                } else {
+                    setGeneratedCode("");
+                }
+
+                const firstMessage = existingMessages[0];
+                if (!autoTriggerRef.current && firstMessage?.content && !designCode) {
+                    autoTriggerRef.current = true;
+                    void sendMessageRef.current?.(firstMessage.content, {
+                        appendUserMessage: false,
+                        presetMessages: existingMessages,
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching frame details", error);
+                const message = error instanceof Error ? error.message : "Failed to load frame details";
+                toast.error(message);
             }
+        };
 
-            const response = await fetch(`${BASE_URL}${API.frames.base}?frameId=${frameId}&projectId=${projectId}`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                cache: "no-store",
-            });
-
-            if (!response.ok) {
-                console.error("Failed to fetch frame details", response.status);
-                return;
-            }
-
-            const payload = await response.json();
-            const data = payload?.data as FrameDetails | undefined;
-
-            if (!data) return;
-
-            const existingMessages = data.chatMessages ?? [];
-            setMessages(existingMessages);
-
-            const designCode = data.designCode ?? "";
-            if (designCode) {
-                setGeneratedCode(stripCodeFences(designCode));
-            }
-
-            const firstMessage = existingMessages[0];
-            if (!autoTriggerRef.current && firstMessage?.content && !designCode) {
-                autoTriggerRef.current = true;
-                await sendMessageRef.current?.(firstMessage.content, { appendUserMessage: false, presetMessages: existingMessages });
-            }
-        } catch (error) {
-            console.error("Error fetching frame details", error);
-        }
-    }, [frameId, projectId]);
-
-    useEffect(() => {
-        getFrameDetails();
-    }, [getFrameDetails]);
+        void loadFrame();
+    }, [accessToken, frameId, projectId]);
 
     useEffect(() => {
         autoTriggerRef.current = false;
@@ -327,6 +248,10 @@ export default function PlaygroundPage() {
         setIsSaving(true);
         try {
             await saveGeneratedCode(generatedCode);
+        } catch (error) {
+            console.error("Manual save failed", error);
+            const message = error instanceof Error ? error.message : "Failed to save generated code";
+            toast.error(message);
         } finally {
             setIsSaving(false);
         }

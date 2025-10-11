@@ -9,21 +9,25 @@ import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import Image from "next/image";
 
-import { API, BASE_URL } from "@/service/api";
 import { setAuthTokens } from "@/lib/auth-storage";
-
-type LoginResponse = {
-    data: {
-        accessToken: string;
-        refreshToken?: string;
-    };
-};
+import { API, BASE_URL } from "@/services/api";
+import { useLoginMutation } from "@/mutations/useAuthMutations";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
+    const loginMutation = useLoginMutation({
+        onSuccess: (tokens) => {
+            setAuthTokens(tokens);
+            toast.success("Logged in successfully");
+            router.push("/");
+        },
+        onError: (error) => {
+            console.error("Login failed", error);
+            toast.error(error.message);
+        },
+    });
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -36,36 +40,12 @@ export default function LoginPage() {
             return;
         }
 
-        setIsSubmitting(true);
-
         try {
-            const response = await fetch(`${BASE_URL}${API.auth.login}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword }),
-            });
-
-            if (!response.ok) {
-                const errorBody = await response.json().catch(() => null);
-                throw new Error(errorBody?.message ?? "Failed to login");
-            }
-
-            const result = (await response.json()) as LoginResponse;
-
-            setAuthTokens({
-                accessToken: result.data.accessToken,
-                refreshToken: result.data.refreshToken,
-            });
-
-            toast.success("Logged in successfully");
-            router.push("/");
+            await loginMutation.mutateAsync({ email: trimmedEmail, password: trimmedPassword });
         } catch (error) {
-            console.error("Login failed", error);
-            toast.error(error instanceof Error ? error.message : "Failed to login");
-        } finally {
-            setIsSubmitting(false);
+            if (!(error instanceof Error)) {
+                toast.error("Failed to login");
+            }
         }
     };
 
@@ -89,7 +69,7 @@ export default function LoginPage() {
                             onChange={(event) => setEmail(event.target.value)}
                             placeholder="you@example.com"
                             required
-                            disabled={isSubmitting}
+                            disabled={loginMutation.isPending}
                         />
                     </div>
 
@@ -102,12 +82,12 @@ export default function LoginPage() {
                             onChange={(event) => setPassword(event.target.value)}
                             placeholder="••••••••"
                             required
-                            disabled={isSubmitting}
+                            disabled={loginMutation.isPending}
                         />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isSubmitting}>
-                        {isSubmitting ? "Logging in..." : "Log In"}
+                    <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                        {loginMutation.isPending ? "Logging in..." : "Log In"}
                     </Button>
                 </form>
 

@@ -3,13 +3,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { exchangeGoogleCode } from "@/services/google-auth";
+import { useGoogleCallbackMutation } from "@/mutations/useAuthMutations";
 
 export default function GoogleCallbackPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [status, setStatus] = useState("Processing Google sign-in...");
     const hasProcessed = useRef(false);
+    const googleCallback = useGoogleCallbackMutation({
+        onSuccess: () => {
+            setStatus("Google login successful! Redirecting...");
+            setTimeout(() => router.replace("/workspace"), 1200);
+        },
+        onError: (error) => {
+            console.error("Google login failed", error);
+            const message = error.message || "google_login_failed";
+            setStatus("Failed to complete Google login.");
+            setTimeout(() => router.replace(`/login?error=${encodeURIComponent(message)}`), 2000);
+        },
+    });
 
     useEffect(() => {
         if (hasProcessed.current) {
@@ -36,19 +48,17 @@ export default function GoogleCallbackPage() {
 
             try {
                 setStatus("Finalising Google login...");
-                await exchangeGoogleCode(code);
-                setStatus("Google login successful! Redirecting...");
-
-                setTimeout(() => router.replace("/workspace"), 1200);
+                await googleCallback.mutateAsync({ code, state: searchParams.get("state") ?? undefined });
             } catch (error) {
-                console.error("Google login failed", error);
-                const message = error instanceof Error ? error.message : "google_login_failed";
-                setStatus("Failed to complete Google login.");
-                setTimeout(() => router.replace(`/login?error=${encodeURIComponent(message)}`), 2000);
+                if (!(error instanceof Error)) {
+                    setStatus("Failed to complete Google login.");
+                    setTimeout(() => router.replace(`/login?error=${encodeURIComponent("google_login_failed")}`), 2000);
+                }
             }
         };
 
         handleCallback();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router, searchParams]);
 
     return (
