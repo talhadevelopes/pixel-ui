@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-
+dotenv.config();
 import express from 'express';
 import hpp from 'hpp';
 import helmet from 'helmet';
@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes'
 import projectRoutes from './routes/projectRoutes'
 import frameRoutes from './routes/frameRoutes'
 import chatRoute from './routes/chatRoute'
+import subscriptionRoutes from './routes/subscriptionRoutes'
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/frames', frameRoutes)
 app.use('/api/chat', chatRoute)
+app.use('/api/subscriptions', subscriptionRoutes)
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

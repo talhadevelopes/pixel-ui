@@ -23,13 +23,20 @@ export async function createChatCompletion({ accessToken, frameId, messages }: C
 
     if (!response.ok) {
         let message = "Failed to fetch AI response";
-        try {
-            const body = await response.clone().json();
-            message = body?.message ?? message;
-        } catch {
-            // ignore JSON parse errors for streamed responses
+        const body = await response.clone().json().catch(() => null);
+
+        if (body?.message) {
+            message = body.message;
         }
-        throw new Error(message);
+
+        const error = new Error(message) as Error & {
+            status?: number;
+            data?: unknown;
+        };
+        error.status = response.status;
+        error.data = body?.data ?? null;
+
+        throw error;
     }
 
     return response;

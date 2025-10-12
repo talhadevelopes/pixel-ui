@@ -3,7 +3,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import z from "zod";
 
 import { AuthRequest } from "../middleware/auth";
-import { chatTable, frameTable, projectTable } from "../db/schema";
+import { chatTable, frameTable, projectTable, userTable } from "../db/schema";
 import { db } from "../utils/drizzle";
 import { sendError, sendSuccess } from "../types/response";
 
@@ -28,11 +28,32 @@ export class ProjectController {
             const { projectId, frameId, messages } = parseResult.data;
 
             const createdBy = req.user?.email;
+            const userId = req.user?.userId;
 
-            if (!createdBy) {
+            if (!createdBy || !userId) {
                 return sendError(res, "Authenticated user email missing", 401);
             }
 
+            // ✅ NEW: Check credits before creating project
+            const [user] = await db
+                .select()
+                .from(userTable)
+                .where(eq(userTable.id, userId))
+                .limit(1);
+
+            if (!user) {
+                return sendError(res, "User not found", 404);
+            }
+
+            if (user.credits <= 0) {
+                return sendError(
+                    res,
+                    "Insufficient credits. Please upgrade your plan or wait for daily reset.",
+                    403
+                );
+            }
+
+            // Create project (existing code)
             const [project] = await db.insert(projectTable)
                 .values({
                     projectId,
@@ -57,6 +78,14 @@ export class ProjectController {
                 })
                 .returning();
 
+            // ✅ NEW: Deduct 1 credit after successful creation
+            await db
+                .update(userTable)
+                .set({
+                    credits: user.credits - 1,
+                })
+                .where(eq(userTable.id, userId));
+
             const projectRecord = project ?? (await db.select()
                 .from(projectTable)
                 .where(eq(projectTable.projectId, projectId))
@@ -73,6 +102,7 @@ export class ProjectController {
             return sendSuccess(res, {
                 project: projectRecord,
                 frame: frameRecord,
+                creditsRemaining: user.credits - 1,
             }, "Project created successfully", 201);
         } catch (error) {
             console.error("Create project error:", error);

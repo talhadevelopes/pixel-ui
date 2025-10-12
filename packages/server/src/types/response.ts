@@ -8,10 +8,17 @@ export const sendSuccess = (res: Response, data: any, message: string = "Success
     });
 };
 
-export const sendError = (res: Response, message: string = "Internal Server Error", statusCode: number = 500, errors?: any[]) => {
+export const sendError = (
+    res: Response,
+    message: string = "Internal Server Error",
+    statusCode: number = 500,
+    errors?: any[],
+    data?: any,
+) => {
     res.status(statusCode).json({
         success: false,
         message,
-        errors: errors || []
+        errors: errors || [],
+        data: data ?? null,
     });
 };

@@ -26,11 +26,16 @@ export class AuthController {
 
             const hashedPassword = await hashPassword(password);
 
+            // ✅ UPDATED: Added default subscription values for new users
             const [user] = await db.insert(userTable).values({
                 name,
                 email,
                 password: hashedPassword,
-                credits: 5
+                credits: 3, // Free tier gets 3 credits
+                tier: "free",
+                dailyCreditsLimit: 3,
+                lastCreditReset: new Date(),
+                subscriptionStatus: "active",
             }).returning();
 
             const accessToken = generateAccessToken({
@@ -48,6 +53,8 @@ export class AuthController {
                 name: user.name,
                 email: user.email,
                 credits: user.credits,
+                tier: user.tier,
+                dailyCreditsLimit: user.dailyCreditsLimit,
                 accessToken,
                 refreshToken
             };
@@ -163,15 +170,15 @@ export class AuthController {
         try {
             const userId = req.user?.userId;
             
-            console.log('User ID from token:', userId); // ADD THIS
-            console.log('User object from token:', req.user); // ADD THIS
+            console.log('User ID from token:', userId);
+            console.log('User object from token:', req.user);
     
             const users = await db.select()
                 .from(userTable)
                 .where(eq(userTable.id, userId!))
                 .limit(1);
     
-            console.log('Found users:', users); // ADD THIS
+            console.log('Found users:', users);
     
             if (users.length === 0) {
                 return sendError(res, "User not found", 404);
@@ -188,37 +195,36 @@ export class AuthController {
         }
     }
 
-    // In AuthController
-static async refreshToken(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-        const { refreshToken } = req.body;
-        
-        if (!refreshToken) {
-            return sendError(res, "Refresh token required", 400);
+    static async refreshToken(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { refreshToken } = req.body;
+            
+            if (!refreshToken) {
+                return sendError(res, "Refresh token required", 400);
+            }
+
+            const decoded = verifyRefreshToken(refreshToken);
+            
+            const users = await db.select()
+                .from(userTable)
+                .where(eq(userTable.id, decoded.userId))
+                .limit(1);
+
+            if (users.length === 0) {
+                return sendError(res, "User not found", 404);
+            }
+
+            const user = users[0];
+            const newAccessToken = generateAccessToken({
+                userId: user.id,
+                email: user.email,
+                credits: user.credits
+            });
+
+            sendSuccess(res, { accessToken: newAccessToken }, "Token refreshed");
+        } catch (error) {
+            console.log('Refresh token error:', error);
+            sendError(res, "Invalid refresh token", 401);
         }
-
-        const decoded = verifyRefreshToken(refreshToken);
-        
-        const users = await db.select()
-            .from(userTable)
-            .where(eq(userTable.id, decoded.userId))
-            .limit(1);
-
-        if (users.length === 0) {
-            return sendError(res, "User not found", 404);
-        }
-
-        const user = users[0];
-        const newAccessToken = generateAccessToken({
-            userId: user.id,
-            email: user.email,
-            credits: user.credits
-        });
-
-        sendSuccess(res, { accessToken: newAccessToken }, "Token refreshed");
-    } catch (error) {
-        console.log('Refresh token error:', error);
-        sendError(res, "Invalid refresh token", 401);
     }
-}
 }

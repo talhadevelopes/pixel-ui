@@ -5,7 +5,7 @@ import { TextEncoder } from "util";
 import z from "zod";
 
 import { AuthRequest } from "../middleware/auth";
-import { chatTable } from "../db/schema";
+import { chatTable, userTable } from "../db/schema";
 import { db } from "../utils/drizzle";
 import { sendError, sendSuccess } from "../types/response";
 import { eq } from "drizzle-orm";
@@ -25,13 +25,42 @@ export class ChatController {
     try {
       const { frameId, messages } = streamRequestSchema.parse(req.body);
       const createdBy = req.user?.email;
+      const userId = req.user?.userId;
 
-      if (!createdBy) {
+      if (!createdBy || !userId) {
         return sendError(res, "Authenticated user email missing", 401);
       }
 
       if (!frameId || !messages || messages.length === 0) {
         return sendError(res, "Missing frameId or messages", 400);
+      }
+
+      // ✅ NEW: Check credits before streaming chat
+      const [user] = await db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.id, userId))
+        .limit(1);
+
+      if (!user) {
+        return sendError(res, "User not found", 404);
+      }
+
+      if (user.credits <= 0) {
+        const nextReset = user.lastCreditReset
+          ? new Date(new Date(user.lastCreditReset).getTime() + 24 * 60 * 60 * 1000)
+          : null;
+
+        return sendError(
+          res,
+          "Insufficient credits. Please upgrade your plan or wait for daily reset.",
+          403,
+          undefined,
+          {
+            nextReset,
+            credits: user.credits,
+          }
+        );
       }
 
       // Set response headers for streaming
@@ -104,6 +133,16 @@ export class ChatController {
                 },
               ],
             });
+
+            // ✅ NEW: Deduct 1 credit after successful chat
+            await db
+              .update(userTable)
+              .set({
+                credits: user.credits - 1,
+              })
+              .where(eq(userTable.id, userId));
+
+            console.log(`✅ Credit deducted. Remaining: ${user.credits - 1}`);
           } catch (dbErr) {
             console.error("Error saving chat message:", dbErr);
           }

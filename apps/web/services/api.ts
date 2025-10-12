@@ -19,4 +19,11 @@ export const API = {
         completions: "/api/chat/completions",
         messages: "/api/chat/messages",
     },
+    subscriptions: {
+        plans: "/api/subscriptions/plans",
+        subscribe: "/api/subscriptions/subscribe",
+        verify: "/api/subscriptions/verify",
+        cancel: "/api/subscriptions/cancel",
+        status: "/api/subscriptions/status",
+    },
 };

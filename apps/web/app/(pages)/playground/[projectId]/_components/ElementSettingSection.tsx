@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { SwatchBook, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@workspace/ui/components/select";
 import { Input } from "@workspace/ui/components/input";
@@ -19,8 +19,8 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
     const [color, setColor] = useState('#000000');
     const [backgroundColor, setBackgroundColor] = useState('#ffffff');
     const [borderRadius, setBorderRadius] = useState('0px');
-    const [padding, setPadding] = useState('0px');
-    const [margin, setMargin] = useState('0px');
+    const [paddingValues, setPaddingValues] = useState({ top: '0', right: '0', bottom: '0', left: '0' });
+    const [marginValues, setMarginValues] = useState({ top: '0', right: '0', bottom: '0', left: '0' });
     const [elementClasses, setElementClasses] = useState<string[]>([]);
     const [newClass, setNewClass] = useState('');
     
@@ -35,22 +35,34 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
             setColor('#000000');
             setBackgroundColor('#ffffff');
             setBorderRadius('0px');
-            setPadding('0px');
-            setMargin('0px');
+            setPaddingValues({ top: '0', right: '0', bottom: '0', left: '0' });
+            setMarginValues({ top: '0', right: '0', bottom: '0', left: '0' });
             setElementClasses([]);
             return;
         }
         
         // Get styles from the passed element data
+        const view = selectedElement.ownerDocument?.defaultView;
+        const computed = view?.getComputedStyle(selectedElement);
         const styles = selectedElement.style || {};
-        
+
         setAlign(styles.textAlign || 'left');
         setFontSize(styles.fontSize || '16px');
         setColor(styles.color || '#000000');
         setBackgroundColor(styles.backgroundColor || '#ffffff');
         setBorderRadius(styles.borderRadius || '0px');
-        setPadding(styles.padding || '0px');
-        setMargin(styles.margin || '0px');
+        setPaddingValues({
+            top: (styles.paddingTop || computed?.paddingTop || '0px').replace('px', ''),
+            right: (styles.paddingRight || computed?.paddingRight || '0px').replace('px', ''),
+            bottom: (styles.paddingBottom || computed?.paddingBottom || '0px').replace('px', ''),
+            left: (styles.paddingLeft || computed?.paddingLeft || '0px').replace('px', ''),
+        });
+        setMarginValues({
+            top: (styles.marginTop || computed?.marginTop || '0px').replace('px', ''),
+            right: (styles.marginRight || computed?.marginRight || '0px').replace('px', ''),
+            bottom: (styles.marginBottom || computed?.marginBottom || '0px').replace('px', ''),
+            left: (styles.marginLeft || computed?.marginLeft || '0px').replace('px', ''),
+        });
         
         // Update classes
         const classes = (selectedElement.className || '')
@@ -84,12 +96,6 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
                 case 'borderRadius':
                     setBorderRadius(value);
                     break;
-                case 'padding':
-                    setPadding(value);
-                    break;
-                case 'margin':
-                    setMargin(value);
-                    break;
             }
 
             // Send message directly to iframe to update the selected element
@@ -104,6 +110,35 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
         } catch (error) {
             console.error('Error applying style:', error);
         }
+    };
+
+    type BoxSide = 'top' | 'right' | 'bottom' | 'left';
+
+    const handleSpacingInput = (
+        type: 'padding' | 'margin',
+        side: BoxSide,
+        event: ChangeEvent<HTMLInputElement>,
+    ) => {
+        if (!selectedElement || !iframeRef?.current?.contentWindow) {
+            return;
+        }
+
+        const numeric = event.target.value.replace(/[^0-9.]/g, '');
+        const sanitized = numeric === '' ? '0' : numeric;
+        const property = `${type}${side.charAt(0).toUpperCase()}${side.slice(1)}`;
+        const valueWithUnit = `${sanitized}px`;
+
+        if (type === 'padding') {
+            setPaddingValues((prev) => ({ ...prev, [side]: sanitized }));
+        } else {
+            setMarginValues((prev) => ({ ...prev, [side]: sanitized }));
+        }
+
+        iframeRef.current.contentWindow.postMessage({
+            type: 'updateStyle',
+            property,
+            value: valueWithUnit,
+        }, '*');
     };
     
     // Add a new class
@@ -258,40 +293,68 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
                 </div>
 
                 {/* Padding + Margin */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                     <div>
-                        <label className='text-sm block mb-1'>Padding</label>
-                        <Select 
-                            value={padding}
-                            onValueChange={(value: string) => handleStyleChange('padding', value)}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Padding" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="0px">None</SelectItem>
-                                <SelectItem value="4px 8px">Small</SelectItem>
-                                <SelectItem value="8px 16px">Medium</SelectItem>
-                                <SelectItem value="16px 24px">Large</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <label className='text-sm block mb-1'>Padding (px)</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <Input
+                                type="number"
+                                min={0}
+                                value={paddingValues.top}
+                                onChange={(event) => handleSpacingInput('padding', 'top', event)}
+                                placeholder="Top"
+                            />
+                            <Input
+                                type="number"
+                                min={0}
+                                value={paddingValues.right}
+                                onChange={(event) => handleSpacingInput('padding', 'right', event)}
+                                placeholder="Right"
+                            />
+                            <Input
+                                type="number"
+                                min={0}
+                                value={paddingValues.bottom}
+                                onChange={(event) => handleSpacingInput('padding', 'bottom', event)}
+                                placeholder="Bottom"
+                            />
+                            <Input
+                                type="number"
+                                min={0}
+                                value={paddingValues.left}
+                                onChange={(event) => handleSpacingInput('padding', 'left', event)}
+                                placeholder="Left"
+                            />
+                        </div>
                     </div>
                     <div>
-                        <label className='text-sm block mb-1'>Margin</label>
-                        <Select 
-                            value={margin}
-                            onValueChange={(value: string) => handleStyleChange('margin', value)}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Margin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="0px">None</SelectItem>
-                                <SelectItem value="4px 8px">Small</SelectItem>
-                                <SelectItem value="8px 16px">Medium</SelectItem>
-                                <SelectItem value="16px 24px">Large</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <label className='text-sm block mb-1'>Margin (px)</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <Input
+                                type="number"
+                                value={marginValues.top}
+                                onChange={(event) => handleSpacingInput('margin', 'top', event)}
+                                placeholder="Top"
+                            />
+                            <Input
+                                type="number"
+                                value={marginValues.right}
+                                onChange={(event) => handleSpacingInput('margin', 'right', event)}
+                                placeholder="Right"
+                            />
+                            <Input
+                                type="number"
+                                value={marginValues.bottom}
+                                onChange={(event) => handleSpacingInput('margin', 'bottom', event)}
+                                placeholder="Bottom"
+                            />
+                            <Input
+                                type="number"
+                                value={marginValues.left}
+                                onChange={(event) => handleSpacingInput('margin', 'left', event)}
+                                placeholder="Left"
+                            />
+                        </div>
                     </div>
                 </div>
 

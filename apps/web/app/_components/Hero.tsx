@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@workspace/ui/components/button";
 import { HomeIcon, ImagePlus, LayoutDashboard, Send } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { getAccessToken } from "@/lib/auth-storage";
 import { useCreateProjectMutation } from "@/mutations/useProjectsMutations";
+import { subscriptionKeys } from "@/mutations/useSubscription";
 
 type ChatMessage = {
     role: "user" | "assistant" | "system";
@@ -41,6 +43,7 @@ function HeroSection() {
     const [userInput, setUserInput] = useState<string>("");
     const router = useRouter();
     const createProjectMutation = useCreateProjectMutation();
+    const queryClient = useQueryClient();
 
     const handleGenerate = async () => {
         const trimmedInput = userInput.trim();
@@ -70,6 +73,8 @@ function HeroSection() {
                 payload: { projectId, frameId, messages },
                 accessToken: token,
             });
+
+            queryClient.invalidateQueries({ queryKey: subscriptionKeys.status() });
 
             toast.success("Project created successfully");
             router.push(`/playground/${projectId}?frameId=${frameId}`);

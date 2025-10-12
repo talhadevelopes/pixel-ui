@@ -16,12 +16,18 @@ import Link from "next/link";
 import { useTheme } from "next-themes";
 
 import { ProjectHistory } from "./ProjectsHistory";
+import { useAuthToken } from "@/hooks/useAuthToken";
+import { useSubscriptionStatusQuery } from "@/mutations/useSubscription";
 
 export function AppSidebar() {
-    const userCredits = 2;
-    const totalCredits = 6;
-    const creditPercentage = (userCredits / totalCredits) * 100;
+    const accessToken = useAuthToken();
+    const { data: subscriptionStatus } = useSubscriptionStatusQuery(accessToken);
     const { theme, setTheme } = useTheme();
+
+    const userCredits = subscriptionStatus?.credits ?? 0;
+    const totalCredits = subscriptionStatus?.dailyCreditsLimit ?? 0;
+    const creditPercentage = totalCredits > 0 ? (userCredits / totalCredits) * 100 : 0;
+    const subscriptionLabel = subscriptionStatus?.subscriptionStatus ?? "inactive";
 
     return (
         <Sidebar className="border-r bg-card">
@@ -72,11 +78,16 @@ export function AppSidebar() {
                         </p>
                     </div>
                     <Progress value={creditPercentage} className="h-2" />
-                    {/* <p className="text-xs text-muted-foreground">
-                            ? "No credits available"
-                            : `${userCredits} credit${userCredits !== 1 ? "s" : ""} available`}
-                    </p> */}
+                    <p className="text-xs text-muted-foreground capitalize">
+                        Status: {subscriptionLabel}
+                    </p>
                 </div>
+
+                <Link href="/payments" className="w-full">
+                    <Button className="w-full gap-2" size="sm" variant="secondary">
+                        Manage Subscription
+                    </Button>
+                </Link>
 
                 {/* Theme Toggle */}
                 <Button

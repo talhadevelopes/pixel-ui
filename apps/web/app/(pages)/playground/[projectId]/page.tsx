@@ -11,6 +11,8 @@ import { fetchFrameDetails, saveFrameMessages, updateFrameDesign } from "@/servi
 import { createChatCompletion } from "@/services/chat.api";
 import { useAuthToken } from "@/hooks/useAuthToken";
 import { parseChatCompletionStream, stripCodeFences } from "@/utils/chat-stream";
+import { useQueryClient } from "@tanstack/react-query";
+import { subscriptionKeys } from "@/mutations/useSubscription";
 
 export interface FrameDetails {
     frameId: string;
@@ -76,6 +78,7 @@ export default function PlaygroundPage() {
     const sendMessageRef = useRef<((input: string, options?: { appendUserMessage?: boolean; presetMessages?: Messages[] }) => Promise<void>) | null>(null);
 
     const [isSaving, setIsSaving] = useState(false);
+    const queryClient = useQueryClient();
 
     const saveGeneratedCode = useCallback(async (code: string) => {
         if (!frameId || !projectId) return;
@@ -174,13 +177,29 @@ export default function PlaygroundPage() {
             }
 
             await saveMessages(finalMessages);
+            queryClient.invalidateQueries({ queryKey: subscriptionKeys.status() });
         } catch (error) {
             console.error("Error sending message", error);
-            toast.error(error instanceof Error ? error.message : "Failed to process message");
+            const typedError = error as Error & { status?: number; data?: unknown };
+            if (typedError?.status === 403) {
+                const info = (typedError.data as { nextReset?: string | null; credits?: number | null } | null) ?? null;
+                const nextReset = info?.nextReset ? new Date(info.nextReset) : null;
+                const nextResetText = nextReset ? nextReset.toLocaleString() : null;
+                const assistantMessage: Messages = {
+                    role: "assistant",
+                    content: nextResetText
+                        ? `You are out of credits. Your credits will reset around ${nextResetText}.`
+                        : "You are out of credits. Your daily credits will reset soon.",
+                };
+                setMessages(prev => [...prev, assistantMessage]);
+                queryClient.invalidateQueries({ queryKey: subscriptionKeys.status() });
+            } else {
+                toast.error(typedError instanceof Error ? typedError.message : "Failed to process message");
+            }
         } finally {
             setLoading(false);
         }
-    }, [accessToken, frameId, formatUserPrompt, messages, saveGeneratedCode, saveMessages]);
+    }, [accessToken, frameId, formatUserPrompt, messages, saveGeneratedCode, saveMessages, queryClient]);
 
     useEffect(() => {
         sendMessageRef.current = sendMessage;
