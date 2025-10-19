@@ -8,74 +8,84 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* Ocean-themed light colors - Vibrant Ocean */
+  --background: oklch(0.98 0.01 200); /* Almost white ocean foam */
+  --foreground: oklch(0.20 0.12 210); /* Deep ocean blue */
+  --card: oklch(0.99 0.005 200);
+  --card-foreground: oklch(0.20 0.12 210);
+  --popover: oklch(0.98 0.01 200);
+  --popover-foreground: oklch(0.20 0.12 210);
+
+  /* Primary - Vibrant Ocean Cyan */
+  --primary: oklch(0.58 0.28 190); /* Bold ocean cyan */
+  --primary-foreground: oklch(0.98 0.01 200);
+  --secondary: oklch(0.45 0.20 200); /* Deep ocean blue */
+  --secondary-foreground: oklch(0.98 0.01 200);
+
+  /* Accent - Ocean Teal */
+  --muted: oklch(0.88 0.02 200);
+  --muted-foreground: oklch(0.50 0.10 200);
+  --accent: oklch(0.55 0.25 195); /* Ocean teal/turquoise */
+  --accent-foreground: oklch(0.98 0.01 200);
+
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --border: oklch(0.88 0.02 200);
+  --input: oklch(0.93 0.01 200);
+  --ring: oklch(0.58 0.28 190);
+  --chart-1: oklch(0.58 0.28 190);
+  --chart-2: oklch(0.55 0.25 195);
+  --chart-3: oklch(0.52 0.22 200);
+  --chart-4: oklch(0.60 0.26 185);
+  --chart-5: oklch(0.56 0.24 205);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.98 0.01 200);
+  --sidebar-foreground: oklch(0.20 0.12 210);
+  --sidebar-primary: oklch(0.58 0.28 190);
+  --sidebar-primary-foreground: oklch(0.98 0.01 200);
+  --sidebar-accent: oklch(0.55 0.25 195);
+  --sidebar-accent-foreground: oklch(0.98 0.01 200);
+  --sidebar-border: oklch(0.88 0.02 200);
+  --sidebar-ring: oklch(0.58 0.28 190);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* Ocean-themed dark colors - Deep Ocean Night */
+  --background: oklch(0.12 0.03 210); /* Very deep ocean */
+  --foreground: oklch(0.92 0.03 190); /* Bright cyan foam */
+  --card: oklch(0.16 0.02 210);
+  --card-foreground: oklch(0.92 0.03 190);
+  --popover: oklch(0.12 0.03 210);
+  --popover-foreground: oklch(0.92 0.03 190);
+
+  --primary: oklch(0.68 0.30 190); /* Bright vibrant cyan */
+  --primary-foreground: oklch(0.12 0.03 210);
+  --secondary: oklch(0.45 0.20 200); /* Ocean blue */
+  --secondary-foreground: oklch(0.92 0.03 190);
+
+  --muted: oklch(0.28 0.02 210);
+  --muted-foreground: oklch(0.68 0.10 190);
+  --accent: oklch(0.62 0.28 195); /* Bright teal */
+  --accent-foreground: oklch(0.12 0.03 210);
+
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --border: oklch(0.28 0.02 210);
+  --input: oklch(0.20 0.02 210);
+  --ring: oklch(0.68 0.30 190);
+  --chart-1: oklch(0.68 0.30 190);
+  --chart-2: oklch(0.62 0.28 195);
+  --chart-3: oklch(0.58 0.26 200);
+  --chart-4: oklch(0.70 0.32 185);
+  --chart-5: oklch(0.65 0.29 205);
+  --sidebar: oklch(0.16 0.02 210);
+  --sidebar-foreground: oklch(0.92 0.03 190);
+  --sidebar-primary: oklch(0.68 0.30 190);
+  --sidebar-primary-foreground: oklch(0.92 0.03 190);
+  --sidebar-accent: oklch(0.62 0.28 195);
+  --sidebar-accent-foreground: oklch(0.92 0.03 190);
+  --sidebar-border: oklch(0.28 0.02 210);
+  --sidebar-ring: oklch(0.58 0.26 200);
 }
 
 @theme inline {
@@ -124,4 +134,118 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Enhanced ocean wave animations */
+@keyframes wave {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(25px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-40px) translateX(0px);
+  }
+  75% {
+    transform: translateY(-20px) translateX(-10px);
+  }
+}
+
+@keyframes oceanSwell {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.1);
+  }
+}
+
+@keyframes bubbleRise {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(100px);
+    opacity: 0;
+  }
+}
+
+/* New slideUp animation for bento cards */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* New shimmer animation for ocean effect */
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* New wave pulse animation */
+@keyframes wavePulse {
+  0%,
+  100% {
+    transform: scaleX(1) scaleY(1);
+  }
+  50% {
+    transform: scaleX(1.05) scaleY(0.95);
+  }
+}
+
+.animate-wave {
+  animation: wave 4s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-ocean-swell {
+  animation: oceanSwell 3s ease-in-out infinite;
+}
+
+.animate-bubble-rise {
+  animation: bubbleRise 8s ease-in infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.animate-wave-pulse {
+  animation: wavePulse 2s ease-in-out infinite;
 }
