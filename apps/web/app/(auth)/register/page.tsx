@@ -27,7 +27,7 @@ export default function RegisterPage() {
         },
     });
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event : any) => {
         event.preventDefault();
 
         const trimmedName = name.trim();

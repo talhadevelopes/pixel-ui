@@ -1,8 +1,8 @@
 // WorkspacePage.tsx
 "use client";
 
-import HeroSection from "@/app/(pages)/workspace/_components/Hero";
-import { AppHeader } from "./_components/AppHeader";
+import HeroSection from "@/components/workspace/Hero";
+import { AppHeader } from "../../../components/workspace/AppHeader";
 
 export default function WorkspacePage() {
     return (

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Messages } from "../page";
+import { Messages } from "../../app/(pages)/playground/[projectId]/page";
 import { Button } from "@workspace/ui/components/button";
 import { ArrowUpRight, Loader2, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";

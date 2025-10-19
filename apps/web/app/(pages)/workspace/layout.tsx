@@ -1,7 +1,7 @@
 import { SidebarProvider } from "@workspace/ui/components/sidebar"
 import React from "react"
-import { AppSidebar } from "./_components/AppSidebar"
-import { AppHeader } from "./_components/AppHeader"
+import { AppSidebar } from "../../../components/workspace/AppSidebar"
+import { AppHeader } from "../../../components/workspace/AppHeader"
 
 function WorkSpaceLayout({
     children

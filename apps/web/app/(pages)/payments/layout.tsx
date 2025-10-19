@@ -1,6 +1,6 @@
 import { SidebarProvider } from "@workspace/ui/components/sidebar";
 import React from "react";
-import { AppSidebar } from "../workspace/_components/AppSidebar";
+import { AppSidebar } from "../../../components/workspace/AppSidebar";
 
 function PaymentsLayout({
     children,

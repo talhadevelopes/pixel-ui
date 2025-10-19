@@ -50,7 +50,7 @@ export default function VerifyOtpPage() {
     }
   }, [emailParam, router]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e : any) => {
     e.preventDefault();
     const code = otp.trim();
     if (!emailParam) return;

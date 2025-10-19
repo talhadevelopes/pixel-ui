@@ -1,10 +1,10 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { PlaygroundHeader } from "./_components/PlaygroundHeader";
-import { WebsiteDesignSection } from "./_components/WebsiteDesign";
+import { PlaygroundHeader } from "../../../../components/playground/PlaygroundHeader";
+import { WebsiteDesignSection } from "../../../../components/playground/WebsiteDesign";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ChatSection from "./_components/ChatSection";
+import ChatSection from "../../../../components/playground/ChatSection";
 import { toast } from "sonner";
 import { getAccessToken } from "@/lib/auth-storage";
 import { fetchFrameDetails, saveFrameMessages, updateFrameDesign } from "@/services/frames.api";
