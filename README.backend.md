@@ -11,10 +11,11 @@
 - **[Contributing](#-contributing)**
 
 ## ✨ Features
-- **Authentication service** providing email/password registration, login, refresh tokens, and Google OAuth callbacks via `AuthController`.
+- **Authentication service** providing email/password registration, login, refresh tokens, and Google OAuth callbacks, Email Verification via `AuthController`.
 - **Project orchestration** that persists project metadata, frame records, and chat transcripts using Drizzle ORM.
 - **Chat streaming proxy** that relays requests to OpenRouter Gemini models and stores assistant responses.
 - **Secure Express setup** with `helmet`, `hpp`, CORS, and JWT-based route guards for private APIs.
+- Payments: Added Razorpay payments integration, consists of free, basic and pro plans with different features and prices.
 
 ## 🛠️ Tech Stack
 - **Runtime:** Node.js 20+ with Express 5.

@@ -16,6 +16,17 @@ export const googleCallbackSchema = z.object({
     state: z.string().optional(),
 });
 
+export const verifyOtpSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    otp: z.string().min(6, "OTP must be 6 digits").max(6, "OTP must be 6 digits"),
+});
+
+export const resendOtpSchema = z.object({
+    email: z.string().email("Invalid email address"),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type GoogleCallbackInput = z.infer<typeof googleCallbackSchema>;
+export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
+export type ResendOtpInput = z.infer<typeof resendOtpSchema>;

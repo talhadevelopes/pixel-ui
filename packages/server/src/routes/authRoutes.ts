@@ -5,6 +5,8 @@ import { protect } from '../middleware/auth';
 const router = express.Router();
 
 router.post('/register', AuthController.register);
+router.post('/verify-otp', AuthController.verifyOtp);
+router.post('/resend-otp', AuthController.resendOtp);
 router.post('/login', AuthController.login);
 router.post('/refresh', AuthController.refreshToken);
 router.get('/google', AuthController.redirectToGoogle);

@@ -8,17 +8,17 @@ import { toast } from "sonner";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 
-import { useRegisterMutation } from "@/mutations/useAuthMutations";
+import { useRegisterStartMutation } from "@/mutations/useAuthMutations";
 
 export default function RegisterPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const router = useRouter();
-    const registerMutation = useRegisterMutation({
-        onSuccess: () => {
-            toast.success("Account created. Please log in to continue.");
-            router.push("/login");
+    const registerMutation = useRegisterStartMutation({
+        onSuccess: ({ email }) => {
+            toast.success("OTP sent to your email");
+            router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
         },
         onError: (error) => {
             console.error("Register failed", error);

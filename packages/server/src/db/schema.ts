@@ -20,6 +20,16 @@ export const userTable = pgTable("users", {
     updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const tempRegistrationTable = pgTable("temp_register", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    password: text("password").notNull(),
+    otpCode: varchar("otp_code").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const projectTable = pgTable("projects", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     projectId: varchar("projectId").notNull().unique(), // Make it UNIQUE

@@ -16,6 +16,19 @@ export type RegisterPayload = {
     password: string;
 };
 
+export type RegisterStartResponse = {
+    email: string;
+};
+
+export type VerifyOtpPayload = {
+    email: string;
+    otp: string;
+};
+
+export type ResendOtpPayload = {
+    email: string;
+};
+
 export type UserProfile = {
     id: string;
     name: string;
@@ -52,7 +65,7 @@ export async function login(payload: LoginPayload): Promise<AuthTokens> {
     return data;
 }
 
-export async function register(payload: RegisterPayload): Promise<AuthTokens> {
+export async function registerStart(payload: RegisterPayload): Promise<RegisterStartResponse> {
     const response = await fetch(`${BASE_URL}${API.auth.register}`, {
         method: "POST",
         headers: jsonHeaders,
@@ -66,13 +79,57 @@ export async function register(payload: RegisterPayload): Promise<AuthTokens> {
         throw new Error(message);
     }
 
-    const data = body?.data as AuthTokens | undefined;
+    const data = body?.data as { email?: string } | undefined;
 
-    if (!data?.accessToken) {
+    if (!data?.email) {
         throw new Error("Invalid register response");
     }
 
-    return data;
+    return { email: data.email };
+}
+
+export async function verifyOtp(payload: VerifyOtpPayload): Promise<AuthTokens> {
+    const response = await fetch(`${BASE_URL}${API.auth.verifyOtp}`, {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify(payload),
+    });
+
+    const body = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        const message = body?.message ?? "Failed to verify OTP";
+        throw new Error(message);
+    }
+
+    const data = body?.data as { accessToken?: string; refreshToken?: string } | undefined;
+    if (!data?.accessToken) {
+        throw new Error("Invalid verify OTP response");
+    }
+
+    return { accessToken: data.accessToken, refreshToken: data.refreshToken };
+}
+
+export async function resendOtp(payload: ResendOtpPayload): Promise<RegisterStartResponse> {
+    const response = await fetch(`${BASE_URL}${API.auth.resendOtp}`, {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify(payload),
+    });
+
+    const body = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        const message = body?.message ?? "Failed to resend OTP";
+        throw new Error(message);
+    }
+
+    const data = body?.data as { email?: string } | undefined;
+    if (!data?.email) {
+        throw new Error("Invalid resend OTP response");
+    }
+
+    return { email: data.email };
 }
 
 export async function getProfile(accessToken: string): Promise<UserProfile> {

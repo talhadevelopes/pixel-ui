@@ -5,8 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { getAccessToken } from "@/lib/auth-storage";
 
-const PUBLIC_PATHS = new Set(["/", "/login", "/register"]);
-const AUTH_REDIRECT_PATHS = new Set(["/login", "/register"]);
+const PUBLIC_PATHS = new Set(["/", "/login", "/register", "/verify-otp"]);
+const AUTH_REDIRECT_PATHS = new Set(["/login", "/register", "/verify-otp"]);
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
     const router = useRouter();

@@ -7,6 +7,8 @@ export const API = {
         google: "/api/auth/google",
         googleCallback: "/api/auth/google-callback",
         profile: "/api/auth/profile",
+        verifyOtp: "/api/auth/verify-otp",
+        resendOtp: "/api/auth/resend-otp",
     },
     projects: {
         create: "/api/projects",
