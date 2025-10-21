@@ -13,6 +13,7 @@ import { useAuthToken } from "@/hooks/useAuthToken";
 import { parseChatCompletionStream, stripCodeFences } from "@/utils/chat-stream";
 import { useQueryClient } from "@tanstack/react-query";
 import { subscriptionKeys } from "@/mutations/useSubscription";
+import { Sidebar } from "@/components/custom/Sidebar";
 
 export interface FrameDetails {
     frameId: string;
@@ -277,20 +278,28 @@ export default function PlaygroundPage() {
     }, [frameId, generatedCode, projectId, saveGeneratedCode]);
 
     return (
-        <div className="px-6 py-8 min-h-screen bg-background">
-            <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-6">
-                <PlaygroundHeader
-                    projectId={projectId}
-                    frameId={frameId}
-                    messageCount={messages.length}
-                    onSave={handleManualSave}
-                    isSaving={isSaving}
-                />
-               <div className="grid gap-6 lg:grid-cols-[0.8fr_2fr] lg:min-h-[calc(100vh-18rem)]">
-                    <ChatSection loading={loading} messages={messages ?? []} onSend={(input) => sendMessage(input)} />
-                    <WebsiteDesignSection generatedCode={generatedCode} />
+        <div className="flex">
+
+            <Sidebar />
+
+            <div className="flex-1 px-6 py-8 min-h-screen bg-background ml-16">
+
+                <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-6">
+                    <PlaygroundHeader
+                        projectId={projectId}
+                        frameId={frameId}
+                        messageCount={messages.length}
+                        onSave={handleManualSave}
+                        isSaving={isSaving}
+                    />
+                    <div className="grid gap-6 lg:grid-cols-[0.8fr_2fr] lg:min-h-[calc(100vh-18rem)]">
+                        <ChatSection loading={loading} messages={messages ?? []} onSend={(input) => sendMessage(input)} />
+                        <WebsiteDesignSection generatedCode={generatedCode} />
+                    </div>
                 </div>
             </div>
+
         </div>
+
     );
 }

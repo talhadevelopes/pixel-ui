@@ -25,7 +25,7 @@ const baseDocument = `<!DOCTYPE html>
 </body>
 </html>`;
 
-export function WebPageTools({selectedScreenSize, setSelectedScreenSize, generatedCode}: any) {
+export function WebPageTools({selectedScreenSize, onScreenSizeChange, generatedCode}: any) {
     
     const [finalCode, setFinalCode] = useState<string>('');
     useEffect(() => {
@@ -57,8 +57,8 @@ export function WebPageTools({selectedScreenSize, setSelectedScreenSize, generat
     return (
         <div className="p-2 shadow rounded-xl w-full flex items-center justify-between">
             <div className="flex gap-2">
-                <Button variant={'ghost'} className={`${selectedScreenSize === 'web' ? 'border-primary' : null}`} onClick={()=> selectedScreenSize('web')}><Monitor/></Button>
-                <Button variant={'ghost'} className={`${selectedScreenSize === 'mobile' ? 'border-primary' : null}`} onClick={()=> selectedScreenSize('mobile')}><TabletSmartphone/></Button>
+                <Button variant={'ghost'} className={`${selectedScreenSize === 'web' ? 'border-primary' : ''}`} onClick={()=> onScreenSizeChange('web')}><Monitor/></Button>
+                <Button variant={'ghost'} className={`${selectedScreenSize === 'mobile' ? 'border-primary' : ''}`} onClick={()=> onScreenSizeChange('mobile')}><TabletSmartphone/></Button>
             </div>
             <div className="flex gap-2">
                 <Button variant={'outline'} onClick={()=> ViewInNewTab()}>View<SquareArrowOutUpRight/></Button>
