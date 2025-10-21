@@ -4,9 +4,8 @@ import { useMutation, type UseMutationOptions } from "@tanstack/react-query";
 
 import {
     createProject,
-    type CreateProjectPayload,
-    type ProjectCreationResult,
 } from "@/services/projects.api";
+import { CreateProjectPayload, ProjectCreationResult } from "@/types/projects.types";
 
 type MutationOptions<TResult, TVariables> = Omit<
     UseMutationOptions<TResult, Error, TVariables, unknown>,

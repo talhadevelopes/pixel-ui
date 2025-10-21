@@ -7,7 +7,7 @@ import { Menu, Zap, Sun, Moon } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
-import { useAuthToken } from "@/hooks/useAuthToken"
+import { useAuthToken } from "@/services/auth.api";
 import { useProfileQuery } from "@/queries/useAuthQueries"
 
 export function LandingHeader() {

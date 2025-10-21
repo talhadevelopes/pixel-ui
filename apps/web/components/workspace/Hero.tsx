@@ -1,13 +1,11 @@
-// HeroSection.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@workspace/ui/components/button";
-import { HomeIcon, ImagePlus, LayoutDashboard, Send } from "lucide-react";
+import { HomeIcon, ImagePlus, LayoutDashboard, Send, InfoIcon, StarIcon, MessageSquareIcon, DollarSignIcon, HelpCircleIcon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-
 import { getAccessToken } from "@/lib/auth-storage";
 import { useCreateProjectMutation } from "@/mutations/useProjectsMutations";
 import { subscriptionKeys } from "@/mutations/useSubscription";
@@ -19,15 +17,31 @@ type ChatMessage = {
 
 const suggestions = [
     {
-        label: "Dashboard",
-        prompt: "Create an Analytics dashboard",
-        icon: LayoutDashboard,
+        label: "About Section",
+        prompt: "Create an About Section",
+        icon: InfoIcon,
     },
     {
-        label: "Hero Section",
-        prompt: "Create a Hero Section",
-        icon: HomeIcon,
+        label: "Features Section",
+        prompt: "Create a Features Section",
+        icon: StarIcon,
     },
+    {
+        label: "Testimonials",
+        prompt: "Create a Testimonials Section",
+        icon: MessageSquareIcon,
+    },
+    {
+        label: "Pricing Section",
+        prompt: "Create a Pricing Section",
+        icon: DollarSignIcon,
+    },
+    {
+        label: "FAQ Section",
+        prompt: "Create an FAQ Section",
+        icon: HelpCircleIcon,
+    },
+
 ];
 
 const generateProjectId = () => {
@@ -94,11 +108,12 @@ function HeroSection() {
                 {/* Header Section */}
                 <div className="space-y-3 text-center">
                     <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                        What should we Design?
+                        What will you create today?
                     </h1>
                     <p className="text-lg text-muted-foreground">
-                        Generate, Edit and Explore Designs with AI
+                        Design, refine, and build stunning UIs with AI — instantly.
                     </p>
+
                 </div>
 
                 {/* Input Section */}

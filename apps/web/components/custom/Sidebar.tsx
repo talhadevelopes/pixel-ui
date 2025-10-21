@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Progress } from "@workspace/ui/components/progress";
-import { Sparkles, LogOut, Moon, Plus, Sun, FolderOpen, User, X } from "lucide-react";
+import { Sparkles, LogOut, Moon, Plus, Sun, FolderOpen, User, X, Home } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-
 import { ProjectHistory } from "../workspace/ProjectsHistory";
-import { useAuthToken } from "@/hooks/useAuthToken";
 import { useSubscriptionStatusQuery } from "@/mutations/useSubscription";
+import { useAuthToken } from "@/services/auth.api";
+import { useProfileQuery } from "@/queries/useAuthQueries";
 
 type SidebarTab = "profile" | "workspace" | null;
 
@@ -18,6 +18,7 @@ export function Sidebar() {
     const accessToken = useAuthToken();
     const { data: subscriptionStatus } = useSubscriptionStatusQuery(accessToken);
     const { theme, setTheme } = useTheme();
+    const { data: profile } = useProfileQuery(accessToken);
 
     const userCredits = subscriptionStatus?.credits ?? 0;
     const totalCredits = subscriptionStatus?.dailyCreditsLimit ?? 0;
@@ -29,7 +30,7 @@ export function Sidebar() {
     };
 
     return (
-<div className="flex h-screen fixed left-0 top-0 z-50">
+        <div className="flex h-[92%] fixed left-0 top-[4%] bottom-[4%] z-50">
             {/* Icon Sidebar */}
             <div className="z-20 rounded-br-2xl rounded-tr-2xl flex flex-col items-center flex-shrink-0 w-16 py-4 bg-card border-r border-border">
                 {/* Logo */}
@@ -41,14 +42,19 @@ export function Sidebar() {
 
                 {/* Icons */}
                 <div className="flex flex-col items-center flex-1 space-y-4">
+                    <button className={`p-2 transition-all rounded-lg shadow-md focus:outline-none ${activeTab === "profile"
+                        ? 'bg-primary text-white scale-110'
+                        : 'bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary'
+                        }`} title="workspace" >
+                        <Link href="/workspace" > <Home /></Link>
+                    </button>
                     {/* Profile Icon */}
                     <button
                         onClick={() => toggleTab("profile")}
-                        className={`p-2 transition-all rounded-lg shadow-md focus:outline-none ${
-                            activeTab === "profile"
-                                ? 'bg-primary text-white scale-110'
-                                : 'bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary'
-                        }`}
+                        className={`p-2 transition-all rounded-lg shadow-md focus:outline-none ${activeTab === "profile"
+                            ? 'bg-primary text-white scale-110'
+                            : 'bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary'
+                            }`}
                         title="Profile"
                     >
                         <User className="w-5 h-5" />
@@ -57,11 +63,10 @@ export function Sidebar() {
                     {/* Workspace Icon */}
                     <button
                         onClick={() => toggleTab("workspace")}
-                        className={`p-2 transition-all rounded-lg shadow-md focus:outline-none ${
-                            activeTab === "workspace"
-                                ? 'bg-primary text-white scale-110'
-                                : 'bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary'
-                        }`}
+                        className={`p-2 transition-all rounded-lg shadow-md focus:outline-none ${activeTab === "workspace"
+                            ? 'bg-primary text-white scale-110'
+                            : 'bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary'
+                            }`}
                         title="Workspace"
                     >
                         <FolderOpen className="w-5 h-5" />
@@ -93,7 +98,7 @@ export function Sidebar() {
 
             {/* Expandable Panel */}
             {activeTab && (
-                <div className="w-72 bg-card border-r border-border flex flex-col animate-in slide-in-from-left duration-300">
+                <div className="w-72 bg-card rounded-tr-2xl rounded-br-2xl rounded-tl-2xl flex flex-col animate-in slide-in-from-left duration-300">
                     {/* Profile Panel */}
                     {activeTab === "profile" && (
                         <div className="flex flex-col h-full">
@@ -113,16 +118,16 @@ export function Sidebar() {
                                 {/* User Info */}
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-lg">
-                                        U
+                                        {(profile?.name?.[0] ?? profile?.email?.[0] ?? 'U').toUpperCase()}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-foreground truncate">
                                             {/* Placeholder for username */}
-                                            John Doe
+                                            {profile?.name ?? ""}
                                         </p>
                                         <p className="text-xs text-muted-foreground truncate">
                                             {/* Placeholder for email */}
-                                            john.doe@example.com
+                                            {profile?.email ?? ""}
                                         </p>
                                     </div>
                                 </div>
@@ -196,15 +201,7 @@ export function Sidebar() {
                                 </button>
                             </div>
 
-                            {/* New Project Button */}
-                            <div className="p-4 border-b border-border">
-                                <Link href="/workspace/new" className="w-full block">
-                                    <Button className="w-full gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg" size="sm">
-                                        <Plus className="h-4 w-4" />
-                                        New Project
-                                    </Button>
-                                </Link>
-                            </div>
+
 
                             {/* Projects List */}
                             <div className="flex-1 overflow-y-auto p-4 space-y-2">

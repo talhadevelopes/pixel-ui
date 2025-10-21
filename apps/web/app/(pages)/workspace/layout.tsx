@@ -1,5 +1,4 @@
 import { Sidebar } from "@/components/custom/Sidebar"
-import { SidebarProvider } from "@workspace/ui/components/sidebar"
 import React from "react"
 
 function WorkSpaceLayout({
@@ -8,7 +7,6 @@ function WorkSpaceLayout({
     children: React.ReactNode
 }>) {
     return (
-        <SidebarProvider>
             <div className="flex h-screen w-full bg-background">
                 <Sidebar />
                 <main className="flex-1 overflow-auto">
@@ -17,7 +15,6 @@ function WorkSpaceLayout({
                     </div>
                 </main>
             </div>
-        </SidebarProvider>
     )
 }
 

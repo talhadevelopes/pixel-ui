@@ -5,17 +5,17 @@ import { useRouter } from "next/navigation";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { useAuthToken } from "@/hooks/useAuthToken";
 import {
     useSubscriptionPlansQuery,
     useSubscriptionStatusQuery,
     useCreateSubscriptionMutation,
     useCancelSubscriptionMutation,
 } from "@/mutations/useSubscription";
-import type { SubscriptionPlan } from "@/services/subscriptions.api";
+import { SubscriptionPlan } from "@/types/subscription.types";
+import { useAuthToken } from "@/services/auth.api";
+import TopLoader from "@/components/custom/Loader";
 
 const PAID_TIERS: Array<"pro" | "premium"> = ["pro", "premium"];
 type PlanCard = SubscriptionPlan & {
@@ -110,7 +110,7 @@ export default function PaymentsPage() {
                 {isBusy && (
                     <Card className="md:col-span-3">
                         <CardContent className="flex items-center justify-center py-12 text-muted-foreground">
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading plans...
+                            <TopLoader /> Loading plans...
                         </CardContent>
                     </Card>
                 )}
@@ -162,7 +162,7 @@ export default function PaymentsPage() {
                                             className="w-full"
                                             onClick={() => handleSubscribe(plan.tier as "pro" | "premium")}
                                         >
-                                            {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                            {isCreating ? <TopLoader /> : null}
                                             {buttonLabel}
                                         </Button>
                                     ) : (
@@ -185,7 +185,7 @@ export default function PaymentsPage() {
                             disabled={isCancelling}
                             onClick={handleCancel}
                         >
-                            {isCancelling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isCancelling && <TopLoader />}
                             Cancel subscription
                         </Button>
                     </div>

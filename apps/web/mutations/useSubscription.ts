@@ -7,13 +7,9 @@ import {
     createSubscription,
     fetchSubscriptionPlans,
     fetchSubscriptionStatus,
-    type CreateSubscriptionPayload,
-    type CreateSubscriptionResult,
-    type SubscriptionPlansResponse,
-    type SubscriptionStatus,
     verifySubscription,
-    type VerifySubscriptionPayload,
 } from "@/services/subscriptions.api";
+import { CreateSubscriptionPayload, CreateSubscriptionResult, SubscriptionPlansResponse, SubscriptionStatus, VerifySubscriptionPayload } from "@/types/subscription.types";
 
 export const subscriptionKeys = {
     plans: () => ["subscriptions", "plans"] as const,

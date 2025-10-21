@@ -1,8 +1,8 @@
 import { Outfit } from "next/font/google"
 import "@workspace/ui/globals.css"
-import { Providers } from "@/components/providers"
+import { Providers } from "@/components/global/ProviderWrapper"
 import { Toaster } from "sonner"
-import { RequireAuth } from "@/components/require-auth"
+import { RequireAuth } from "@/components/global/ProtectedRoutes"
 
 const fontSans = Outfit({
   subsets: ["latin"],

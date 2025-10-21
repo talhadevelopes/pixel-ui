@@ -1,29 +1,8 @@
 import { Button } from "@workspace/ui/components/button";
-import { BookAIcon, Code, Download, Monitor, SquareArrowOutUpRight, TabletSmartphone } from "lucide-react";
+import { Code, Download, Monitor, SquareArrowOutUpRight, TabletSmartphone } from "lucide-react";
 import { ViewCodeBlock } from "./ViewCodeBlock";
 import { useEffect, useState } from "react";
-
-const baseDocument = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Generated design preview" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
-  <script src="https://unpkg.com/@popperjs/core@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
-</head>
-<body>
-  <div id="root">
-  {code}</div>
-</body>
-</html>`;
+import { baseDocument } from "@/utils/htmlTemplate";
 
 export function WebPageTools({selectedScreenSize, onScreenSizeChange, generatedCode}: any) {
     

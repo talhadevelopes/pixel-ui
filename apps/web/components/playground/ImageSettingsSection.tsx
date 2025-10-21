@@ -17,7 +17,7 @@ import {
     TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
 import ImageKit from "imagekit";
-import { useDesignStore } from "@/app/store/designStore";  // Import the store
+import { useDesignStore } from '@/store/useDesignStore';
 
 type Props = {
     selectedEl: HTMLImageElement;

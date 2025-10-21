@@ -2,7 +2,8 @@
 
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 
-import { fetchFrameDetails, type FrameDetails } from "@/services/frames.api";
+import { fetchFrameDetails } from "@/services/frames.api";
+import { FrameDetails } from "@/types/frames.types";
 
 const frameDetailsKey = (frameId: string, projectId: string) => ["frames", projectId, frameId] as const;
 

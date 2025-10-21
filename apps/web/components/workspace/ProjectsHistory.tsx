@@ -5,15 +5,9 @@ import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
-
-import { deleteProject, fetchProjects, type ProjectWithRelations } from "@/services/projects.api";
-import { useAuthToken } from "@/hooks/useAuthToken";
-
-//here use that backend Get endpoint to get all the project list frames etc
-//create a fucntion in the services folder, use tanstackquery
-//then use that function in the component
-//then map through the data and display it
-//after that use this component in the in the sidebar
+import { deleteProject, fetchProjects } from "@/services/projects.api";
+import { useAuthToken } from "@/services/auth.api";
+import { ProjectWithRelations } from "@/types/projects.types";
 
 type ProjectDisplay = {
     id: number;

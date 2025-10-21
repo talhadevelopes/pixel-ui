@@ -7,17 +7,11 @@ import {
     registerStart,
     verifyOtp,
     resendOtp,
-    type AuthTokens,
-    type LoginPayload,
-    type RegisterPayload,
-    type RegisterStartResponse,
-    type VerifyOtpPayload,
-    type ResendOtpPayload,
-} from "@/services/auth.api";
-import {
     exchangeGoogleCode,
-    type GoogleCallbackResponse,
-} from "@/services/google-auth";
+} from "@/services/auth.api";
+import { AuthTokens, GoogleCallbackResponse, LoginPayload, RegisterPayload, RegisterStartResponse, ResendOtpPayload, VerifyOtpPayload } from "@/types/auth.types";
+
+
 
 type MutationOptions<TResult, TVariables> = Omit<
     UseMutationOptions<TResult, Error, TVariables, unknown>,

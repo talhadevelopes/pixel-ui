@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { WebPageTools } from "./WebpageTools";
 import ElementSettingsSection from "./ElementSettingSection";
 import ImageSettingsAction from "./ImageSettingsSection";
-import { useDesignStore } from "@/app/store/designStore";
 import { X } from "lucide-react";
+import { useDesignStore } from '@/store/useDesignStore';
+import { html } from "@/utils/htmlTemplate";
 
 interface WebsiteDesignSectionProps {
     generatedCode: string;
@@ -23,10 +24,6 @@ const stripFences = (code: string) => {
 
 const sanitizeScripts = (code: string) => {
     console.log("sanitizeScripts input length:", code?.length);
-    
-    // Don't comment out scripts - keep them as is so they execute
-    // We only want to remove text that appears OUTSIDE script tags
-    
     return code;
 };
 
@@ -34,19 +31,19 @@ const sanitizeScripts = (code: string) => {
 const stripTrailingMetadata = (code: string) => {
     console.log("stripTrailingMetadata input length:", code?.length);
     let result = code;
-    
+
     // Step 1: Find the VERY LAST closing tag in the HTML
     const allClosingTags = result.match(/<\/[^>]+>/g);
     if (allClosingTags && allClosingTags.length > 0) {
         const lastTag = allClosingTags[allClosingTags.length - 1];
-        const lastTagIndex = result.lastIndexOf(lastTag);
-        
+        const lastTagIndex = result.lastIndexOf(lastTag ?? '');
+
         if (lastTagIndex !== -1) {
             // Cut everything after the last closing tag
-            result = result.substring(0, lastTagIndex + lastTag.length);
+            result = result.substring(0, lastTagIndex + (lastTag ?? '').length);
         }
     }
-    
+
     result = result.trim();
     console.log("stripTrailingMetadata output length:", result?.length);
     return result;
@@ -62,6 +59,7 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
 
     useEffect(() => {
         if (iframeRef.current) {
+            //@ts-ignore
             setIframeRef(iframeRef);
         }
 
@@ -103,23 +101,23 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
         console.log("=== IFRAME UPDATE EFFECT ===");
         console.log("renderedCode:", renderedCode?.substring(0, 100));
         console.log("iframeRef.current:", iframeRef.current);
-        
+
         if (!iframeRef.current) {
             console.log("No iframe ref, returning");
             return;
         }
 
         let processedCode = "";
-        
+
         if (renderedCode && renderedCode.length > 0 && renderedCode !== "undefined") {
             console.log("Processing code, length:", renderedCode.length);
             try {
                 processedCode = stripTrailingMetadata(renderedCode);
                 console.log("After stripTrailingMetadata, length:", processedCode.length);
-                
+
                 processedCode = stripFences(processedCode);
                 console.log("After stripFences, length:", processedCode.length);
-                
+
                 processedCode = sanitizeScripts(processedCode);
                 console.log("After sanitizeScripts, length:", processedCode.length);
                 console.log("Final processedCode:", processedCode?.substring(0, 200));
@@ -140,132 +138,10 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
         setLastCode(processedCode);
         setIsIframeReady(false);
 
-        const html = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <script src="https://cdn.tailwindcss.com"><\/script>
-                <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"><\/script>
-                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
-                <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"><\/script>
-                <script src="https://unpkg.com/@popperjs/core@2"><\/script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer><\/script>
-                <style>
-                    body { 
-                        margin: 0; 
-                        padding: 0;
-                    }
-                    [contenteditable="true"]:focus { outline: none; }
-                </style>
-            </head>
-            <body>
-                ${processedCode || "<div style='padding: 40px; text-align: center; color: #999;'>No design generated yet. Ask AI to create one.</div>"}
-                <script>
-                    console.log("Iframe loaded");
-                    
-                    document.addEventListener('DOMContentLoaded', () => {
-                        console.log("Iframe DOMContentLoaded");
-                        let hoverEL = null;
-                        let selectedEL = null;
 
-                        const handleMouseOver = (e) => {
-                            if (selectedEL) return;
-                            const target = e.target.closest('*:not(html):not(head):not(body):not(script):not(style)');
-                            if (!target) return;
-                            
-                            if (hoverEL && hoverEL === target) {
-                                hoverEL.style.outline = "";
-                            }
-                            hoverEL = target;
-                            hoverEL.style.outline = "2px dotted blue";
-                            
-                            window.parent.postMessage({ 
-                                type: 'elementHover', 
-                                tagName: target.tagName,
-                                id: target.id,
-                                className: target.className
-                            }, '*');
-                        };
-
-                        const handleMouseOut = (e) => {
-                            if (selectedEL) return;
-                            if (hoverEL) {
-                                hoverEL.style.outline = "";
-                                hoverEL = null;
-                            }
-                        };
-
-                        const handleClick = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            
-                            const target = e.target.closest('*:not(html):not(head):not(body):not(script):not(style)');
-                            if (!target) return;
-                            
-                            if (selectedEL && selectedEL !== target) {
-                                selectedEL.style.outline = "";
-                            }
-                            
-                            selectedEL = target;
-                            selectedEL.style.outline = "2px solid red";
-                            
-                            console.log("Element selected:", selectedEL.tagName, selectedEL.src);
-                            
-                            window.parent.postMessage({ 
-                                type: 'elementSelected',
-                                element: {
-                                    tagName: selectedEL.tagName,
-                                    id: selectedEL.id,
-                                    className: selectedEL.className,
-                                    innerHTML: selectedEL.innerHTML,
-                                    outerHTML: selectedEL.outerHTML,
-                                    src: selectedEL.src || null,
-                                    alt: selectedEL.alt || null,
-                                    width: selectedEL.width || null,
-                                    height: selectedEL.height || null,
-                                    style: {
-                                        borderRadius: selectedEL.style.borderRadius || '0px'
-                                    }
-                                }
-                            }, '*');
-                        };
-
-                        document.addEventListener('mouseover', handleMouseOver);
-                        document.addEventListener('mouseout', handleMouseOut);
-                        document.addEventListener('click', handleClick);
-                        
-                        window.addEventListener('message', (event) => {
-                            console.log("Iframe received message:", event.data);
-                            
-                            if (event.data.type === 'updateStyle' && selectedEL) {
-                                selectedEL.style[event.data.property] = event.data.value;
-                            } else if (event.data.type === 'addClass' && selectedEL) {
-                                selectedEL.classList.add(event.data.className);
-                            } else if (event.data.type === 'removeClass' && selectedEL) {
-                                selectedEL.classList.remove(event.data.className);
-                            } else if (event.data.type === 'updateImageSrc' && selectedEL) {
-                                console.log("Updating image src to:", event.data.src);
-                                if (selectedEL.tagName === 'IMG') {
-                                    selectedEL.src = event.data.src;
-                                    console.log("Image src updated successfully");
-                                } else {
-                                    console.warn("Selected element is not an IMG tag:", selectedEL.tagName);
-                                }
-                            }
-                        });
-                    });
-                <\/script>
-            </body>
-            </html>
-        `;
 
         console.log("Setting iframe srcdoc, length:", html.length);
-        iframeRef.current.srcdoc = html;
+        iframeRef.current.srcdoc = html(processedCode);
         iframeRef.current.onload = () => setIsIframeReady(true);
 
         const handleMessage = (event: MessageEvent) => {
@@ -286,19 +162,18 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
 
     return (
         <div className="flex flex-col h-full w-full">
-            <WebPageTools 
+            <WebPageTools
                 selectedScreenSize={selectedScreenSize}
                 onScreenSizeChange={setSelectedScreenSize}
                 generatedCode={generatedCode}
             />
-            
+
             <div className="flex flex-1 overflow-hidden relative bg-gray-50">
                 {/* Left Settings Panel */}
                 <div
-                    className={`bg-white border-r border-gray-200 shadow-lg transform transition-all duration-300 overflow-y-auto ${
-                        showSettings ? 'w-96' : 'w-0'
-                    }`}
-                    style={{ 
+                    className={`bg-white border-r border-gray-200 shadow-lg transform transition-all duration-300 overflow-y-auto ${showSettings ? 'w-96' : 'w-0'
+                        }`}
+                    style={{
                         height: 'calc(100vh - 120px)'
                     }}
                 >
@@ -316,10 +191,11 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
 
                             <div className="p-4">
                                 {selectedElement?.tagName?.toLowerCase() === 'img' ? (
+                                    //@ts-ignore
                                     <ImageSettingsAction selectedEl={selectedElement} />
                                 ) : selectedElement ? (
-                                    <ElementSettingsSection 
-                                        selectedElement={selectedElement} 
+                                    <ElementSettingsSection
+                                        selectedElement={selectedElement}
                                         clearSelection={handleClearSelection}
                                     />
                                 ) : (

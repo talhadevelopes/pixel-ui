@@ -1,6 +1,5 @@
-import { SidebarProvider } from "@workspace/ui/components/sidebar";
+import { Sidebar } from "@/components/custom/Sidebar";
 import React from "react";
-import { AppSidebar } from "../../../components/custom/Sidebar";
 
 function PaymentsLayout({
     children,
@@ -8,14 +7,12 @@ function PaymentsLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <SidebarProvider>
-            <div className="flex h-screen w-full bg-background">
-                <AppSidebar />
-                <main className="flex-1 overflow-auto">
-                    <div className="min-h-full w-full">{children}</div>
-                </main>
-            </div>
-        </SidebarProvider>
+        <div className="flex h-screen w-full bg-background">
+            <Sidebar />
+            <main className="flex-1 overflow-auto">
+                <div className="min-h-full w-full">{children}</div>
+            </main>
+        </div>
     );
 }
 

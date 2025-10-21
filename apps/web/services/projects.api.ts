@@ -1,44 +1,5 @@
+import { CreateProjectPayload, ProjectCreationResult, ProjectWithRelations } from "@/types/projects.types";
 import { API, BASE_URL } from "./api";
-
-export type ProjectChatMessage = {
-    role: "user" | "assistant" | "system";
-    content: string;
-};
-
-export type CreateProjectPayload = {
-    projectId: string;
-    frameId: string;
-    messages: ProjectChatMessage[];
-};
-
-export type ProjectCreationResult = {
-    id?: string;
-    projectId?: string;
-    frameId?: string;
-};
-
-export type ProjectChatRecord = {
-    id: number;
-    chatMessage: unknown;
-    createdBy: string;
-    createdAt: string | null;
-    frameId: string | null;
-};
-
-export type ProjectFrameRecord = {
-    frameId: string;
-    designCode: string | null;
-    createdAt: string | null;
-    chats: ProjectChatRecord[];
-};
-
-export type ProjectWithRelations = {
-    id: number;
-    projectId: string;
-    createdAt: string | null;
-    updatedAt: string | null;
-    frames: ProjectFrameRecord[];
-};
 
 export async function createProject(payload: CreateProjectPayload, accessToken: string) {
     const response = await fetch(`${BASE_URL}${API.projects.create}`, {

@@ -5,7 +5,7 @@ import { SwatchBook, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@workspace/ui/components/select";
 import { Input } from "@workspace/ui/components/input";
 import { Button } from "@workspace/ui/components/button";
-import { useDesignStore } from "@/app/store/designStore";
+import { useDesignStore } from '@/store/useDesignStore';
 
 interface Props {
     selectedElement: HTMLElement | null;

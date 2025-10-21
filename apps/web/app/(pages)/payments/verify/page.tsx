@@ -6,8 +6,7 @@ import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { toast } from "sonner";
-
-import { useAuthToken } from "@/hooks/useAuthToken";
+import { useAuthToken } from "@/services/auth.api";
 import { useVerifySubscriptionMutation } from "@/mutations/useSubscription";
 
 export default function VerifySubscriptionPage() {

@@ -2,7 +2,8 @@
 
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 
-import { getProfile, type UserProfile } from "@/services/auth.api";
+import { getProfile } from "@/services/auth.api";
+import { UserProfile } from "@/types/auth.types";
 
 const authProfileQueryKey = ["auth", "profile"] as const;
 

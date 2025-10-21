@@ -238,7 +238,7 @@ export class ProjectController {
                     eq(projectTable.createdBy, createdBy),
                 ))
                 .limit(1)
-                .then((rows) => rows[0] ?? null);
+                .then((rows : any) => rows[0] ?? null);
 
             if (!project) {
                 return sendError(res, "Project not found", 404);
@@ -250,8 +250,8 @@ export class ProjectController {
                 .where(eq(frameTable.projectId, projectId));
 
             const frameIds = frames
-                .map((frame) => frame.frameId)
-                .filter((frameId): frameId is string => Boolean(frameId));
+                .map((frame: any) => frame.frameId)
+                .filter((frameId : any): frameId is string => Boolean(frameId));
 
             if (frameIds.length > 0) {
                 await db

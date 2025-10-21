@@ -15,11 +15,11 @@ export function ViewCodeBlock({ children, code }: any) {
                 toast.error("No code to copy");
                 return;
             }
-            
+
             await navigator.clipboard.writeText(code);
             setIsCopied(true);
             toast.success("Copied to clipboard!");
-            
+
             // Reset the icon after 2 seconds
             setTimeout(() => setIsCopied(false), 2000);
         } catch (error) {
@@ -27,13 +27,19 @@ export function ViewCodeBlock({ children, code }: any) {
             toast.error("Failed to copy code");
         }
     };
-    
+
     return (
         <Dialog>
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="max-w-[80vw] max-h-[80vh] overflow-auto">
+            <DialogContent
+                className="max-h-[80vh] overflow-auto"
+                style={{
+                    width: '1400px',
+                    maxWidth: '1400px'
+                }}
+            >
                 <DialogHeader>
                     <div className="flex items-center justify-between">
                         <DialogTitle>Source Code</DialogTitle>

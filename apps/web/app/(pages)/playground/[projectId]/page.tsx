@@ -6,14 +6,13 @@ import { WebsiteDesignSection } from "../../../../components/playground/WebsiteD
 import { useCallback, useEffect, useRef, useState } from "react";
 import ChatSection from "../../../../components/playground/ChatSection";
 import { toast } from "sonner";
-import { getAccessToken } from "@/lib/auth-storage";
 import { fetchFrameDetails, saveFrameMessages, updateFrameDesign } from "@/services/frames.api";
 import { createChatCompletion } from "@/services/chat.api";
-import { useAuthToken } from "@/hooks/useAuthToken";
 import { parseChatCompletionStream, stripCodeFences } from "@/utils/chat-stream";
 import { useQueryClient } from "@tanstack/react-query";
 import { subscriptionKeys } from "@/mutations/useSubscription";
 import { Sidebar } from "@/components/custom/Sidebar";
+import { useAuthToken } from "@/services/auth.api";
 
 export interface FrameDetails {
     frameId: string;
@@ -285,6 +284,11 @@ export default function PlaygroundPage() {
             <div className="flex-1 px-6 py-8 min-h-screen bg-background ml-16">
 
                 <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-6">
+                    
+                    <div className="grid gap-6 lg:grid-cols-[0.8fr_2fr] lg:min-h-[calc(100vh-18rem)]">
+                        <ChatSection loading={loading} messages={messages ?? []} onSend={(input) => sendMessage(input)} />
+                        <WebsiteDesignSection generatedCode={generatedCode} />
+                    </div>
                     <PlaygroundHeader
                         projectId={projectId}
                         frameId={frameId}
@@ -292,10 +296,6 @@ export default function PlaygroundPage() {
                         onSave={handleManualSave}
                         isSaving={isSaving}
                     />
-                    <div className="grid gap-6 lg:grid-cols-[0.8fr_2fr] lg:min-h-[calc(100vh-18rem)]">
-                        <ChatSection loading={loading} messages={messages ?? []} onSend={(input) => sendMessage(input)} />
-                        <WebsiteDesignSection generatedCode={generatedCode} />
-                    </div>
                 </div>
             </div>
 

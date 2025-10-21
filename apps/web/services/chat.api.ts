@@ -1,15 +1,5 @@
 import { API, BASE_URL } from "./api";
-
-export type ChatCompletionMessage = {
-    role: string;
-    content: string;
-};
-
-export type CreateChatCompletionPayload = {
-    accessToken: string;
-    frameId: string;
-    messages: ChatCompletionMessage[];
-};
+import { CreateChatCompletionPayload } from "@/types/chat.types";
 
 export async function createChatCompletion({ accessToken, frameId, messages }: CreateChatCompletionPayload): Promise<Response> {
     const response = await fetch(`${BASE_URL}${API.chat.completions}`, {

@@ -1,46 +1,31 @@
+import { setAuthTokens } from "@/lib/auth-storage";
 import { API, BASE_URL } from "./api";
+import { AuthTokens, GoogleCallbackResponse, jsonHeaders, LoginPayload, RegisterPayload, RegisterStartResponse, ResendOtpPayload, UserProfile, VerifyOtpPayload } from "@/types/auth.types";
+import { useEffect, useState } from "react";
+import { getAccessToken } from "@/lib/auth-storage";
 
-export type AuthTokens = {
-    accessToken: string;
-    refreshToken?: string;
-};
+//this hook to check auth status
+export function useAuthToken() {
+    const [token, setToken] = useState<string | null>(() => getAccessToken());
 
-export type LoginPayload = {
-    email: string;
-    password: string;
-};
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
 
-export type RegisterPayload = {
-    name: string;
-    email: string;
-    password: string;
-};
+        const handleAuthChange = () => {
+            setToken(getAccessToken());
+        };
 
-export type RegisterStartResponse = {
-    email: string;
-};
+        window.addEventListener("auth-change", handleAuthChange);
 
-export type VerifyOtpPayload = {
-    email: string;
-    otp: string;
-};
+        return () => {
+            window.removeEventListener("auth-change", handleAuthChange);
+        };
+    }, []);
 
-export type ResendOtpPayload = {
-    email: string;
-};
-
-export type UserProfile = {
-    id: string;
-    name: string;
-    email: string;
-    credits: number | null;
-};
-
-export type GoogleCallbackResponse = UserProfile & AuthTokens;
-
-const jsonHeaders: HeadersInit = {
-    "Content-Type": "application/json",
-};
+    return token;
+}
 
 export async function login(payload: LoginPayload): Promise<AuthTokens> {
     const response = await fetch(`${BASE_URL}${API.auth.login}`, {
@@ -158,6 +143,7 @@ export async function getProfile(accessToken: string): Promise<UserProfile> {
 }
 
 export async function exchangeGoogleCode(code: string, state?: string): Promise<GoogleCallbackResponse> {
+    // Make the API call
     const response = await fetch(`${BASE_URL}${API.auth.googleCallback}`, {
         method: "POST",
         headers: jsonHeaders,
@@ -176,6 +162,12 @@ export async function exchangeGoogleCode(code: string, state?: string): Promise<
     if (!data?.accessToken) {
         throw new Error("Invalid Google login response");
     }
+
+    // Store the tokens (side effect)
+    setAuthTokens({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+    });
 
     return data;
 }

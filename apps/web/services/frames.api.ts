@@ -1,21 +1,5 @@
+import { FrameIdentifier, FrameDetails, FrameMessage } from "@/types/frames.types";
 import { API, BASE_URL } from "./api";
-
-export type FrameMessage = {
-    role: string;
-    content: string;
-};
-
-export type FrameDetails = {
-    frameId: string;
-    projectId: string;
-    designCode: string | null;
-    chatMessages: FrameMessage[] | null;
-};
-
-export type FrameIdentifier = {
-    frameId: string;
-    projectId: string;
-};
 
 export async function fetchFrameDetails({ frameId, projectId }: FrameIdentifier, accessToken: string) {
     const query = new URLSearchParams({ frameId, projectId }).toString();

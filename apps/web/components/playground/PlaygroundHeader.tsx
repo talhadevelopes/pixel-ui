@@ -1,6 +1,6 @@
 import { Button } from "@workspace/ui/components/button"
 import { BookAIcon, Loader2, Save } from "lucide-react"
-import { useDesignStore } from "@/app/store/designStore"
+import { useDesignStore } from '@/store/useDesignStore';
 
 type PlaygroundHeaderProps = {
   projectId?: string
