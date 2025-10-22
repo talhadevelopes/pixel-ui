@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { WebPageTools } from "./WebpageTools";
 import ElementSettingsSection from "./ElementSettingSection";
 import ImageSettingsAction from "./ImageSettingsSection";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { useDesignStore } from '@/store/useDesignStore';
 import { html } from "@/utils/htmlTemplate";
 
 interface WebsiteDesignSectionProps {
     generatedCode: string;
+    projectId?: string;
+    frameId?: string;
 }
 
 const stripFences = (code: string) => {
@@ -27,19 +29,16 @@ const sanitizeScripts = (code: string) => {
     return code;
 };
 
-// FIXED: Better cleanup of trailing metadata and scripts
 const stripTrailingMetadata = (code: string) => {
     console.log("stripTrailingMetadata input length:", code?.length);
     let result = code;
 
-    // Step 1: Find the VERY LAST closing tag in the HTML
     const allClosingTags = result.match(/<\/[^>]+>/g);
     if (allClosingTags && allClosingTags.length > 0) {
         const lastTag = allClosingTags[allClosingTags.length - 1];
         const lastTagIndex = result.lastIndexOf(lastTag ?? '');
 
         if (lastTagIndex !== -1) {
-            // Cut everything after the last closing tag
             result = result.substring(0, lastTagIndex + (lastTag ?? '').length);
         }
     }
@@ -49,13 +48,15 @@ const stripTrailingMetadata = (code: string) => {
     return result;
 };
 
-export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProps) {
+export function WebsiteDesignSection({ generatedCode, projectId, frameId }: WebsiteDesignSectionProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [selectedScreenSize, setSelectedScreenSize] = useState<string>('web');
     const [showSettings, setShowSettings] = useState(false);
     const { selectedElement, setSelectedElement, setIframeRef } = useDesignStore();
     const [renderedCode, setRenderedCode] = useState(generatedCode);
     const [isIframeReady, setIsIframeReady] = useState(false);
+
+    const [isViewingSnapshot, setIsViewingSnapshot] = useState(false);
 
     useEffect(() => {
         if (iframeRef.current) {
@@ -88,12 +89,17 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
     };
 
     useEffect(() => {
-        const timer = window.setTimeout(() => {
-            setRenderedCode(generatedCode);
-        }, 150);
+        // Only update if we're not viewing a snapshot
+        if (!isViewingSnapshot) {
+            const timer = window.setTimeout(() => {
+                setRenderedCode(generatedCode);
+            }, 150);
+            setIsViewingSnapshot(false);
 
-        return () => window.clearTimeout(timer);
-    }, [generatedCode]);
+
+            return () => window.clearTimeout(timer);
+        }
+    }, [generatedCode, isViewingSnapshot]);
 
     const [lastCode, setLastCode] = useState("");
 
@@ -130,15 +136,12 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
             processedCode = "";
         }
 
-        // CRITICAL FIX: Only update if code actually changed
         if (processedCode === lastCode) {
             console.log("Code hasn't changed, skipping update");
             return;
         }
         setLastCode(processedCode);
         setIsIframeReady(false);
-
-
 
         console.log("Setting iframe srcdoc, length:", html.length);
         iframeRef.current.srcdoc = html(processedCode);
@@ -166,12 +169,19 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
                 selectedScreenSize={selectedScreenSize}
                 onScreenSizeChange={setSelectedScreenSize}
                 generatedCode={generatedCode}
+                projectId={projectId}
+                frameId={frameId}
+                onPreviewHtml={(code: string) => {
+                    console.log("📥 Received preview code:", code?.substring(0, 100));
+                    setRenderedCode(code);
+                    setIsViewingSnapshot(true);
+                }}
             />
 
-            <div className="flex flex-1 overflow-hidden relative bg-gray-50">
+            <div className="flex flex-1 overflow-hidden relative bg-background">
                 {/* Left Settings Panel */}
                 <div
-                    className={`bg-white border-r border-gray-200 shadow-lg transform transition-all duration-300 overflow-y-auto ${showSettings ? 'w-96' : 'w-0'
+                    className={`bg-card  shadow-lg transform transition-all duration-300 overflow-y-auto ${showSettings ? 'w-96' : 'w-0'
                         }`}
                     style={{
                         height: 'calc(100vh - 120px)'
@@ -179,17 +189,22 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
                 >
                     {showSettings && (
                         <>
-                            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
-                                <h3 className="font-semibold">Settings</h3>
+                            <div className="sticky top-0 bg-card border-b border-border p-5 flex items-center justify-between z-10">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-lg">
+                                        <Sparkles className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <h3 className="font-semibold text-lg">Element Settings</h3>
+                                </div>
                                 <button
                                     onClick={() => setShowSettings(false)}
-                                    className="p-1 hover:bg-gray-100 rounded"
+                                    className="p-2 rounded-lg"
                                 >
-                                    <X className="h-5 w-5" />
+                                    <X className="h-5 w-5 text-muted-foreground" />
                                 </button>
                             </div>
 
-                            <div className="p-4">
+                            <div className="p-5">
                                 {selectedElement?.tagName?.toLowerCase() === 'img' ? (
                                     //@ts-ignore
                                     <ImageSettingsAction selectedEl={selectedElement} />
@@ -199,7 +214,14 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
                                         clearSelection={handleClearSelection}
                                     />
                                 ) : (
-                                    <p className="text-gray-500 text-sm">Select an element</p>
+                                    <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                                        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                            <Sparkles className="h-8 w-8 text-primary/50" />
+                                        </div>
+                                        <p className="text-muted-foreground text-sm text-center">
+                                            Select an element to customize
+                                        </p>
+                                    </div>
                                 )}
                             </div>
                         </>
@@ -207,15 +229,34 @@ export function WebsiteDesignSection({ generatedCode }: WebsiteDesignSectionProp
                 </div>
 
                 {/* Center Design Preview */}
-                <div className="flex-1 overflow-auto p-4">
+                <div className="flex-1 overflow-auto p-6">
                     <div className={`mx-auto ${getScreenSizeClass(selectedScreenSize)}`}>
-                        <iframe
-                            ref={iframeRef}
-                            className="w-full border border-gray-200 bg-white rounded-lg shadow-sm transition-opacity duration-200"
-                            style={{ minHeight: '90vh', opacity: isIframeReady ? 1 : 0.4 }}
-                            title="Design Preview"
-                            sandbox="allow-same-origin allow-scripts"
-                        />
+                        <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
+                            {/* Top decorative bar with dots */}
+                            <div className="h-8 bg-muted/30 border-b border-border flex items-center px-4 gap-2">
+                                <div className="flex gap-1.5">
+                                    <div className="w-3 h-3 rounded-full bg-destructive/60"></div>
+                                    <div className="w-3 h-3 rounded-full bg-accent/60"></div>
+                                    <div className="w-3 h-3 rounded-full bg-primary/60"></div>
+                                </div>
+                                <div className="flex-1 flex justify-center">
+                                    <div className="px-4 py-1 bg-muted/50 rounded-md text-xs text-muted-foreground">
+                                        preview.design
+                                    </div>
+                                </div>
+                            </div>
+
+                            <iframe
+                                ref={iframeRef}
+                                className="w-full bg-white transition-opacity duration-300"
+                                style={{
+                                    minHeight: '85vh',
+                                    opacity: isIframeReady ? 1 : 0.5,
+                                }}
+                                title="Design Preview"
+                                sandbox="allow-same-origin allow-scripts"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

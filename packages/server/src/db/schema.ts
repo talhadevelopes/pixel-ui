@@ -54,6 +54,15 @@ export const chatTable = pgTable("chats", {
     createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const frameHistoryTable = pgTable("frame_history", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    projectId: varchar("projectId").notNull().references(() => projectTable.projectId),
+    frameId: varchar("frameId").notNull().references(() => frameTable.frameId),
+    designCode: text("designCode").notNull(),
+    label: varchar("label"),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const subscriptionHistoryTable = pgTable("subscription_history", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     userId: text("user_id").notNull().references(() => userTable.id),

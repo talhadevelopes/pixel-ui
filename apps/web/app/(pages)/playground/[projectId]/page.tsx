@@ -287,7 +287,7 @@ export default function PlaygroundPage() {
                     
                     <div className="grid gap-6 lg:grid-cols-[0.8fr_2fr] lg:min-h-[calc(100vh-18rem)]">
                         <ChatSection loading={loading} messages={messages ?? []} onSend={(input) => sendMessage(input)} />
-                        <WebsiteDesignSection generatedCode={generatedCode} />
+                        <WebsiteDesignSection generatedCode={generatedCode} projectId={projectId} frameId={frameId ?? undefined} />
                     </div>
                     <PlaygroundHeader
                         projectId={projectId}

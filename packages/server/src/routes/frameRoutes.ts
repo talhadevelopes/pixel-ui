@@ -7,5 +7,7 @@ const router = express.Router();
 
 router.get("/", protect, FrameController.getFrameDetails);
 router.put("/", protect, FrameController.updateFrameDetails);
+router.get("/history", protect, FrameController.getFrameHistory);
+router.get("/snapshots/:id", protect, FrameController.getSnapshotById);
 
 export default router;
