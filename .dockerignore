@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.next
+**/.next
+.git
+.env
+*.log
+.DS_Store
+.cache
+.turbo
+build
+**/build
+.venv

@@ -1,0 +1,26 @@
+services:
+  client:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+      target: runner
+    image: talhadevelopes/pixel-ui-client:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - server
+
+  server:
+    build:
+      context: .
+      dockerfile: ./packages/server/Dockerfile
+      target: runner
+    image: talhadevelopes/pixel-ui-server:latest
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+    volumes: []
