@@ -15,7 +15,7 @@ jobs:
       uses: docker/login-action@v2
       with:
         username: talhadevelopes
-        password: ${{ secrets.DOCKER_TOKEN }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
         
     - name: Build and push Server
       uses: docker/build-push-action@v4
@@ -23,7 +23,7 @@ jobs:
         context: .
         file: ./packages/server/Dockerfile
         push: true
-        tags: talhadevelopes/pixel-ui-server:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/pixel-ui-server:latest
         
     - name: Build and push Client
       uses: docker/build-push-action@v4
@@ -31,4 +31,4 @@ jobs:
         context: .
         file: ./apps/web/Dockerfile
         push: true
-        tags: talhadevelopes/pixel-ui-client:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/pixel-ui-client:latest
