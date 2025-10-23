@@ -23,7 +23,7 @@ jobs:
         context: .
         file: ./packages/server/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/pixel-ui-server:latest
+        tags: talhadevelopes/pixel-ui-server:latest
         
     - name: Build and push Client
       uses: docker/build-push-action@v4
@@ -31,4 +31,4 @@ jobs:
         context: .
         file: ./apps/web/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/pixel-ui-client:latest
+        tags: talhadevelopes/pixel-ui-client:latest
