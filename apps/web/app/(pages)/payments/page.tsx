@@ -175,36 +175,34 @@ export default function PaymentsPage() {
                         );
                     })}
             </section>
+            
 
-            {statusData?.subscriptionStatus === "active" && (
-                <section className="flex flex-col gap-2 rounded-lg border bg-card p-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">Current subscription</h2>
-                        <Button
-                            variant="destructive"
-                            disabled={isCancelling}
-                            onClick={handleCancel}
-                        >
-                            {isCancelling && <TopLoader />}
-                            Cancel subscription
-                        </Button>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 text-sm text-muted-foreground md:grid-cols-3">
-                        <div>
-                            <p className="font-medium text-foreground">Credits remaining</p>
-                            <p>{statusData.credits} / {statusData.dailyCreditsLimit}</p>
-                        </div>
-                        <div>
-                            <p className="font-medium text-foreground">Renews on</p>
-                            <p>{statusData.subscriptionEndDate ? new Date(statusData.subscriptionEndDate).toLocaleDateString() : "N/A"}</p>
-                        </div>
-                        <div>
-                            <p className="font-medium text-foreground">Last reset</p>
-                            <p>{statusData.lastCreditReset ? new Date(statusData.lastCreditReset).toLocaleDateString() : "N/A"}</p>
-                        </div>
-                    </div>
-                </section>
-            )}
+           <div className="flex flex-col gap-2 rounded-lg border bg-card p-6">
+  <div className="flex items-center justify-between">
+    <h2 className="text-lg font-semibold">Subscription Status</h2>
+    {statusData?.subscriptionStatus === "active" && (
+      <Button variant="destructive" disabled={isCancelling} onClick={handleCancel}>
+        {isCancelling && <TopLoader />}
+        Cancel subscription
+      </Button>
+    )}
+  </div>
+  
+  <div className="grid grid-cols-1 gap-4 text-sm text-muted-foreground md:grid-cols-3">
+    <div>
+      <p className="font-medium text-foreground">Current Plan</p>
+      <p className="capitalize">{currentTier}</p>
+    </div>
+    <div>
+      <p className="font-medium text-foreground">Credits</p>
+      <p>{statusData?.credits ?? 0} / {statusData?.dailyCreditsLimit ?? 3}</p>
+    </div>
+    <div>
+      <p className="font-medium text-foreground">Status</p>
+      <p className="capitalize">{statusData?.subscriptionStatus ?? "inactive"}</p>
+    </div>
+  </div>
+</div>
         </div>
     );
 }

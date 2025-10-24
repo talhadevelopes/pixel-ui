@@ -39,60 +39,75 @@ function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
             const baseContent = message.role === "user" ? extractUserPrompt(message.content) : message.content;
             return {
                 ...message,
-                display: baseContent.replace(/\n/g, "<br />"),
+                display: baseContent,
             };
         });
     }, [messages]);
 
     return (
-        <div className="flex h-full flex-col rounded-2xl border border-border/70 bg-card shadow-sm">
-            <div className="border-b border-border/70 px-5 py-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Chat</h2>
-                    {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+        <div className="flex h-[70%] mt-[20%] flex-col rounded-lg overflow-hidden shadow-2xl font-mono text-sm bg-card border border-border/70">
+            {/* Terminal Header */}
+            <div className="bg-muted/30 px-4 py-2 flex items-center gap-2 border-b border-border/70">
+                <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-destructive"></div>
+                    <div className="w-3 h-3 rounded-full bg-accent"></div>
+                    <div className="w-3 h-3 rounded-full bg-primary"></div>
+                </div>
+                <span className="text-muted-foreground text-xs ml-4">terminal — ai-assistant</span>
+                <div className="ml-auto flex items-center gap-2">
+                    {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
                 </div>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+
+            {/* Terminal Content */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-2">
                 {formattedMessages.length === 0 && !loading ? (
-                    <p className="text-sm text-muted-foreground">Start the conversation to generate your design.</p>
+                    <>
+                        <div className="text-primary">AI Assistant v2.0.1 initialized...</div>
+                        <div className="text-primary">Type your message to start the conversation</div>
+                    </>
                 ) : (
                     formattedMessages.map((message, index) => {
                         const isUser = message.role === "user";
                         return (
-                            <div key={`${message.role}-${index}`} className={`flex ${isUser ? "justify-start" : "justify-end"}`}>
-                                <div
-                                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
-                                        isUser ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
-                                    }`}
-                                    dangerouslySetInnerHTML={{ __html: message.display }}
-                                />
+                            <div key={`${message.role}-${index}`}>
+                                {isUser ? (
+                                    <div className="text-accent">
+                                        &gt; {message.display}
+                                        <span className="animate-pulse">_</span>
+                                    </div>
+                                ) : (
+                                    <div className="text-foreground whitespace-pre-wrap pl-4 border-l-2 border-primary">
+                                        {message.display}
+                                    </div>
+                                )}
                             </div>
                         );
                     })
                 )}
             </div>
-            <div className="border-t border-border/70 px-5 py-4">
-                <div className="rounded-xl border border-border/80 bg-background">
+
+            {/* Terminal Input */}
+            <div className="bg-muted/30 px-4 py-2 border-t border-border/70">
+                <div className="flex items-center gap-2">
+                    <span className="text-accent">&gt;</span>
                     <textarea
-                        placeholder="Describe what you want to build..."
+                        placeholder="Type command..."
                         value={input}
                         onChange={(event) => setInput(event.target.value)}
                         onKeyDown={handleKeyDown}
-                        rows={3}
-                        className="w-full resize-none rounded-xl bg-transparent px-4 py-3 text-sm outline-none"
+                        rows={1}
+                        className="flex-1 resize-none bg-transparent text-foreground focus:outline-none placeholder:text-muted-foreground"
                     />
-                    <div className="flex justify-end gap-2 border-t border-border/70 px-4 py-3">
-                        <Button
-                            size="sm"
-                            type="button"
-                            onClick={handleSend}
-                            disabled={loading || !input.trim()}
-                            className="gap-2"
-                        >
-                            <ArrowUpRight className="h-4 w-4" />
-                            Send
-                        </Button>
-                    </div>
+                    <Button
+                        size="sm"
+                        type="button"
+                        onClick={handleSend}
+                        disabled={loading || !input.trim()}
+                        className="gap-2"
+                    >
+                        <ArrowUpRight className="h-4 w-4" />
+                    </Button>
                 </div>
             </div>
         </div>

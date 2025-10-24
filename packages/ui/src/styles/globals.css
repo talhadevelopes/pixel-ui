@@ -249,3 +249,26 @@
 .animate-wave-pulse {
   animation: wavePulse 2s ease-in-out infinite;
 }
+/* Global scrollbar (applies everywhere) */
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--primary) transparent; /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: none;
+  border-radius: 1px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 1px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}

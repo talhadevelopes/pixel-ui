@@ -366,7 +366,7 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
                             elementClasses.map((cls) => (
                                 <span
                                     key={cls}
-                                    className='flex items-center gap-1 px-2 py-1 text-sm rounded-full bg-gray-100'
+                                    className='flex items-center gap-1 px-2 py-1 text-sm rounded-full'
                                 >
                                     {cls}
                                     <button
