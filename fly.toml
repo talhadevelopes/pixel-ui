@@ -2,15 +2,15 @@ app = "pixel-ui"
 primary_region = "bom"
 
 [build]
-  dockerfile = "packages/server/Dockerfile"
+image = "talhadevelopes/pixel-ui-server:latest"
 
 [env]
-  NODE_ENV = "production"
-  PORT = "4000"
+NODE_ENV = "production"
+PORT = "4000"
 
 [http_service]
-  internal_port = 4000
-  force_https = true
-  auto_stop_machines = false
-  auto_start_machines = true
-  min_machines_running = 1
+auto_start_machines = true
+auto_stop_machines = true
+force_https = true
+internal_port = 4_000
+min_machines_running = 0
