@@ -1,21 +1,23 @@
 FROM node:18-alpine AS deps
-WORKDIR /app/packages/server
+WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@8 --activate
 
-# Copy only server package files
-COPY packages/server/package.json ./
-COPY packages/server/pnpm-lock.yaml ./
+# Copy root package files for monorepo
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/server/package.json ./packages/server/
 
-# Install only production dependencies
-RUN pnpm install --prod --frozen-lockfile
+# Install all dependencies
+RUN pnpm install --frozen-lockfile
 
 FROM node:18-alpine AS builder
-WORKDIR /app/packages/server
+WORKDIR /app
 
-COPY packages/server .
+COPY --from=deps /app /app
+COPY packages/server ./packages/server
+
 RUN corepack enable && corepack prepare pnpm@8 --activate
-RUN pnpm install --frozen-lockfile
+WORKDIR /app/packages/server
 RUN pnpm build
 
 FROM node:18-alpine AS runner
@@ -24,7 +26,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
 
-# Copy built files and the correct node_modules
+# Copy the built dist and node_modules from packages/server
 COPY --from=builder /app/packages/server/dist ./dist
 COPY --from=deps /app/packages/server/node_modules ./node_modules
 COPY --from=builder /app/packages/server/package.json ./package.json
