@@ -4,6 +4,14 @@ export type ProjectChatMessage = {
     content: string;
 };
 
+export type ProjectDisplay = {
+    id: number;
+    projectId: string;
+    createdAt: string | null;
+    frameCount: number;
+    firstFrameId: string | null;
+};
+
 export type CreateProjectPayload = {
     projectId: string;
     frameId: string;
@@ -38,3 +46,19 @@ export type ProjectWithRelations = {
     updatedAt: string | null;
     frames: ProjectFrameRecord[];
 };
+
+export type PlaygroundHeaderProps = {
+  projectId?: string
+  frameId?: string | null
+  messageCount?: number
+  onSave?: () => void
+  isSaving?: boolean
+}
+
+export interface WebsiteDesignSectionProps {
+  generatedCode: string;
+  projectId?: string;
+  frameId?: string;
+  onSettingsToggle?: (visible: boolean) => void; // Add this
+  onCodeChange?: (code: string) => void;
+}

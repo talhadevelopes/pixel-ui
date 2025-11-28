@@ -1,23 +1,22 @@
-// routes/subscriptionRoutes.ts
-import express from "express";
+import { Router } from "express";
 import { SubscriptionController } from "../controllers/subscriptionController";
 import { protect } from "../middleware/authMiddleware";
 
-const router = express.Router();
+const router = Router();
 
-// GET /api/subscriptions/plans - Get all subscription plans
+//get all subscription plans
 router.get("/plans", SubscriptionController.getPlans);
 
-// POST /api/subscriptions/subscribe - Create a new subscription
+//create a new subscription
 router.post("/subscribe", protect, SubscriptionController.createSubscription);
 
-// POST /api/subscriptions/verify - Verify subscription payment
+//verify subscription payment
 router.post("/verify", protect, SubscriptionController.verifySubscription);
 
-// POST /api/subscriptions/cancel - Cancel active subscription
+//cancel active subscription
 router.post("/cancel", protect, SubscriptionController.cancelSubscription);
 
-// GET /api/subscriptions/status - Get user's subscription status
+//get user's subscription status
 router.get("/status", protect, SubscriptionController.getSubscriptionStatus);
 
 export default router;

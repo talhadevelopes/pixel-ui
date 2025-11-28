@@ -1,14 +1,7 @@
 import { Button } from "@workspace/ui/components/button"
 import { BookAIcon, Loader2, Save } from "lucide-react"
 import { useDesignStore } from '@/store/useDesignStore';
-
-type PlaygroundHeaderProps = {
-  projectId?: string
-  frameId?: string | null
-  messageCount?: number
-  onSave?: () => void
-  isSaving?: boolean
-}
+import { PlaygroundHeaderProps } from "@workspace/types";
 
 export function PlaygroundHeader({
   projectId,

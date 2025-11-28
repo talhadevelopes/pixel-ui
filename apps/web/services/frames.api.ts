@@ -1,5 +1,5 @@
 import axios from "axios";
-import { FrameIdentifier, FrameDetails, FrameMessage, FrameSnapshotMeta, FrameSnapshot } from "@/types/frames.types";
+import { FrameIdentifier, FrameDetails, FrameMessage, FrameSnapshotMeta, FrameSnapshot, SaveFrameMessagesPayload, UpdateFrameDesignPayload } from "@workspace/types";
 import { API, BASE_URL } from "./api";
 
 export async function fetchFrameDetails({ frameId, projectId }: FrameIdentifier, accessToken: string) {
@@ -48,10 +48,6 @@ export async function fetchFrameSnapshot(id: number, accessToken: string) {
     }
 }
 
-export type UpdateFrameDesignPayload = FrameIdentifier & {
-    designCode: string;
-};
-
 export async function updateFrameDesign({ frameId, projectId, designCode }: UpdateFrameDesignPayload, accessToken: string) {
     const query = new URLSearchParams({ frameId, projectId }).toString();
     try {
@@ -65,11 +61,6 @@ export async function updateFrameDesign({ frameId, projectId, designCode }: Upda
         throw new Error(message);
     }
 }
-
-export type SaveFrameMessagesPayload = {
-    frameId: string;
-    messages: FrameMessage[];
-};
 
 export async function saveFrameMessages({ frameId, messages }: SaveFrameMessagesPayload, accessToken: string) {
     try {

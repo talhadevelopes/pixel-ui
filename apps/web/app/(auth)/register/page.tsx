@@ -5,11 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Mail, Lock, User, ArrowRight, CheckCircle2, Clock } from "lucide-react";
-
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-
-import { useRegisterStartMutation } from "@/mutations/useAuthMutations";
+import { Button, Input } from "@workspace/ui";
+import { useRegisterStartMutation } from "@/mutations/";
 
 export default function RegisterPage() {
     const [name, setName] = useState("");

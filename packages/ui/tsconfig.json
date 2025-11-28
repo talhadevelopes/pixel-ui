@@ -2,10 +2,12 @@
   "extends": "@workspace/typescript-config/react-library.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "paths": {
       "@workspace/ui/*": ["./src/*"]
     }
   },
-  "include": [".", "../../apps/web/components/layout/Sidebar.tsx", "../../apps/web/components/layout/ThemeToggle.tsx"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }

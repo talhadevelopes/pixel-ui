@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useGoogleCallbackMutation } from '@/mutations/useAuthMutations';
+import { useGoogleCallbackMutation } from '@/mutations/';
 
 export function GoogleCallbackContent() {
     const router = useRouter();

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { setAuthTokens } from "@/lib/auth-storage";
 import { API, BASE_URL } from "./api";
-import { AuthTokens, GoogleCallbackResponse, jsonHeaders, LoginPayload, RegisterPayload, RegisterStartResponse, ResendOtpPayload, UserProfile, VerifyOtpPayload } from "@/types/auth.types";
+import { AuthTokens, GoogleCallbackResponse, jsonHeaders, LoginPayload, RegisterPayload, RegisterStartResponse, ResendOtpPayload, UserProfile, VerifyOtpPayload } from "@workspace/types";
 import { useEffect, useState } from "react";
 import { getAccessToken } from "@/lib/auth-storage";
 

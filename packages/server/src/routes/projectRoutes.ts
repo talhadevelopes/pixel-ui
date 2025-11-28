@@ -1,9 +1,8 @@
-import express from "express";
-
+import { Router } from "express";
 import { ProjectController } from "../controllers/projectController";
 import { protect } from "../middleware/authMiddleware";
 
-const router = express.Router();
+const router = Router();
 
 router.post("/", protect, ProjectController.createProject);
 router.get("/", protect, ProjectController.getProjects);

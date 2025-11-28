@@ -1,18 +1,7 @@
 import { NextFunction, Response } from "express";
-import z from "zod";
-
 import { AuthRequest } from "../middleware/authMiddleware";
-import { sendError, sendSuccess } from "../types/response";
+import { sendError, sendSuccess } from "../utils/response.utils";
 import { prisma } from "../utils/prisma";
-
-const createProjectSchema = z.object({
-    projectId: z.string().min(1, "projectId is required"),
-    frameId: z.string().min(1, "frameId is required"),
-    messages: z.array(z.object({
-        role: z.string(),
-        content: z.string(),
-    })).min(1, "messages must contain at least one item"),
-});
 
 export class FrameController {
     static async getFrameDetails(req: AuthRequest, res: Response, _next: NextFunction) {

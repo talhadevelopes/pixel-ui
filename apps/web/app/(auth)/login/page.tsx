@@ -5,12 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Mail, Lock, ArrowRight } from "lucide-react";
-import { Input } from "@workspace/ui/components/input";
+import { Input } from "@workspace/ui";
 import Image from "next/image";
-
 import { setAuthTokens } from "@/lib/auth-storage";
 import { API, BASE_URL } from "@/services/api";
-import { useLoginMutation } from "@/mutations/useAuthMutations";
+import { useLoginMutation } from "@/mutations/";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");

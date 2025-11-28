@@ -1,10 +1,7 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { PlaygroundHeader } from "./_components/PlaygroundHeader";
-import { WebsiteDesignSection } from "./_components/WebsiteDesign";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ChatSection from "./_components/ChatSection";
 import { toast } from "sonner";
 import {
   fetchFrameDetails,
@@ -12,26 +9,13 @@ import {
   updateFrameDesign,
 } from "@/services/frames.api";
 import { createChatCompletion } from "@/services/chat.api";
-import {
-  parseChatCompletionStream,
-  stripCodeFences,
-} from "@/lib/chat-stream";
+import { parseChatCompletionStream, stripCodeFences } from "@/lib/chat-stream";
 import { useQueryClient } from "@tanstack/react-query";
-import { subscriptionKeys } from "@/mutations/useSubscription";
+import { subscriptionKeys } from "@/mutations/";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { useAuthToken } from "@/services/auth.api";
-
-export interface FrameDetails {
-  frameId: string;
-  projectId: string;
-  designCode: string | null;
-  chatMessages: Messages[] | null;
-}
-
-export interface Messages {
-  role: string;
-  content: string;
-}
+import { FrameMessage } from "@workspace/types";
+import { ChatSection, WebsiteDesignSection, PlaygroundHeader } from "./_components/index";
 
 export default function PlaygroundPage() {
   const params = useParams();
@@ -42,12 +26,18 @@ export default function PlaygroundPage() {
   const searchParams = useSearchParams();
   const frameId = searchParams.get("frameId");
   const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<Messages[]>([]);
+  const [messages, setMessages] = useState<FrameMessage[]>([]);
   const [isChatVisible, setIsChatVisible] = useState(true);
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const accessToken = useAuthToken();
   const autoTriggerRef = useRef(false);
-  const sendMessageRef = useRef<((msg: string, options?: { appendUserMessage?: boolean; presetMessages?: Messages[] }) => Promise<void>) | null>(null);
+  const sendMessageRef = useRef<
+    | ((
+        msg: string,
+        options?: { appendUserMessage?: boolean; presetMessages?: FrameMessage[] }
+      ) => Promise<void>)
+    | null
+  >(null);
 
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
@@ -75,7 +65,7 @@ export default function PlaygroundPage() {
   );
 
   const saveMessages = useCallback(
-    async (updatedMessages: Messages[]) => {
+    async (updatedMessages: FrameMessage[]) => {
       if (!frameId) return;
       if (!accessToken) {
         return;
@@ -96,7 +86,7 @@ export default function PlaygroundPage() {
   const sendMessage = useCallback(
     async (
       userInput: string,
-      options?: { appendUserMessage?: boolean; presetMessages?: Messages[] }
+      options?: { appendUserMessage?: boolean; presetMessages?: FrameMessage[] }
     ) => {
       if (!frameId) {
         toast.error("Select a frame to continue");
@@ -111,7 +101,7 @@ export default function PlaygroundPage() {
       let workingMessages = options?.presetMessages ?? messages;
 
       if (options?.appendUserMessage !== false) {
-        const userMessage: Messages = { role: "user", content: trimmedInput };
+        const userMessage: FrameMessage = { role: "user", content: trimmedInput };
         workingMessages = [...messages, userMessage];
         setMessages(workingMessages);
       } else if (options?.presetMessages) {
@@ -130,7 +120,8 @@ export default function PlaygroundPage() {
         }
 
         const generationId =
-          globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
+          globalThis.crypto &&
+          typeof globalThis.crypto.randomUUID === "function"
             ? globalThis.crypto.randomUUID()
             : `${frameId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -148,14 +139,13 @@ export default function PlaygroundPage() {
           }
         );
 
-        let finalCode = cleanedCode && cleanedCode !== "undefined" ? cleanedCode : "";
+        let finalCode =
+          cleanedCode && cleanedCode !== "undefined" ? cleanedCode : "";
         let effectiveRaw = raw;
 
         if (!finalCode) {
           const strictHint = `${trimmedInput}\nStrictOutput: Return ONLY HTML Tailwind CSS code inside a single markdown fenced code block labeled html. No explanations.`;
-          const strictMessages = [
-            { role: "user", content: strictHint },
-          ];
+          const strictMessages = [{ role: "user", content: strictHint }];
           const response2 = await createChatCompletion({
             accessToken,
             frameId,
@@ -173,7 +163,7 @@ export default function PlaygroundPage() {
         if (finalCode) {
           setGeneratedCode(finalCode);
         }
-        const assistantMessage: Messages = finalCode
+        const assistantMessage: FrameMessage = finalCode
           ? { role: "assistant", content: "Your Code is Ready" }
           : { role: "assistant", content: effectiveRaw };
 
@@ -200,7 +190,7 @@ export default function PlaygroundPage() {
             } | null) ?? null;
           const nextReset = info?.nextReset ? new Date(info.nextReset) : null;
           const nextResetText = nextReset ? nextReset.toLocaleString() : null;
-          const assistantMessage: Messages = {
+          const assistantMessage: FrameMessage = {
             role: "assistant",
             content: nextResetText
               ? `You are out of credits. Your credits will reset around ${nextResetText}.`

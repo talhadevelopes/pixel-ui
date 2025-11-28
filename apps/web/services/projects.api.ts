@@ -1,5 +1,5 @@
 import axios from "axios";
-import { CreateProjectPayload, ProjectCreationResult, ProjectWithRelations } from "@/types/projects.types";
+import { CreateProjectPayload, ProjectCreationResult, ProjectWithRelations } from "@workspace/types";
 import { API, BASE_URL } from "./api";
 
 export async function createProject(payload: CreateProjectPayload, accessToken: string) {

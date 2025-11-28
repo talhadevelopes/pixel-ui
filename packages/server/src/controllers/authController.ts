@@ -2,19 +2,13 @@ import { GoogleCallbackInput, LoginInput, RegisterInput, googleCallbackSchema, v
 import { AuthRequest } from "../middleware/authMiddleware";
 import { Response, NextFunction } from "express";
 import z from "zod";
-
-import { sendError, sendSuccess } from "../types/response";
+import { sendError, sendSuccess } from "../utils/response.utils";
 import { generateAccessToken, generateRefreshToken, hashPassword, verifyPassword, verifyRefreshToken } from "../utils/jwt";
 import { handleGoogleCallback } from "../services/googleAuthService";
-import { sendVerificationEmail } from "../services/mailjetService";
+import { generateOtp, OTP_EXPIRY_MINUTES, sendVerificationEmail } from "../services/mailjetService";
 import crypto from "crypto";
 import { prisma } from "../utils/prisma";
 
-const OTP_EXPIRY_MINUTES = 10;
-
-function generateOtp(): string {
-    return String(Math.floor(100000 + Math.random() * 900000));
-}
 
 export class AuthController {
     static async register(req: AuthRequest, res: Response, next: NextFunction) {

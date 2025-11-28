@@ -1,5 +1,3 @@
-// utils/subscriptionPlans.ts
-
 const proPlanId = process.env.RAZORPAY_PLAN_PRO ?? "";
 const premiumPlanId = process.env.RAZORPAY_PLAN_PREMIUM ?? "";
 

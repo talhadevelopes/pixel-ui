@@ -1,4 +1,3 @@
-
 export type FrameMessage = {
     role: string;
     content: string;
@@ -29,4 +28,12 @@ export type FrameSnapshot = {
     designCode: string;
     label: string | null;
     createdAt: string | null;
+};
+
+export type UpdateFrameDesignPayload = FrameIdentifier & {
+    designCode: string;
+};
+export type SaveFrameMessagesPayload = {
+    frameId: string;
+    messages: FrameMessage[];
 };

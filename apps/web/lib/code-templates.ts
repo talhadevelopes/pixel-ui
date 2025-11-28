@@ -1,4 +1,4 @@
- export const html = (processedCode : any) => `
+export const html = (processedCode: any) => `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -275,3 +275,26 @@ export const htmlShell = () => `
 </body>
 </html>
 `;
+
+export const getNextJsCode = (htmlCode: string): string => {
+  return `import Head from 'next/head';
+
+export default function Page() {
+  return (
+    <>
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="https://cdn.tailwindcss.com" defer></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js" defer></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js" defer></script>
+      </Head>
+      <main dangerouslySetInnerHTML={{ __html: \`${htmlCode || ""}\` }} />
+    </>
+  );
+}`;
+};

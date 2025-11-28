@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API, BASE_URL } from "./api";
-import { CreateSubscriptionPayload, CreateSubscriptionResult, SubscriptionPlan, SubscriptionPlansResponse, SubscriptionStatus, VerifySubscriptionPayload } from "@/types/subscription.types";
+import { CreateSubscriptionPayload, CreateSubscriptionResult, SubscriptionPlan, SubscriptionPlansResponse, SubscriptionStatus, VerifySubscriptionPayload } from "@workspace/types";
 
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {

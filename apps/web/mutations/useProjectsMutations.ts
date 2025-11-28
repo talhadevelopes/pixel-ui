@@ -1,11 +1,9 @@
 "use client";
-
 import { useMutation, type UseMutationOptions } from "@tanstack/react-query";
-
 import {
     createProject,
 } from "@/services/projects.api";
-import { CreateProjectPayload, ProjectCreationResult } from "@/types/projects.types";
+import { CreateProjectPayload, ProjectCreationResult } from "@workspace/types";
 
 type MutationOptions<TResult, TVariables> = Omit<
     UseMutationOptions<TResult, Error, TVariables, unknown>,

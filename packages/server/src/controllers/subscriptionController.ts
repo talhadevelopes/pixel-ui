@@ -1,17 +1,22 @@
-// controllers/subscriptionController.ts
 import { Response, NextFunction } from "express";
 import crypto from "crypto";
 import { AuthRequest } from "../middleware/authMiddleware";
-import { sendError, sendSuccess } from "../types/response";
-import { SUBSCRIPTION_PLANS, isValidPaidTier } from "../utils/subscriptionPlans";
-import { createSubscription, fetchSubscription, cancelSubscription } from "../utils/razorpay";
+import { sendError, sendSuccess } from "../utils/response.utils";
+import {
+  SUBSCRIPTION_PLANS,
+  isValidPaidTier,
+} from "../utils/subscriptionPlans";
+import {
+  createSubscription,
+  fetchSubscription,
+  cancelSubscription,
+} from "../utils/razorpay";
 import { prisma } from "../utils/prisma";
 
 export class SubscriptionController {
-  // GET /api/subscriptions/plans
   static async getPlans(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const plans = Object.values(SUBSCRIPTION_PLANS).map(plan => ({
+      const plans = Object.values(SUBSCRIPTION_PLANS).map((plan) => ({
         tier: plan.tier,
         name: plan.name,
         price: plan.price,
@@ -27,8 +32,11 @@ export class SubscriptionController {
     }
   }
 
-  // POST /api/subscriptions/subscribe
-  static async createSubscription(req: AuthRequest, res: Response, next: NextFunction) {
+  static async createSubscription(
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const { tier } = req.body;
       const userId = req.user?.userId;
@@ -42,7 +50,8 @@ export class SubscriptionController {
       }
 
       const plan = SUBSCRIPTION_PLANS[tier];
-      const planIdFromConfig = "razorpayPlanId" in plan ? plan.razorpayPlanId : undefined;
+      const planIdFromConfig =
+        "razorpayPlanId" in plan ? plan.razorpayPlanId : undefined;
       const planIdEnvKey = `RAZORPAY_PLAN_${tier.toUpperCase()}` as const;
       const planId = planIdFromConfig || process.env[planIdEnvKey];
 
@@ -62,7 +71,8 @@ export class SubscriptionController {
         },
       };
 
-      const razorpaySubscription = await createSubscription(subscriptionOptions);
+      const razorpaySubscription =
+        await createSubscription(subscriptionOptions);
 
       // Save to database
       await prisma.subscriptionHistory.create({
@@ -91,10 +101,17 @@ export class SubscriptionController {
     }
   }
 
-  // POST /api/subscriptions/verify
-  static async verifySubscription(req: AuthRequest, res: Response, next: NextFunction) {
+  static async verifySubscription(
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const { razorpay_subscription_id, razorpay_payment_id, razorpay_signature } = req.body;
+      const {
+        razorpay_subscription_id,
+        razorpay_payment_id,
+        razorpay_signature,
+      } = req.body;
       const userId = req.user?.userId;
 
       if (!userId) {
@@ -127,7 +144,10 @@ export class SubscriptionController {
         return sendError(res, "Subscription not found", 404);
       }
 
-      const plan = SUBSCRIPTION_PLANS[subscriptionRecord.tier as keyof typeof SUBSCRIPTION_PLANS];
+      const plan =
+        SUBSCRIPTION_PLANS[
+          subscriptionRecord.tier as keyof typeof SUBSCRIPTION_PLANS
+        ];
 
       // Calculate end date (30 days from now)
       const endDate = new Date();
@@ -174,8 +194,11 @@ export class SubscriptionController {
     }
   }
 
-  // POST /api/subscriptions/cancel
-  static async cancelSubscription(req: AuthRequest, res: Response, next: NextFunction) {
+  static async cancelSubscription(
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const userId = req.user?.userId;
 
@@ -228,8 +251,11 @@ export class SubscriptionController {
     }
   }
 
-  // GET /api/subscriptions/status
-  static async getSubscriptionStatus(req: AuthRequest, res: Response, next: NextFunction) {
+  static async getSubscriptionStatus(
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const userId = req.user?.userId;
 
@@ -245,7 +271,9 @@ export class SubscriptionController {
 
       // Ensure daily credit reset if 24h passed
       const now = Date.now();
-      const lastReset = user.lastCreditReset ? new Date(user.lastCreditReset).getTime() : 0;
+      const lastReset = user.lastCreditReset
+        ? new Date(user.lastCreditReset).getTime()
+        : 0;
       const twentyFourHrs = 24 * 60 * 60 * 1000;
       if (now - lastReset >= twentyFourHrs) {
         user = await prisma.user.update({
@@ -273,7 +301,10 @@ export class SubscriptionController {
         dailyCreditsLimit = plan.credits;
       }
 
-      const credits = Math.min(user.credits ?? dailyCreditsLimit, dailyCreditsLimit);
+      const credits = Math.min(
+        user.credits ?? dailyCreditsLimit,
+        dailyCreditsLimit
+      );
       const subscriptionStatus = user.subscriptionStatus ?? "inactive";
 
       return sendSuccess(

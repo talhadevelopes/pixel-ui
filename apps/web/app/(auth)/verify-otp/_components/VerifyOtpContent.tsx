@@ -3,13 +3,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Mail, ArrowLeft, CheckCircle2, Clock, RefreshCw } from "lucide-react";
-import { Input } from "@workspace/ui/components/input";
+import { Input } from "@workspace/ui";
 
 import { setAuthTokens } from "@/lib/auth-storage";
 import {
     useResendOtpMutation,
     useVerifyOtpMutation,
-} from "@/mutations/useAuthMutations";
+} from "@/mutations/";
 
 export default function VerifyOtpContent() {
     const searchParams = useSearchParams();

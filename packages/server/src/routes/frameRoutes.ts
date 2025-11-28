@@ -1,9 +1,8 @@
-import express from "express";
-
+import { Router } from "express";
 import { FrameController } from "../controllers/frameController";
 import { protect } from "../middleware/authMiddleware";
 
-const router = express.Router();
+const router = Router();
 
 router.get("/", protect, FrameController.getFrameDetails);
 router.put("/", protect, FrameController.updateFrameDetails);

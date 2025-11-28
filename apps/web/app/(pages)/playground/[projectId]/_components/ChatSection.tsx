@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Messages } from "../page";
 import { Button } from "@workspace/ui/components/button";
-import { ArrowUpRight, Loader2, Moon, Sun } from "lucide-react";
+import { ArrowUpRight, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { FrameMessage } from "@workspace/types";
 
 interface ChatSectionProps {
-    messages: Messages[];
+    messages: FrameMessage[];
     onSend: (input: string) => void;
     loading: boolean;
 }

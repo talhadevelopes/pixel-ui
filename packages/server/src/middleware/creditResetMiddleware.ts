@@ -1,9 +1,8 @@
-// middleware/creditReset.ts
 import { Response, NextFunction } from "express";
 import { AuthRequest } from "./authMiddleware";
 import { prisma } from "../utils/prisma";
 
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 hours
 
 export async function creditResetMiddleware(
   req: AuthRequest,
@@ -14,7 +13,7 @@ export async function creditResetMiddleware(
     const userId = req.user?.userId;
 
     if (!userId) {
-      return next(); // Let auth middleware handle it
+      return next(); 
     }
 
     // Fetch user
@@ -50,6 +49,6 @@ export async function creditResetMiddleware(
     next();
   } catch (error) {
     console.error("Credit reset middleware error:", error);
-    next(); // Continue even if reset fails
+    next();
   }
 }

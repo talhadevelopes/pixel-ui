@@ -10,6 +10,11 @@ export type SubscriptionPlan = {
     features: string[];
 };
 
+export type PlanCard = SubscriptionPlan & {
+  isCurrent: boolean;
+  isPaidTier: boolean;
+};
+
 export type SubscriptionPlansResponse = {
     plans: SubscriptionPlan[];
 };
@@ -39,3 +44,18 @@ export type VerifySubscriptionPayload = {
     razorpay_payment_id: string;
     razorpay_signature: string;
 };
+
+
+//used in backend
+export interface RazorpaySubscription {
+  id: string;
+  status: string;
+  short_url?: string;
+}
+
+export interface CreateSubscriptionOptions {
+  plan_id: string;
+  customer_notify?: boolean | 0 | 1;
+  total_count?: number;
+  notes?: Record<string, unknown>;
+}

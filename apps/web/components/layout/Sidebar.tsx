@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@workspace/ui/components/button";
-import { Progress } from "@workspace/ui/components/progress";
+import { Button, Progress } from "@workspace/ui";
 import { Sparkles, LogOut, Moon, Plus, Sun, FolderOpen, User, X, Home } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { useSubscriptionStatusQuery } from "@/mutations/useSubscription";
+import { useSubscriptionStatusQuery } from "@/mutations/";
 import { useAuthToken } from "@/services/auth.api";
-import { useProfileQuery } from "@/queries/useAuthQueries";
+import { useProfileQuery } from "@/queries/";
 import { ProjectHistory } from "@/components/layout/ProjectsHistory";
 
 type SidebarTab = "profile" | "workspace" | null;

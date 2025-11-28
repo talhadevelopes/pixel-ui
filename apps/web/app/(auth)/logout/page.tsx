@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
 import { clearAuthTokens } from "@/lib/auth-storage";
 
 export default function LogoutPage() {

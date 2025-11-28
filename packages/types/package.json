@@ -1,19 +1,18 @@
 {
   "name": "@workspace/types",
-  "version": "0.0.0",
-  "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./user": "./src/user.types.ts",
-    "./project": "./src/project.types.ts",
-    "./frames": "./src/frames.types.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
-    "type-check": "tsc --noEmit"
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "devDependencies": {
-    "typescript": "^5.3.3"
-  }
+  "packageManager": "pnpm@10.4.1"
 }

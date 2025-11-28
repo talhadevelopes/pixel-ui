@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import { generateAccessToken, generateRefreshToken, hashPassword } from "../utils/jwt";
 import { prisma } from "../utils/prisma";
+import { GoogleLoginData } from "@workspace/types"
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -15,15 +16,6 @@ class GoogleAuthError extends Error {
         this.statusCode = statusCode;
     }
 }
-
-export type GoogleLoginData = {
-    id: string;
-    name: string;
-    email: string;
-    credits: number | null;
-    accessToken: string;
-    refreshToken: string;
-};
 
 export async function handleGoogleCallback(code: string, state?: string): Promise<GoogleLoginData> {
     const clientId = process.env.GOOGLE_CLIENT_ID;

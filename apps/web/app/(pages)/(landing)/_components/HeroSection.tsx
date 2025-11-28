@@ -1,5 +1,5 @@
 "use client"
-import { Button } from "@workspace/ui/components/button"
+import { Button } from "@workspace/ui"
 import { LandingHeader } from "./LandingHeader"
 import Link from "next/link"
 import { ArrowRight, Waves, Sparkles } from "lucide-react"

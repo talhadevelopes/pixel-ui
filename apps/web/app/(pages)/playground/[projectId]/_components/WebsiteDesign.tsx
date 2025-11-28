@@ -1,75 +1,64 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { WebPageTools } from "./WebpageTools";
-import ElementSettingsSection from "./ElementSettingSection";
-import ImageSettingsAction from "./ImageSettingsSection";
 import { X, Sparkles } from "lucide-react";
-import { useDesignStore } from "@/store/useDesignStore";
-import { htmlShell } from "@/lib/html";
-import { createChatCompletion } from "@/services/chat.api";
-import { parseChatCompletionStream, stripCodeFences } from "@/lib/chat-stream";
+import { htmlShell } from "@/lib/code-templates";
 import { useAuthToken } from "@/services/auth.api";
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-import { toast } from "sonner";
-
-interface WebsiteDesignSectionProps {
-  generatedCode: string;
-  projectId?: string;
-  frameId?: string;
-  onSettingsToggle?: (visible: boolean) => void; // Add this
-  onCodeChange?: (code: string) => void;
-}
-
-const stripFences = (code: string) => {
-  console.log("stripFences input:", code?.substring(0, 100));
-  const result = code
-    .replace(/```\s*html/gi, "")
-    .replace(/```/g, "")
-    .trim();
-  console.log("stripFences output:", result?.substring(0, 100));
-  return result;
-};
-
-const sanitizeScripts = (code: string) => {
-  console.log("sanitizeScripts input length:", code?.length);
-  return code;
-};
-
-const stripTrailingMetadata = (code: string) => {
-  console.log("stripTrailingMetadata input length:", code?.length);
-  const result = (code ?? "").trim();
-  console.log("stripTrailingMetadata output length:", result?.length);
-  return result;
-};
+import { Input, Button } from "@workspace/ui";
+import { WebsiteDesignSectionProps } from "@workspace/types";
+import { useWebsiteDesignStore, useDesignStore } from "@/store";
+import {
+  stripFences,
+  sanitizeScripts,
+  stripTrailingMetadata,
+} from "@/lib/code-processors";
+import { useAIGeneration } from "@/hooks/useAIGeneration";
+import { WebPageTools, ElementSettingsSection } from "./index";
 
 export function WebsiteDesignSection({
   generatedCode,
   projectId,
   frameId,
-  onSettingsToggle, // Add this line
+  onSettingsToggle,
   onCodeChange,
 }: WebsiteDesignSectionProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [selectedScreenSize, setSelectedScreenSize] = useState<string>("web");
-  const [showSettings, setShowSettings] = useState(false);
   const { selectedElement, setSelectedElement, setIframeRef } =
     useDesignStore();
-  const [renderedCode, setRenderedCode] = useState(generatedCode);
-  const [isIframeReady, setIsIframeReady] = useState(false);
+  const {
+    selectedScreenSize,
+    setSelectedScreenSize,
+    showSettings,
+    setShowSettings,
+    renderedCode,
+    setRenderedCode,
+    isIframeReady,
+    setIsIframeReady,
+    regenHint,
+    setRegenHint,
+    pushUndo,
+    popUndo,
+    pushRedo,
+    popRedo,
+    clearRedoStack,
+    lastQuickAction,
+    setLastQuickAction,
+  } = useWebsiteDesignStore();
   const shellLoadedRef = useRef(false);
   const pendingCodeRef = useRef<string | null>(null);
   const skipNextFullRenderRef = useRef(false);
 
   const [isViewingSnapshot, setIsViewingSnapshot] = useState(false);
   const accessToken = useAuthToken();
-  const undoStackRef = useRef<string[]>([]);
-  const redoStackRef = useRef<string[]>([]);
-  const lastQuickActionRef = useRef<{ label: string; lastHtml?: string } | null>(
-    null
-  );
-  const [regenHint, setRegenHint] = useState("");
+  const { streamReplaceSelected, handleQuickAction, handleTryAnother } =
+    useAIGeneration(
+      frameId,
+      accessToken,
+      //@ts-ignore
+      iframeRef,
+      skipNextFullRenderRef,
+      onCodeChange
+    );
 
   useEffect(() => {
     if (iframeRef.current) {
@@ -211,240 +200,23 @@ export function WebsiteDesignSection({
     setShowSettings(false);
   };
 
-  const replaceInnerInOuter = (
-    outerHTML: string,
-    innerHTML: string,
-    newInnerHTML: string
-  ) => {
-    try {
-      const idx = outerHTML.indexOf(innerHTML);
-      if (idx === -1) return null;
-      return (
-        outerHTML.slice(0, idx) + newInnerHTML + outerHTML.slice(idx + innerHTML.length)
-      );
-    } catch {
-      return null;
-    }
-  };
-
-  const patchRenderedCodeForSelection = (
-    selected: any,
-    newInner: string,
-    code: string
-  ) => {
-    const { outerHTML, innerHTML } = selected || {};
-    if (!outerHTML || innerHTML === undefined) return null;
-    const newOuter = replaceInnerInOuter(outerHTML, innerHTML, newInner);
-    if (!newOuter) return null;
-    const idx = code.indexOf(outerHTML);
-    if (idx === -1) return null;
-    return code.slice(0, idx) + newOuter + code.slice(idx + outerHTML.length);
-  };
-
-  const streamReplaceSelected = useCallback(
-    async (hint?: string) => {
-      if (!frameId || !accessToken) {
-        toast.error("Please log in again");
-        return;
-      }
-      if (!selectedElement) {
-        toast.info("Select an element first");
-        return;
-      }
-      const genId =
-        (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
-          ? globalThis.crypto.randomUUID()
-          : `${frameId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
-
-      const basePrompt = `Regenerate only the INNER HTML of the selected element. Do not include <html> or <body> or global wrappers.
-Context element outerHTML:
-${selectedElement.outerHTML}
-
-Constraints:
-- Return ONLY the inner HTML that should be placed inside this element.
-- Use Tailwind CSS + Flowbite components where appropriate.
-- Keep a clean semantic structure; primary color #4b5c.
-${hint ? `User hint: ${hint}` : ""}`;
-
-      const response = await createChatCompletion({
-        accessToken,
-        frameId,
-        messages: [{ role: "user", content: basePrompt }],
-        generationId: genId,
-      });
-
-      const { code: cleaned, raw } = await parseChatCompletionStream(response, {
-        onPartialCode: (partial) => {
-          const html = stripCodeFences(partial);
-          if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow.postMessage(
-              { type: "replaceSelectedInnerHTML", html },
-              "*"
-            );
-          }
-        },
-      });
-
-      let final = cleaned && cleaned !== "undefined" ? cleaned : "";
-      if (!final) {
-        const strict = `${basePrompt}\nStrictOutput: Return ONLY the inner HTML. No explanations.`;
-        const response2 = await createChatCompletion({
-          accessToken,
-          frameId,
-          messages: [{ role: "user", content: strict }],
-          generationId: genId,
-        });
-        const r2 = await parseChatCompletionStream(response2, {
-          onPartialCode: (partial) => {
-            const html = stripCodeFences(partial);
-            if (iframeRef.current?.contentWindow) {
-              iframeRef.current.contentWindow.postMessage(
-                { type: "replaceSelectedInnerHTML", html },
-                "*"
-              );
-            }
-          },
-        });
-        final = r2.code && r2.code !== "undefined" ? r2.code : "";
-      }
-
-      if (final) {
-        undoStackRef.current.push(renderedCode || "");
-        redoStackRef.current = [];
-        const patched = patchRenderedCodeForSelection(selectedElement, final, renderedCode || "");
-        if (patched) {
-          skipNextFullRenderRef.current = true;
-          setRenderedCode(patched);
-          onCodeChange?.(patched);
-        }
-      } else {
-        toast.error("AI did not return HTML for the selection");
-      }
-    },
-    [accessToken, frameId, renderedCode, selectedElement]
-  );
-
-  const quickActionPrompt = (label: string) =>
-    `Generate a ${label} section for a landing page.
-Return ONLY that section's HTML (<section> or a single top-level <div>), without <html> or <body>.
-Use Tailwind CSS + Flowbite, primary color #4b5c.`;
-
-  const handleQuickAction = useCallback(
-    async (label: string) => {
-      if (!frameId || !accessToken) {
-        toast.error("Please log in again");
-        return;
-      }
-      const genId =
-        (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
-          ? globalThis.crypto.randomUUID()
-          : `${frameId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
-      lastQuickActionRef.current = { label };
-      const prompt = quickActionPrompt(label);
-      const response = await createChatCompletion({
-        accessToken,
-        frameId,
-        messages: [{ role: "user", content: prompt }],
-        generationId: genId,
-      });
-      const { code: cleaned } = await parseChatCompletionStream(response, {
-        onPartialCode: (partial) => {
-          const html = stripCodeFences(partial);
-          iframeRef.current?.contentWindow?.postMessage(
-            { type: "appendToRoot", html, label },
-            "*"
-          );
-        },
-      });
-      const final = cleaned && cleaned !== "undefined" ? cleaned : "";
-      if (final) {
-        undoStackRef.current.push(renderedCode || "");
-        redoStackRef.current = [];
-        const patched = (renderedCode || "") + "\n" + final;
-        lastQuickActionRef.current = { label, lastHtml: final };
-        skipNextFullRenderRef.current = true;
-        setRenderedCode(patched);
-        onCodeChange?.(patched);
-      } else {
-        toast.error("Failed to generate section");
-      }
-    },
-    [accessToken, frameId, renderedCode]
-  );
-
-  const handleTryAnother = useCallback(async () => {
-    if (!frameId || !accessToken) {
-      toast.error("Please log in again");
-      return;
-    }
-    const meta = lastQuickActionRef.current;
-    if (!meta?.label) {
-      toast.info("Use a quick action first");
-      return;
-    }
-    const genId =
-      (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
-        ? globalThis.crypto.randomUUID()
-        : `${frameId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
-    const prompt = quickActionPrompt(meta.label);
-    const response = await createChatCompletion({
-      accessToken,
-      frameId,
-      messages: [{ role: "user", content: prompt }],
-      generationId: genId,
-    });
-    const { code: cleaned } = await parseChatCompletionStream(response, {
-      onPartialCode: (partial) => {
-        const html = stripCodeFences(partial);
-        iframeRef.current?.contentWindow?.postMessage(
-          { type: "replaceLastAppended", html },
-          "*"
-        );
-      },
-    });
-    const final = cleaned && cleaned !== "undefined" ? cleaned : "";
-    if (final) {
-      undoStackRef.current.push(renderedCode || "");
-      redoStackRef.current = [];
-      if (meta.lastHtml) {
-        const idx = (renderedCode || "").lastIndexOf(meta.lastHtml);
-        const patched =
-          idx !== -1
-            ? (renderedCode || "").slice(0, idx) + final + (renderedCode || "").slice(idx + meta.lastHtml.length)
-            : (renderedCode || "") + "\n" + final;
-        lastQuickActionRef.current = { label: meta.label, lastHtml: final };
-        skipNextFullRenderRef.current = true;
-        setRenderedCode(patched);
-        onCodeChange?.(patched);
-      } else {
-        lastQuickActionRef.current = { label: meta.label, lastHtml: final };
-        skipNextFullRenderRef.current = true;
-        const patched = (renderedCode || "") + "\n" + final;
-        setRenderedCode(patched);
-        onCodeChange?.(patched);
-      }
-    } else {
-      toast.error("Failed to regenerate variation");
-    }
-  }, [accessToken, frameId, renderedCode]);
-
   const handleUndo = useCallback(() => {
-    const prev = undoStackRef.current.pop();
+    const prev = popUndo();
     if (prev !== undefined) {
-      redoStackRef.current.push(renderedCode || "");
+      pushRedo(renderedCode || "");
       skipNextFullRenderRef.current = true;
       setRenderedCode(prev);
     }
-  }, [renderedCode]);
+  }, [renderedCode, popUndo, pushRedo, setRenderedCode]);
 
   const handleRedo = useCallback(() => {
-    const next = redoStackRef.current.pop();
+    const next = popRedo();
     if (next !== undefined) {
-      undoStackRef.current.push(renderedCode || "");
+      pushUndo(renderedCode || "");
       skipNextFullRenderRef.current = true;
       setRenderedCode(next);
     }
-  }, [renderedCode]);
+  }, [renderedCode, popRedo, pushUndo, setRenderedCode]);
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -522,7 +294,12 @@ Use Tailwind CSS + Flowbite, primary color #4b5c.`;
                         onChange={(e) => setRegenHint(e.target.value)}
                         placeholder="Optional hint (e.g. add CTA, 2 columns, dark)"
                       />
-                      <Button type="button" onClick={() => streamReplaceSelected(regenHint)}>
+                      <Button
+                        type="button"
+                        onClick={() =>
+                          streamReplaceSelected(selectedElement, regenHint)
+                        }
+                      >
                         Regenerate
                       </Button>
                     </div>
@@ -550,8 +327,6 @@ Use Tailwind CSS + Flowbite, primary color #4b5c.`;
                   </div>
                 </div>
               </div>
-
-              
 
               <iframe
                 ref={iframeRef}

@@ -40,3 +40,14 @@ export type GoogleCallbackResponse = UserProfile & AuthTokens;
 export const jsonHeaders: HeadersInit = {
     "Content-Type": "application/json",
 };
+
+
+//used in backend
+export type GoogleLoginData = {
+    id: string;
+    name: string;
+    email: string;
+    credits: number | null;
+    accessToken: string;
+    refreshToken: string;
+};

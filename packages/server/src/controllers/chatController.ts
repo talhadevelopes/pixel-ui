@@ -1,32 +1,26 @@
-// controllers/chatController.ts
 import axios from "axios";
 import { Response, NextFunction } from "express";
 import { TextEncoder } from "util";
 import z from "zod";
-
 import { AuthRequest } from "../middleware/authMiddleware";
-import { sendError, sendSuccess } from "../types/response";
+import { sendError, sendSuccess } from "../utils/response.utils";
 import { prisma } from "../utils/prisma";
 import { PROMPT_TEMPLATE } from "../utils/prompt-template";
-
-const streamRequestSchema = z.object({
-  frameId: z.string(),
-  messages: z.array(
-    z.object({
-      role: z.enum(["user", "assistant", "system"]),
-      content: z.string(),
-    })
-  ),
-  generationId: z.string().optional(),
-});
+import { streamRequestSchema } from "../validation/chatValidation";
 
 const generationCache: Map<string, number> = new Map();
 const GENERATION_CACHE_TTL_MS = 10 * 60 * 1000;
 
 export class ChatController {
-  static async streamChat(req: AuthRequest, res: Response, _next: NextFunction) {
+  static async streamChat(
+    req: AuthRequest,
+    res: Response,
+    _next: NextFunction
+  ) {
     try {
-      const { frameId, messages, generationId } = streamRequestSchema.parse(req.body);
+      const { frameId, messages, generationId } = streamRequestSchema.parse(
+        req.body
+      );
       const createdBy = req.user?.email;
       const userId = req.user?.userId;
 
@@ -67,20 +61,29 @@ export class ChatController {
       res.setHeader("Transfer-Encoding", "chunked");
 
       try {
-        const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+        const lastUserMessage = [...messages]
+          .reverse()
+          .find((m) => m.role === "user");
         if (!lastUserMessage) {
           return sendError(res, "No user message found to generate code", 400);
         }
 
         const userInput = lastUserMessage.content;
-        const formattedPrompt = PROMPT_TEMPLATE.replace("{userInput}", userInput);
+        const formattedPrompt = PROMPT_TEMPLATE.replace(
+          "{userInput}",
+          userInput
+        );
 
-        console.log("📝 [DEBUG] Formatted prompt:", formattedPrompt.substring(0, 200));
+        console.log(
+          "📝 [DEBUG] Formatted prompt:",
+          formattedPrompt.substring(0, 200)
+        );
         console.log("📝 [DEBUG] User input was:", userInput);
         console.log("🔐 [SECURE] Backend formatting prompt for user input");
 
         let isDuplicate = false;
-        const cacheKey = generationId && userId ? `${userId}:${generationId}` : undefined;
+        const cacheKey =
+          generationId && userId ? `${userId}:${generationId}` : undefined;
         if (cacheKey) {
           const ts = generationCache.get(cacheKey);
           const nowMs = Date.now();
@@ -143,7 +146,10 @@ export class ChatController {
                 const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
                 if (text) {
-                  console.log("✍️ [DEBUG] Got text chunk:", text.substring(0, 50));
+                  console.log(
+                    "✍️ [DEBUG] Got text chunk:",
+                    text.substring(0, 50)
+                  );
                   fullResponse += text;
                   res.write(encoder.encode(text));
                 }
@@ -161,12 +167,18 @@ export class ChatController {
           try {
             const trimmed = fullResponse.trim();
             if (trimmed.length === 0) {
-              console.log("❌ [DEBUG] Empty response - no content was streamed");
+              console.log(
+                "❌ [DEBUG] Empty response - no content was streamed"
+              );
               res.end();
               return;
             }
 
-            const substantialHtml = /```/.test(trimmed) || /<\s*(section|div|header|main|footer|nav|ul|ol|article|aside|form|img|h1|h2|h3|h4|h5|h6|button|a|span|p|table|figure|canvas|svg)[\s>]/i.test(trimmed);
+            const substantialHtml =
+              /```/.test(trimmed) ||
+              /<\s*(section|div|header|main|footer|nav|ul|ol|article|aside|form|img|h1|h2|h3|h4|h5|h6|button|a|span|p|table|figure|canvas|svg)[\s>]/i.test(
+                trimmed
+              );
             const meetsLength = trimmed.length >= 200;
             const shouldCharge = !isDuplicate && substantialHtml && meetsLength;
 
@@ -185,18 +197,22 @@ export class ChatController {
               }),
               ...(shouldCharge
                 ? [
-                  prisma.user.update({
-                    where: { id: userId },
-                    data: { credits: { decrement: 1 } },
-                  }),
-                ]
+                    prisma.user.update({
+                      where: { id: userId },
+                      data: { credits: { decrement: 1 } },
+                    }),
+                  ]
                 : []),
             ]);
 
             if (shouldCharge) {
-              console.log(`✅ [DEBUG] Credit deducted. Response saved successfully`);
+              console.log(
+                `✅ [DEBUG] Credit deducted. Response saved successfully`
+              );
             } else {
-              console.log(`ℹ️ [DEBUG] Skipped credit deduction (duplicate or not substantial)`);
+              console.log(
+                `ℹ️ [DEBUG] Skipped credit deduction (duplicate or not substantial)`
+              );
             }
           } catch (dbErr) {
             console.error("❌ [DEBUG] Error saving chat message:", dbErr);
@@ -209,7 +225,10 @@ export class ChatController {
           res.status(500).end();
         });
       } catch (apiError: any) {
-        console.error("❌ [DEBUG] API Error Status:", apiError.response?.status);
+        console.error(
+          "❌ [DEBUG] API Error Status:",
+          apiError.response?.status
+        );
         console.error("❌ [DEBUG] API Error Data:", apiError.response?.data);
         console.error("❌ [DEBUG] API Error Message:", apiError.message);
         return sendError(res, "Failed to connect to AI service", 500);

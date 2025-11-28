@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API, BASE_URL } from "./api";
-import { CreateChatCompletionPayload } from "@/types/chat.types";
+import { CreateChatCompletionPayload } from "@workspace/types";
 
 export async function createChatCompletion({ accessToken, frameId, messages, generationId }: CreateChatCompletionPayload): Promise<Response> {
     const encoder = new TextEncoder();

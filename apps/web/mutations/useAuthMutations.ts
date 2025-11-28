@@ -9,14 +9,17 @@ import {
     resendOtp,
     exchangeGoogleCode,
 } from "@/services/auth.api";
-import { AuthTokens, GoogleCallbackResponse, LoginPayload, RegisterPayload, RegisterStartResponse, ResendOtpPayload, VerifyOtpPayload } from "@/types/auth.types";
-
-
+import { AuthTokens, GoogleCallbackResponse, LoginPayload, RegisterPayload, RegisterStartResponse, ResendOtpPayload, VerifyOtpPayload } from "@workspace/types";
 
 type MutationOptions<TResult, TVariables> = Omit<
     UseMutationOptions<TResult, Error, TVariables, unknown>,
     "mutationFn"
 >;
+
+export type GoogleCallbackVariables = {
+    code: string;
+    state?: string;
+};
 
 export function useLoginMutation(options?: MutationOptions<AuthTokens, LoginPayload>) {
     return useMutation<AuthTokens, Error, LoginPayload, unknown>({
@@ -50,10 +53,6 @@ export function useResendOtpMutation(options?: MutationOptions<RegisterStartResp
     });
 }
 
-export type GoogleCallbackVariables = {
-    code: string;
-    state?: string;
-};
 
 export function useGoogleCallbackMutation(
     options?: MutationOptions<GoogleCallbackResponse, GoogleCallbackVariables>,

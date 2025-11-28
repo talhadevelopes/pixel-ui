@@ -8,14 +8,12 @@ import {
     ImageMinus,
     Loader2,
 } from "lucide-react";
-import { Input } from "@workspace/ui/components/input";
-import { Button } from "@workspace/ui/components/button";
 import {
-    Tooltip,
+    Tooltip, Input, Button,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from "@workspace/ui/components/tooltip";
+} from "@workspace/ui";
 import ImageKit from "imagekit";
 import { useDesignStore } from '@/store/useDesignStore';
 
@@ -72,13 +70,13 @@ function ImageSettingsAction({ selectedEl }: Props) {
         if (file) {
             setSelectedImage(file);
             setLoading(true);
-            
+
             // Immediately show the image when selected
             const reader = new FileReader();
             reader.onload = (event) => {
                 const result = event.target?.result as string;
                 setPreview(result);
-                
+
                 // FIXED: Send to iframe's contentWindow instead of window.parent
                 if (iframeRef?.current?.contentWindow) {
                     iframeRef.current.contentWindow.postMessage({
@@ -89,7 +87,7 @@ function ImageSettingsAction({ selectedEl }: Props) {
                 } else {
                     console.error('Iframe ref not available');
                 }
-                
+
                 setLoading(false);
             };
             reader.onerror = () => {
@@ -110,7 +108,7 @@ function ImageSettingsAction({ selectedEl }: Props) {
 
     const ApplyTransformation = (transformationValue: string) => {
         if (!selectedEl) return;
-        
+
         setLoading(true);
         try {
             let newUrl: string;
@@ -119,9 +117,9 @@ function ImageSettingsAction({ selectedEl }: Props) {
             } else {
                 newUrl = preview.replaceAll(`${transformationValue},`, '');
             }
-            
+
             setPreview(newUrl);
-            
+
             // FIXED: Send to iframe's contentWindow instead of window.parent
             if (iframeRef?.current?.contentWindow) {
                 iframeRef.current.contentWindow.postMessage({
@@ -142,11 +140,11 @@ function ImageSettingsAction({ selectedEl }: Props) {
     const GenerateAiImage = () => {
         setLoading(true);
         const url = `https://ik.imagekit.io/on7jjaueg/ik-genimg-prompt-${altText}/${Date.now()}.png?tr=`;
-        
+
         const img = new Image();
         img.onload = () => {
             setPreview(url);
-            
+
             // FIXED: Send to iframe's contentWindow instead of window.parent
             if (iframeRef?.current?.contentWindow) {
                 iframeRef.current.contentWindow.postMessage({
@@ -157,7 +155,7 @@ function ImageSettingsAction({ selectedEl }: Props) {
             } else {
                 console.error('Iframe ref not available');
             }
-            
+
             setLoading(false);
         };
         img.onerror = () => {
@@ -172,9 +170,9 @@ function ImageSettingsAction({ selectedEl }: Props) {
             <h2 className="flex gap-2 items-center font-bold text-lg">
                 <ImageIcon className="h-5 w-5" /> Image Settings
             </h2>
-            
+
             {/* Preview Square - Click to add image */}
-            <div 
+            <div
                 className="flex items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
                 onClick={openFileDialog}
             >
@@ -192,7 +190,7 @@ function ImageSettingsAction({ selectedEl }: Props) {
                     </div>
                 )}
             </div>
-            
+
             {/* Hidden file input */}
             <input
                 type="file"
@@ -202,94 +200,94 @@ function ImageSettingsAction({ selectedEl }: Props) {
                 onChange={handleFileChange}
             />
 
-            {/* Alt text / Prompt */} 
-            <div> 
-                <label className="text-sm font-medium">Prompt</label> 
-                <Input 
-                    type="text" 
-                    value={altText} 
-                    onChange={(e) => setAltText(e.target.value)} 
-                    placeholder="Enter prompt for AI image generation" 
-                    className="mt-1" 
-                /> 
-            </div> 
-            
-            {/* Generate AI Image */} 
-            <Button 
-                className="w-full" 
-                onClick={GenerateAiImage} 
-                disabled={loading}
-            > 
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Generate AI Image 
-            </Button> 
-            
-            {/* Transform Buttons */} 
-            <div> 
-                <label className="text-sm font-medium mb-2 block">AI Transforms</label> 
-                <div className="flex gap-2 flex-wrap"> 
-                    <TooltipProvider> 
-                        {transformOptions.map((opt) => { 
-                            const applied = activeTransforms.includes(opt.value); 
-                            return ( 
-                                <Tooltip key={opt.value}> 
-                                    <TooltipTrigger asChild> 
-                                        <Button 
-                                            type="button" 
-                                            variant={preview.includes(opt.transformation) ? "default" : "outline"} 
-                                            size="icon"
-                                            onClick={() => ApplyTransformation(opt.transformation)} 
-                                        > 
-                                            {opt.icon} 
-                                        </Button> 
-                                    </TooltipTrigger> 
-                                    <TooltipContent> 
-                                        {opt.label} {applied && "(Applied)"} 
-                                    </TooltipContent> 
-                                </Tooltip> 
-                            );
-                        })} 
-                    </TooltipProvider> 
-                </div> 
-            </div> 
-            
-            {/* Conditional Resize Inputs */} 
-            {activeTransforms.includes("resize") && ( 
-                <div className="flex gap-2"> 
-                    <div className="flex-1"> 
-                        <label className="text-sm font-medium">Width</label> 
-                        <Input 
-                            type="number" 
-                            value={width} 
-                            onChange={(e) => setWidth(Number(e.target.value))} 
-                            className="mt-1" 
-                        /> 
-                    </div> 
-                    <div className="flex-1"> 
-                        <label className="text-sm font-medium">Height</label> 
-                        <Input 
-                            type="number" 
-                            value={height} 
-                            onChange={(e) => setHeight(Number(e.target.value))} 
-                            className="mt-1" 
-                        /> 
-                    </div> 
-                </div>
-            )} 
+            {/* Alt text / Prompt */}
+            <div>
+                <label className="text-sm font-medium">Prompt</label>
+                <Input
+                    type="text"
+                    value={altText}
+                    onChange={(e) => setAltText(e.target.value)}
+                    placeholder="Enter prompt for AI image generation"
+                    className="mt-1"
+                />
+            </div>
 
-            {/* Border Radius */} 
-            <div> 
-                <label className="text-sm font-medium">Border Radius</label> 
-                <Input 
-                    type="text" 
-                    value={borderRadius} 
-                    onChange={(e) => setBorderRadius(e.target.value)} 
-                    placeholder="e.g. 8px or 50%" 
-                    className="mt-1" 
-                /> 
-            </div> 
+            {/* Generate AI Image */}
+            <Button
+                className="w-full"
+                onClick={GenerateAiImage}
+                disabled={loading}
+            >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Generate AI Image
+            </Button>
+
+            {/* Transform Buttons */}
+            <div>
+                <label className="text-sm font-medium mb-2 block">AI Transforms</label>
+                <div className="flex gap-2 flex-wrap">
+                    <TooltipProvider>
+                        {transformOptions.map((opt) => {
+                            const applied = activeTransforms.includes(opt.value);
+                            return (
+                                <Tooltip key={opt.value}>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant={preview.includes(opt.transformation) ? "default" : "outline"}
+                                            size="icon"
+                                            onClick={() => ApplyTransformation(opt.transformation)}
+                                        >
+                                            {opt.icon}
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {opt.label} {applied && "(Applied)"}
+                                    </TooltipContent>
+                                </Tooltip>
+                            );
+                        })}
+                    </TooltipProvider>
+                </div>
+            </div>
+
+            {/* Conditional Resize Inputs */}
+            {activeTransforms.includes("resize") && (
+                <div className="flex gap-2">
+                    <div className="flex-1">
+                        <label className="text-sm font-medium">Width</label>
+                        <Input
+                            type="number"
+                            value={width}
+                            onChange={(e) => setWidth(Number(e.target.value))}
+                            className="mt-1"
+                        />
+                    </div>
+                    <div className="flex-1">
+                        <label className="text-sm font-medium">Height</label>
+                        <Input
+                            type="number"
+                            value={height}
+                            onChange={(e) => setHeight(Number(e.target.value))}
+                            className="mt-1"
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Border Radius */}
+            <div>
+                <label className="text-sm font-medium">Border Radius</label>
+                <Input
+                    type="text"
+                    value={borderRadius}
+                    onChange={(e) => setBorderRadius(e.target.value)}
+                    placeholder="e.g. 8px or 50%"
+                    className="mt-1"
+                />
+            </div>
         </div>
-    ); 
+    );
 }
 
 export default ImageSettingsAction;
