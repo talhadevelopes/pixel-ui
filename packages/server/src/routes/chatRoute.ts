@@ -1,8 +1,8 @@
 // routes/chatRoute.ts
 import { Router } from "express";
 import { ChatController } from "../controllers/chatController";
-import { protect } from "../middleware/auth";
-import { creditResetMiddleware } from "../middleware/creditReset";
+import { protect } from "../middleware/authMiddleware";
+import { creditResetMiddleware } from "../middleware/creditResetMiddleware";
 
 const router = Router();
 

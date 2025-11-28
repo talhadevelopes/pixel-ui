@@ -1,7 +1,7 @@
 import express from "express";
 
 import { FrameController } from "../controllers/frameController";
-import { protect } from "../middleware/auth";
+import { protect } from "../middleware/authMiddleware";
 
 const router = express.Router();
 

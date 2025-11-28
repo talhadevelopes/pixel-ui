@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { getAccessToken } from "@/lib/auth-storage";
 
-const PUBLIC_PATHS = new Set(["/", "/login", "/register", "/verify-otp"]);
+const PUBLIC_PATHS = new Set(["/", "/login", "/register", "/verify-otp", "/auth/google/callback"]);
 const AUTH_REDIRECT_PATHS = new Set(["/login", "/register", "/verify-otp"]);
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -42,6 +42,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
         if (!hasToken) {
             if (!isPublicRoute) {
                 router.replace("/login");
+                return; // keep checking=true to avoid flashing protected UI
             }
             setIsChecking(false);
             return;
@@ -49,8 +50,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
         if (AUTH_REDIRECT_PATHS.has(pathname)) {
             router.replace("/workspace");
-            setIsChecking(false);
-            return;
+            return; // keep checking=true during redirect
         }
 
         setIsChecking(false);

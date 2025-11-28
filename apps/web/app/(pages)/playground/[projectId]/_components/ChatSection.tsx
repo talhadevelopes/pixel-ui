@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
-import { Messages } from "../../app/(pages)/playground/[projectId]/page";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Messages } from "../page";
 import { Button } from "@workspace/ui/components/button";
 import { ArrowUpRight, Loader2, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -13,6 +13,7 @@ interface ChatSectionProps {
 function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
     const [input, setInput] = useState("");
     const { theme, setTheme } = useTheme();
+    const [loadingStage, setLoadingStage] = useState(0);
 
     const handleSend = useCallback(() => {
         const trimmed = input.trim();
@@ -43,6 +44,22 @@ function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
             };
         });
     }, [messages]);
+
+    useEffect(() => {
+        let t1: ReturnType<typeof setTimeout> | undefined;
+        let t2: ReturnType<typeof setTimeout> | undefined;
+        if (loading) {
+            setLoadingStage(0);
+            t1 = setTimeout(() => setLoadingStage(1), 3000);
+            t2 = setTimeout(() => setLoadingStage(2), 5000);
+        } else {
+            setLoadingStage(0);
+        }
+        return () => {
+            if (t1) clearTimeout(t1);
+            if (t2) clearTimeout(t2);
+        };
+    }, [loading]);
 
     return (
         <div className="flex h-[70%] mt-[20%] flex-col rounded-lg overflow-hidden shadow-2xl font-mono text-sm bg-card border border-border/70">
@@ -84,6 +101,13 @@ function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
                             </div>
                         );
                     })
+                )}
+                {loading && (
+                    <div className="text-foreground pl-4 border-l-2 border-primary/70">
+                        {loadingStage === 0 && "AI is thinking..."}
+                        {loadingStage === 1 && "Setting up the template..."}
+                        {loadingStage >= 2 && "Generating code..."}
+                    </div>
                 )}
             </div>
 

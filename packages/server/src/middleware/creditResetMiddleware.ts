@@ -1,9 +1,7 @@
 // middleware/creditReset.ts
 import { Response, NextFunction } from "express";
-import { AuthRequest } from "./auth";
-import { db } from "../utils/drizzle";
-import { userTable } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { AuthRequest } from "./authMiddleware";
+import { prisma } from "../utils/prisma";
 
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
@@ -20,11 +18,7 @@ export async function creditResetMiddleware(
     }
 
     // Fetch user
-    const [user] = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.id, userId))
-      .limit(1);
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
       return next();
@@ -37,14 +31,13 @@ export async function creditResetMiddleware(
 
     // If 24 hours have passed, reset credits
     if (timeSinceReset >= TWENTY_FOUR_HOURS) {
-      const [updatedUser] = await db
-        .update(userTable)
-        .set({
-          credits: user.dailyCreditsLimit,
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          credits: user.dailyCreditsLimit ?? user.credits ?? 0,
           lastCreditReset: new Date(),
-        })
-        .where(eq(userTable.id, userId))
-        .returning();
+        },
+      });
 
       // Update req.user with fresh credit count
       if (req.user) {

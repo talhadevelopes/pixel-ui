@@ -1,11 +1,9 @@
 import { NextFunction, Response } from "express";
-import { and, desc, eq, inArray } from "drizzle-orm";
 import z from "zod";
 
-import { AuthRequest } from "../middleware/auth";
-import { chatTable, frameTable, projectTable, userTable } from "../db/schema";
-import { db } from "../utils/drizzle";
+import { AuthRequest } from "../middleware/authMiddleware";
 import { sendError, sendSuccess } from "../types/response";
+import { prisma } from "../utils/prisma";
 
 const createProjectSchema = z.object({
     projectId: z.string().min(1, "projectId is required"),
@@ -34,75 +32,34 @@ export class ProjectController {
                 return sendError(res, "Authenticated user email missing", 401);
             }
 
-            // ✅ NEW: Check credits before creating project
-            const [user] = await db
-                .select()
-                .from(userTable)
-                .where(eq(userTable.id, userId))
-                .limit(1);
+            // Create or fetch existing project
+            const projectRecord = await prisma.project.upsert({
+                where: { projectId },
+                update: {},
+                create: { projectId, createdBy },
+            });
 
-            if (!user) {
-                return sendError(res, "User not found", 404);
+            // Create frame (allow duplicates if already exists similar to previous behavior)
+            let frameRecord = await prisma.frame.findFirst({ where: { projectId, frameId } });
+            if (!frameRecord) {
+                frameRecord = await prisma.frame.create({
+                    data: { frameId, projectId },
+                });
             }
 
-            if (user.credits <= 0) {
-                return sendError(
-                    res,
-                    "Insufficient credits. Please upgrade your plan or wait for daily reset.",
-                    403
-                );
-            }
-
-            // Create project (existing code)
-            const [project] = await db.insert(projectTable)
-                .values({
-                    projectId,
+            // Save initial chat message
+            await prisma.chat.create({
+                data: {
+                    chatMessage: messages as unknown as any,
                     createdBy,
-                })
-                .onConflictDoNothing({ target: projectTable.projectId })
-                .returning();
-
-            const [frame] = await db.insert(frameTable)
-                .values({
                     frameId,
-                    projectId,
-                })
-                .onConflictDoNothing()
-                .returning();
-
-            const [chat] = await db.insert(chatTable)
-                .values({
-                    chatMessage: messages,
-                    createdBy,
-                    frameId: frameId,
-                })
-                .returning();
-
-            // ✅ NEW: Deduct 1 credit after successful creation
-            await db
-                .update(userTable)
-                .set({
-                    credits: user.credits - 1,
-                })
-                .where(eq(userTable.id, userId));
-
-            const projectRecord = project ?? (await db.select()
-                .from(projectTable)
-                .where(eq(projectTable.projectId, projectId))
-                .limit(1))[0] ?? null;
-
-            const frameRecord = frame ?? (await db.select()
-                .from(frameTable)
-                .where(and(
-                    eq(frameTable.projectId, projectId),
-                    eq(frameTable.frameId, frameId),
-                ))
-                .limit(1))[0] ?? null;
+                },
+            });
 
             return sendSuccess(res, {
                 project: projectRecord,
                 frame: frameRecord,
-                creditsRemaining: user.credits - 1,
+                creditsRemaining: undefined,
             }, "Project created successfully", 201);
         } catch (error) {
             console.error("Create project error:", error);
@@ -118,16 +75,16 @@ export class ProjectController {
                 return sendError(res, "Authenticated user email missing", 401);
             }
 
-            const projects = await db
-                .select({
-                    id: projectTable.id,
-                    projectId: projectTable.projectId,
-                    createdAt: projectTable.createdAt,
-                    updatedAt: projectTable.updatedAt,
-                })
-                .from(projectTable)
-                .where(eq(projectTable.createdBy, createdBy))
-                .orderBy(desc(projectTable.id));
+            const projects = await prisma.project.findMany({
+                where: { createdBy },
+                orderBy: { id: "desc" },
+                select: {
+                    id: true,
+                    projectId: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+            });
 
             type FrameRecord = {
                 frameId: string;
@@ -157,30 +114,20 @@ export class ProjectController {
             }[] = [];
 
             for (const project of projects) {
-                const frames = await db
-                    .select({
-                        frameId: frameTable.frameId,
-                        designCode: frameTable.designCode,
-                        createdAt: frameTable.createdAt,
-                    })
-                    .from(frameTable)
-                    .where(eq(frameTable.projectId, project.projectId)) as FrameRecord[];
+                const frames = await prisma.frame.findMany({
+                    where: { projectId: project.projectId },
+                    select: { frameId: true, designCode: true, createdAt: true },
+                }) as FrameRecord[];
 
                 const frameIds = frames.map((frame) => frame.frameId);
 
                 let chatsByFrame: Record<string, ChatRecord[]> = {};
 
                 if (frameIds.length > 0) {
-                    const chats = await db
-                        .select({
-                            id: chatTable.id,
-                            chatMessage: chatTable.chatMessage,
-                            createdBy: chatTable.createdBy,
-                            createdAt: chatTable.createdAt,
-                            frameId: chatTable.frameId,
-                        })
-                        .from(chatTable)
-                        .where(inArray(chatTable.frameId, frameIds)) as ChatRecord[];
+                    const chats = await prisma.chat.findMany({
+                        where: { frameId: { in: frameIds } },
+                        select: { id: true, chatMessage: true, createdBy: true, createdAt: true, frameId: true },
+                    }) as ChatRecord[];
 
                     chatsByFrame = chats.reduce<Record<string, ChatRecord[]>>((acc, chat) => {
                         if (!chat.frameId) {
@@ -230,42 +177,25 @@ export class ProjectController {
                 return sendError(res, "projectId is required", 400);
             }
 
-            const project = await db
-                .select()
-                .from(projectTable)
-                .where(and(
-                    eq(projectTable.projectId, projectId),
-                    eq(projectTable.createdBy, createdBy),
-                ))
-                .limit(1)
-                .then((rows : any) => rows[0] ?? null);
+            const project = await prisma.project.findFirst({ where: { projectId, createdBy } });
 
             if (!project) {
                 return sendError(res, "Project not found", 404);
             }
 
-            const frames = await db
-                .select({ frameId: frameTable.frameId })
-                .from(frameTable)
-                .where(eq(frameTable.projectId, projectId));
+            const frames = await prisma.frame.findMany({ where: { projectId }, select: { frameId: true } });
 
             const frameIds = frames
                 .map((frame: any) => frame.frameId)
-                .filter((frameId : any): frameId is string => Boolean(frameId));
+                .filter((frameId: any): frameId is string => Boolean(frameId));
 
             if (frameIds.length > 0) {
-                await db
-                    .delete(chatTable)
-                    .where(inArray(chatTable.frameId, frameIds));
+                await prisma.chat.deleteMany({ where: { frameId: { in: frameIds } } });
             }
 
-            await db
-                .delete(frameTable)
-                .where(eq(frameTable.projectId, projectId));
+            await prisma.frame.deleteMany({ where: { projectId } });
 
-            await db
-                .delete(projectTable)
-                .where(eq(projectTable.projectId, projectId));
+            await prisma.project.deleteMany({ where: { projectId } });
 
             return sendSuccess(res, null, "Project deleted successfully");
         } catch (error) {

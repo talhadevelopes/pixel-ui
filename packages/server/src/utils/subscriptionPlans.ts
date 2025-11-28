@@ -6,13 +6,13 @@ const premiumPlanId = process.env.RAZORPAY_PLAN_PREMIUM ?? "";
 export const SUBSCRIPTION_PLANS = {
   free: {
     tier: 'free',
-    credits: 3,
+    credits: 5,
     price: 0,
     priceInPaise: 0,
     name: 'Free',
     description: 'Perfect for trying out',
     features: [
-      '3 projects per day',
+      '5 projects per day',
       'Basic AI features',
       'Community support'
     ]

@@ -7,4 +7,5 @@ export type CreateChatCompletionPayload = {
     accessToken: string;
     frameId: string;
     messages: ChatCompletionMessage[];
+    generationId?: string;
 };

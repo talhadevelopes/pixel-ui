@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/custom/Sidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
 import React from "react";
 
 function PaymentsLayout({

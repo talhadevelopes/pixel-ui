@@ -7,9 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,7 +17,10 @@
   "license": "ISC",
   "packageManager": "pnpm@10.4.1",
   "dependencies": {
+    "@workspace/types": "workspace:*",
+    "@google/genai": "^1.30.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@prisma/client": "5.9.1",
     "@types/express": "^5.0.3",
     "@types/hpp": "^0.2.6",
     "@types/supertest": "^6.0.3",
@@ -25,7 +28,6 @@
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.44.6",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
@@ -40,7 +42,7 @@
     "@types/bcryptjs": "^3.0.0",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
-    "drizzle-kit": "^0.31.5",
+    "prisma": "5.9.1",
     "tsx": "^4.20.6",
     "typescript": "^5.7.3"
   }

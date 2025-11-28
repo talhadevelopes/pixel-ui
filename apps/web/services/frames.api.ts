@@ -1,99 +1,51 @@
+import axios from "axios";
 import { FrameIdentifier, FrameDetails, FrameMessage, FrameSnapshotMeta, FrameSnapshot } from "@/types/frames.types";
 import { API, BASE_URL } from "./api";
 
 export async function fetchFrameDetails({ frameId, projectId }: FrameIdentifier, accessToken: string) {
     const query = new URLSearchParams({ frameId, projectId }).toString();
-    const response = await fetch(`${BASE_URL}${API.frames.base}?${query}`, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-        cache: "no-store",
-    });
-
-    const body = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message = body?.message ?? "Failed to load frame";
+    try {
+        const res = await axios.get(`${BASE_URL}${API.frames.base}?${query}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const body = res?.data ?? null;
+        const data = (body?.data ?? null) as FrameDetails | null;
+        if (!data) throw new Error("Invalid frame response");
+        return data;
+    } catch (err: any) {
+        const message = err?.response?.data?.message || err?.message || "Failed to load frame";
         throw new Error(message);
     }
-
- type UpdateFrameDesignWithLabelPayload = FrameIdentifier & {
-    designCode: string;
-    label?: string;
-};
-~
- async function updateFrameDesignWithLabel({ frameId, projectId, designCode, label }: UpdateFrameDesignWithLabelPayload, accessToken: string) {
-    const query = new URLSearchParams({ frameId, projectId }).toString();
-    const response = await fetch(`${BASE_URL}${API.frames.base}?${query}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ designCode, label }),
-    });
-
-    const body = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message = body?.message ?? "Failed to save frame";
-        throw new Error(message);
-    }
-
-    return body?.data ?? null;
-}
-
-    const data = (body?.data ?? null) as FrameDetails | null;
-    if (!data) {
-        throw new Error("Invalid frame response");
-    }
-    return data;
 }
 
 export async function fetchFrameHistory({ frameId, projectId }: FrameIdentifier, accessToken: string) {
     const query = new URLSearchParams({ frameId, projectId }).toString();
-    const response = await fetch(`${BASE_URL}${API.frames.base}/history?${query}`, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-        cache: "no-store",
-    });
-
-    const body = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message = body?.message ?? "Failed to load frame history";
+    try {
+        const res = await axios.get(`${BASE_URL}${API.frames.base}/history?${query}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const body = res?.data ?? null;
+        const data = (body?.data ?? []) as FrameSnapshotMeta[];
+        return data;
+    } catch (err: any) {
+        const message = err?.response?.data?.message || err?.message || "Failed to load frame history";
         throw new Error(message);
     }
-
-    const data = (body?.data ?? []) as FrameSnapshotMeta[];
-    return data;
 }
 
 export async function fetchFrameSnapshot(id: number, accessToken: string) {
-    const response = await fetch(`${BASE_URL}${API.frames.base}/snapshots/${id}`, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-        cache: "no-store",
-    });
-
-    const body = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message = body?.message ?? "Failed to load snapshot";
+    try {
+        const res = await axios.get(`${BASE_URL}${API.frames.base}/snapshots/${id}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const body = res?.data ?? null;
+        const data = (body?.data ?? null) as FrameSnapshot | null;
+        if (!data) throw new Error("Invalid snapshot response");
+        return data;
+    } catch (err: any) {
+        const message = err?.response?.data?.message || err?.message || "Failed to load snapshot";
         throw new Error(message);
     }
-
-    const data = (body?.data ?? null) as FrameSnapshot | null;
-    if (!data) {
-        throw new Error("Invalid snapshot response");
-    }
-
-    return data;
 }
 
 export type UpdateFrameDesignPayload = FrameIdentifier & {
@@ -102,23 +54,16 @@ export type UpdateFrameDesignPayload = FrameIdentifier & {
 
 export async function updateFrameDesign({ frameId, projectId, designCode }: UpdateFrameDesignPayload, accessToken: string) {
     const query = new URLSearchParams({ frameId, projectId }).toString();
-    const response = await fetch(`${BASE_URL}${API.frames.base}?${query}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ designCode }),
-    });
-
-    const body = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message = body?.message ?? "Failed to save frame";
+    try {
+        const res = await axios.put(`${BASE_URL}${API.frames.base}?${query}`, { designCode }, {
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        });
+        const body = res?.data ?? null;
+        return body?.data ?? null;
+    } catch (err: any) {
+        const message = err?.response?.data?.message || err?.message || "Failed to save frame";
         throw new Error(message);
     }
-
-    return body?.data ?? null;
 }
 
 export type SaveFrameMessagesPayload = {
@@ -127,22 +72,15 @@ export type SaveFrameMessagesPayload = {
 };
 
 export async function saveFrameMessages({ frameId, messages }: SaveFrameMessagesPayload, accessToken: string) {
-    const response = await fetch(`${BASE_URL}${API.chat.messages}?frameId=${frameId}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ chatMessage: messages }),
-    });
-
-    const body = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message = body?.message ?? "Failed to save messages";
+    try {
+        const res = await axios.put(`${BASE_URL}${API.chat.messages}?frameId=${frameId}`, { chatMessage: messages }, {
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        });
+        const body = res?.data ?? null;
+        return body?.data ?? null;
+    } catch (err: any) {
+        const message = err?.response?.data?.message || err?.message || "Failed to save messages";
         throw new Error(message);
     }
-
-    return body?.data ?? null;
 }
 

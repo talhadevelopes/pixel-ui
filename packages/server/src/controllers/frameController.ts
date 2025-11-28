@@ -1,11 +1,9 @@
 import { NextFunction, Response } from "express";
-import { and, desc, eq } from "drizzle-orm";
 import z from "zod";
 
-import { AuthRequest } from "../middleware/auth";
-import { chatTable, frameTable, frameHistoryTable } from "../db/schema";
-import { db } from "../utils/drizzle";
+import { AuthRequest } from "../middleware/authMiddleware";
 import { sendError, sendSuccess } from "../types/response";
+import { prisma } from "../utils/prisma";
 
 const createProjectSchema = z.object({
     projectId: z.string().min(1, "projectId is required"),
@@ -24,20 +22,15 @@ export class FrameController {
                 return sendError(res, "Missing projectId or frameId", 400);
             }
 
-            const [frame] = await db.select()
-                .from(frameTable)
-                .where(and(eq(frameTable.projectId, projectId), eq(frameTable.frameId, frameId)))
-                .limit(1);
+            const frame = await prisma.frame.findFirst({ where: { projectId, frameId } });
 
             if (!frame) {
                 return sendError(res, "Frame not found", 404);
             }
 
-            const chatResult = await db.select()
-                .from(chatTable)
-                .where(eq(chatTable.frameId, frameId));
+            const chat = await prisma.chat.findFirst({ where: { frameId }, orderBy: { id: "asc" } });
 
-            const chatMessages = chatResult.length > 0 ? chatResult[0]?.chatMessage ?? [] : [];
+            const chatMessages = chat?.chatMessage ?? [];
 
             const response = {
                 ...frame,
@@ -58,19 +51,16 @@ export class FrameController {
             if (typeof projectId !== "string" || typeof frameId !== "string") {
                 return sendError(res, "Missing projectId or frameId", 400);
             }
-            await db.update(frameTable)
-                .set({ designCode })
-                .where(and(eq(frameTable.projectId, projectId), eq(frameTable.frameId, frameId)));
+            await prisma.frame.updateMany({ where: { projectId, frameId }, data: { designCode } });
             let label: string | null = labelBody ? String(labelBody).trim().slice(0, 120) : null;
             if (!label) {
                 try {
-                    const latestChat = await db
-                        .select({ id: chatTable.id, chatMessage: chatTable.chatMessage })
-                        .from(chatTable)
-                        .where(eq(chatTable.frameId, frameId))
-                        .orderBy(desc(chatTable.id))
-                        .limit(1);
-                    const chatArray = (latestChat?.[0]?.chatMessage ?? []) as Array<{ role?: string; content?: string }>;
+                    const latestChat = await prisma.chat.findFirst({
+                        where: { frameId },
+                        orderBy: { id: "desc" },
+                        select: { id: true, chatMessage: true },
+                    });
+                    const chatArray = (latestChat?.chatMessage ?? []) as Array<{ role?: string; content?: string }>;
                     for (let i = chatArray.length - 1; i >= 0; i--) {
                         const m = chatArray[i];
                         if (m?.role === "user" && typeof m?.content === "string" && m.content.trim().length > 0) {
@@ -82,11 +72,13 @@ export class FrameController {
                 }
             }
             try {
-                await db.insert(frameHistoryTable).values({
-                    projectId,
-                    frameId,
-                    designCode: String(designCode ?? ""),
-                    label: label ?? null,
+                await prisma.frameHistory.create({
+                    data: {
+                        projectId,
+                        frameId,
+                        designCode: String(designCode ?? ""),
+                        label: label ?? null,
+                    },
                 });
             } catch (err) {
                 console.error("Failed to insert frame history snapshot:", err);
@@ -104,15 +96,11 @@ export class FrameController {
                 return sendError(res, "Missing projectId or frameId", 400);
             }
 
-            const rows = await db
-                .select({
-                    id: frameHistoryTable.id,
-                    label: frameHistoryTable.label,
-                    createdAt: frameHistoryTable.createdAt,
-                })
-                .from(frameHistoryTable)
-                .where(and(eq(frameHistoryTable.projectId, projectId), eq(frameHistoryTable.frameId, frameId)))
-                .orderBy(desc(frameHistoryTable.id));
+            const rows = await prisma.frameHistory.findMany({
+                where: { projectId, frameId },
+                select: { id: true, label: true, createdAt: true },
+                orderBy: { id: "desc" },
+            });
 
             return sendSuccess(res, rows, "Success", 200);
         } catch (error) {
@@ -128,13 +116,8 @@ export class FrameController {
                 return sendError(res, "Invalid snapshot id", 400);
             }
 
-            const rows = await db
-                .select()
-                .from(frameHistoryTable)
-                .where(eq(frameHistoryTable.id, id))
-                .limit(1);
+            const snapshot = await prisma.frameHistory.findUnique({ where: { id } });
 
-            const snapshot = rows?.[0] ?? null;
             if (!snapshot) {
                 return sendError(res, "Snapshot not found", 404);
             }

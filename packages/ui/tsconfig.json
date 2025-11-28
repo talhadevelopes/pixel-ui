@@ -6,6 +6,6 @@
       "@workspace/ui/*": ["./src/*"]
     }
   },
-  "include": ["."],
+  "include": [".", "../../apps/web/components/layout/Sidebar.tsx", "../../apps/web/components/layout/ThemeToggle.tsx"],
   "exclude": ["node_modules", "dist"]
 }

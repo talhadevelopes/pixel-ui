@@ -9,6 +9,7 @@ import projectRoutes from './routes/projectRoutes'
 import frameRoutes from './routes/frameRoutes'
 import chatRoute from './routes/chatRoute'
 import subscriptionRoutes from './routes/subscriptionRoutes'
+import { prisma } from './utils/prisma'
 
 const app = express();
 
@@ -33,6 +34,12 @@ app.use('/api/subscriptions', subscriptionRoutes)
 
 const PORT = process.env.PORT || 4000;
 //@ts-ignore
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`Server started on port ${PORT}`);
+  try {
+    await prisma.$connect();
+    console.log('Database connected');
+  } catch (err) {
+    console.error('Database connection failed:', err);
+  }
 });

@@ -1,20 +1,20 @@
+import axios from "axios";
 import { API, BASE_URL } from "./api";
 import { CreateSubscriptionPayload, CreateSubscriptionResult, SubscriptionPlan, SubscriptionPlansResponse, SubscriptionStatus, VerifySubscriptionPayload } from "@/types/subscription.types";
 
 
-async function request<T>(
-    input: RequestInfo | URL,
-    init?: RequestInit,
-): Promise<T> {
-    const response = await fetch(input, init);
-    const body = await response.json().catch(() => null);
-
-    if (!response.ok) {
-        const message = body?.message ?? "Subscription request failed";
+async function request<T>(url: string, init?: RequestInit): Promise<T> {
+    try {
+        const method = (init?.method || "GET").toLowerCase() as any;
+        const headers = init?.headers as Record<string, string> | undefined;
+        const data = init?.body ? JSON.parse(init.body as string) : undefined;
+        const res = await axios({ url, method, headers, data });
+        const body = res?.data ?? null;
+        return (body?.data ?? body) as T;
+    } catch (err: any) {
+        const message = err?.response?.data?.message || err?.message || "Subscription request failed";
         throw new Error(message);
     }
-
-    return (body?.data ?? body) as T;
 }
 
 function authHeaders(accessToken: string | null | undefined) {

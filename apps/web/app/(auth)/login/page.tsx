@@ -20,7 +20,7 @@ export default function LoginPage() {
         onSuccess: (tokens) => {
             setAuthTokens(tokens);
             toast.success("Logged in successfully");
-            router.push("/");
+            router.replace("/workspace");
         },
         onError: (error) => {
             console.error("Login failed", error);

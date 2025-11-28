@@ -8,7 +8,7 @@ import { Button } from "@workspace/ui/components/button";
 import { useDesignStore } from '@/store/useDesignStore';
 
 interface Props {
-    selectedElement: HTMLElement | null;
+    selectedElement: any; // This is now just element data, not DOM element
     clearSelection: () => void;
 }
 
@@ -26,6 +26,29 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
     
     const { iframeRef } = useDesignStore();
     
+    // Get the actual DOM element from iframe
+    const getIframeElement = () => {
+        if (!iframeRef?.current?.contentWindow?.document || !selectedElement) return null;
+        
+        const doc = iframeRef.current.contentWindow.document;
+        
+        // Try to find by ID first
+        if (selectedElement.id) {
+            const el = doc.getElementById(selectedElement.id);
+            if (el) return el;
+        }
+        
+        // Fallback: Find by tag and class
+        const elements = doc.getElementsByTagName(selectedElement.tagName);
+        for (let i = 0; i < elements.length; i++) {
+            if (elements[i].className === selectedElement.className) {
+                return elements[i];
+            }
+        }
+        
+        return null;
+    };
+    
     // Initialize all values from selected element
     useEffect(() => {
         if (!selectedElement) {
@@ -41,22 +64,31 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
             return;
         }
         
-        // Get styles from the passed element data
-        const view = selectedElement.ownerDocument?.defaultView;
-        const computed = view?.getComputedStyle(selectedElement);
-        const styles = selectedElement.style || {};
+        // Get actual DOM element from iframe
+        const iframeElement = getIframeElement();
+        if (!iframeElement) {
+            console.warn('Could not find element in iframe');
+            return;
+        }
+        
+        // Get styles from the actual DOM element
+        const view = iframeElement.ownerDocument?.defaultView;
+        const computed = view?.getComputedStyle(iframeElement);
+        const styles = iframeElement.style || {};
 
-        setAlign(styles.textAlign || 'left');
-        setFontSize(styles.fontSize || '16px');
-        setColor(styles.color || '#000000');
-        setBackgroundColor(styles.backgroundColor || '#ffffff');
-        setBorderRadius(styles.borderRadius || '0px');
+        setAlign(styles.textAlign || computed?.textAlign || 'left');
+        setFontSize(styles.fontSize || computed?.fontSize || '16px');
+        setColor(styles.color || computed?.color || '#000000');
+        setBackgroundColor(styles.backgroundColor || computed?.backgroundColor || '#ffffff');
+        setBorderRadius(styles.borderRadius || computed?.borderRadius || '0px');
+        
         setPaddingValues({
             top: (styles.paddingTop || computed?.paddingTop || '0px').replace('px', ''),
             right: (styles.paddingRight || computed?.paddingRight || '0px').replace('px', ''),
             bottom: (styles.paddingBottom || computed?.paddingBottom || '0px').replace('px', ''),
             left: (styles.paddingLeft || computed?.paddingLeft || '0px').replace('px', ''),
         });
+        
         setMarginValues({
             top: (styles.marginTop || computed?.marginTop || '0px').replace('px', ''),
             right: (styles.marginRight || computed?.marginRight || '0px').replace('px', ''),
@@ -64,12 +96,12 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
             left: (styles.marginLeft || computed?.marginLeft || '0px').replace('px', ''),
         });
         
-        // Update classes
+        // Update classes from the data
         const classes = (selectedElement.className || '')
             .split(' ')
-            .filter(c => c.trim() !== '');
+            .filter((c: string) => c.trim() !== '');
         setElementClasses(classes);
-    }, [selectedElement]);
+    }, [selectedElement, iframeRef]);
     
     // Handle style changes and send to iframe
     const handleStyleChange = (property: string, value: string) => {
@@ -98,14 +130,14 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
                     break;
             }
 
-            // Send message directly to iframe to update the selected element
+            // Send message to iframe to update the selected element
             iframeRef.current.contentWindow.postMessage({
                 type: 'updateStyle',
                 property: property,
                 value: value
             }, '*');
 
-            console.log('Sent style update:', property, value);
+            console.log('✅ Sent style update:', property, value);
 
         } catch (error) {
             console.error('Error applying style:', error);
@@ -176,6 +208,7 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
         return (
             <div className="p-4 text-center text-gray-500">
                 <p>No element selected</p>
+                <p className="text-xs mt-2">Click any element in the preview to edit it</p>
             </div>
         );
     }
@@ -185,7 +218,7 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium flex items-center gap-2">
                     <SwatchBook className="h-4 w-4" />
-                    Element Settings
+                    {selectedElement.tagName} Settings
                 </h3>
                 <Button 
                     variant="ghost" 
@@ -366,7 +399,7 @@ const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelecti
                             elementClasses.map((cls) => (
                                 <span
                                     key={cls}
-                                    className='flex items-center gap-1 px-2 py-1 text-sm rounded-full'
+                                    className='flex items-center gap-1 px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800'
                                 >
                                     {cls}
                                     <button

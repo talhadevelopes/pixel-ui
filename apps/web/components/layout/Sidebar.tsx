@@ -6,10 +6,10 @@ import { Progress } from "@workspace/ui/components/progress";
 import { Sparkles, LogOut, Moon, Plus, Sun, FolderOpen, User, X, Home } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { ProjectHistory } from "../workspace/ProjectsHistory";
 import { useSubscriptionStatusQuery } from "@/mutations/useSubscription";
 import { useAuthToken } from "@/services/auth.api";
 import { useProfileQuery } from "@/queries/useAuthQueries";
+import { ProjectHistory } from "@/components/layout/ProjectsHistory";
 
 type SidebarTab = "profile" | "workspace" | null;
 

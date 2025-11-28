@@ -1,7 +1,7 @@
 import express from "express";
 
 import { ProjectController } from "../controllers/projectController";
-import { protect } from "../middleware/auth";
+import { protect } from "../middleware/authMiddleware";
 
 const router = express.Router();
 

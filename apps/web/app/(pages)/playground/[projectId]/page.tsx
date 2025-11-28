@@ -1,10 +1,10 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { PlaygroundHeader } from "../../../../components/playground/PlaygroundHeader";
-import { WebsiteDesignSection } from "../../../../components/playground/WebsiteDesign";
+import { PlaygroundHeader } from "./_components/PlaygroundHeader";
+import { WebsiteDesignSection } from "./_components/WebsiteDesign";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ChatSection from "../../../../components/playground/ChatSection";
+import ChatSection from "./_components/ChatSection";
 import { toast } from "sonner";
 import {
   fetchFrameDetails,
@@ -15,10 +15,10 @@ import { createChatCompletion } from "@/services/chat.api";
 import {
   parseChatCompletionStream,
   stripCodeFences,
-} from "@/utils/chat-stream";
+} from "@/lib/chat-stream";
 import { useQueryClient } from "@tanstack/react-query";
 import { subscriptionKeys } from "@/mutations/useSubscription";
-import { Sidebar } from "@/components/custom/Sidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { useAuthToken } from "@/services/auth.api";
 
 export interface FrameDetails {
@@ -32,44 +32,6 @@ export interface Messages {
   role: string;
   content: string;
 }
-
-const PROMPT_TEMPLATE = `userInput: {userInput}
-
-Instructions:
-- If the user input is explicitly asking to generate code, design, or HTML/CSS/JS output (e.g., "Create a landing page", "Build a dashboard", "Generate HTML Tailwind CSS code"), then:
-
-Generate a complete HTML Tailwind CSS code using Flowbite UI components.
-(Use a modern design with #4b5c as the primary color.)
-- Only include the <body> content (do not add <html> or <title>).
-- Make it fully responsive for all screen sizes.
-- All primary components must match the theme.
-
-then:
-- Use placeholders for all images:
-  Light mode:
-  https://community.softr.io/uploads/db9110/original/2X/7f/7c6e0c54325ff1ca71263aa8e5b8df6f8372e0dcc.jpeg
-  Dark mode:
-  https://community.softr.io/uploads/2015/12/placeholder-3.jpg
-- Add alt tags describing each image prompt.
-- Use the following libraries/components where appropriate:
-  - Flowbite UI components
-  - Awesome icons (fa fa-*)
-  - Chart.js for charts & graphs
-  - Slider.js for sliders/carousels/slidesheets
-  - Tooltips and poppers
-  - Interactive components like modals or dropdowns
-- Ensure proper spacing, alignment, hierarchy, and consistency.
-- Use colors that are visually appealing and match the theme.
-- Header menu options should be spaced apart rather than grouped.
-
-Do not include broken links.
-Do not add any extra text before or after the HTML code.
-
-- If user input does not explicitly ask to generate code, then respond with a simple, friendly text message instead of generating any code.
-
-Example:
-- User: "Hi" ⟹ Response: "Hello! How can I help you today?"
-- User: "Build a responsive landing page with Tailwind CSS" ⟹ Response: [Generate full HTML code as per instructions above]`;
 
 export default function PlaygroundPage() {
   const params = useParams();
@@ -85,13 +47,7 @@ export default function PlaygroundPage() {
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const accessToken = useAuthToken();
   const autoTriggerRef = useRef(false);
-  const sendMessageRef = useRef<
-    | ((
-        input: string,
-        options?: { appendUserMessage?: boolean; presetMessages?: Messages[] }
-      ) => Promise<void>)
-    | null
-  >(null);
+  const sendMessageRef = useRef<((msg: string, options?: { appendUserMessage?: boolean; presetMessages?: Messages[] }) => Promise<void>) | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
@@ -137,13 +93,6 @@ export default function PlaygroundPage() {
     [accessToken, frameId]
   );
 
-  const formatUserPrompt = useCallback((content: string) => {
-    if (content.includes("Instructions:")) {
-      return content;
-    }
-    return PROMPT_TEMPLATE.replace("{userInput}", content);
-  }, []);
-
   const sendMessage = useCallback(
     async (
       userInput: string,
@@ -165,16 +114,14 @@ export default function PlaygroundPage() {
         const userMessage: Messages = { role: "user", content: trimmedInput };
         workingMessages = [...messages, userMessage];
         setMessages(workingMessages);
-        setGeneratedCode("");
       } else if (options?.presetMessages) {
         setMessages(options.presetMessages);
       }
 
-      const messagesForApi = workingMessages.map((message) =>
-        message.role === "user"
-          ? { ...message, content: formatUserPrompt(message.content) }
-          : message
-      );
+      const messagesForApi = workingMessages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      }));
 
       try {
         if (!accessToken) {
@@ -182,10 +129,16 @@ export default function PlaygroundPage() {
           return;
         }
 
+        const generationId =
+          globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
+            ? globalThis.crypto.randomUUID()
+            : `${frameId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
         const response = await createChatCompletion({
           accessToken,
           frameId,
           messages: messagesForApi,
+          generationId,
         });
 
         const { code: cleanedCode, raw } = await parseChatCompletionStream(
@@ -195,14 +148,34 @@ export default function PlaygroundPage() {
           }
         );
 
-        const finalCode =
-          cleanedCode && cleanedCode !== "undefined" ? cleanedCode : "";
+        let finalCode = cleanedCode && cleanedCode !== "undefined" ? cleanedCode : "";
+        let effectiveRaw = raw;
+
+        if (!finalCode) {
+          const strictHint = `${trimmedInput}\nStrictOutput: Return ONLY HTML Tailwind CSS code inside a single markdown fenced code block labeled html. No explanations.`;
+          const strictMessages = [
+            { role: "user", content: strictHint },
+          ];
+          const response2 = await createChatCompletion({
+            accessToken,
+            frameId,
+            messages: strictMessages,
+            generationId,
+          });
+          const { code: cleaned2, raw: raw2 } = await parseChatCompletionStream(
+            response2,
+            { onPartialCode: (partial) => setGeneratedCode(partial) }
+          );
+          finalCode = cleaned2 && cleaned2 !== "undefined" ? cleaned2 : "";
+          effectiveRaw = raw2 ?? raw;
+        }
+
         if (finalCode) {
           setGeneratedCode(finalCode);
         }
         const assistantMessage: Messages = finalCode
           ? { role: "assistant", content: "Your Code is Ready" }
-          : { role: "assistant", content: raw };
+          : { role: "assistant", content: effectiveRaw };
 
         const finalMessages = [...workingMessages, assistantMessage];
         setMessages(finalMessages);
@@ -251,7 +224,6 @@ export default function PlaygroundPage() {
     [
       accessToken,
       frameId,
-      formatUserPrompt,
       messages,
       saveGeneratedCode,
       saveMessages,
@@ -352,19 +324,19 @@ export default function PlaygroundPage() {
           <div
             className={`grid gap-6 ${isChatVisible ? "lg:grid-cols-[0.8fr_2fr]" : "lg:grid-cols-1"} lg:min-h-[calc(100vh-18rem)]`}
           >
-            {" "}
             {isChatVisible && (
               <ChatSection
                 loading={loading}
                 messages={messages ?? []}
-                onSend={(input) => sendMessage(input)}
+                onSend={(msg) => sendMessage(msg)}
               />
             )}
             <WebsiteDesignSection
               generatedCode={generatedCode}
               projectId={projectId}
               frameId={frameId ?? undefined}
-              onSettingsToggle={setIsChatVisible} // Pass the toggle function
+              onSettingsToggle={setIsChatVisible}
+              onCodeChange={setGeneratedCode}
             />
           </div>
           <PlaygroundHeader

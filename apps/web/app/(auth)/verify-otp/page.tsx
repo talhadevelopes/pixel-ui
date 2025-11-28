@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import VerifyOtpContent from "@/components/auth/VerifyOtpContent";
+import VerifyOtpContent from "@/app/(auth)/verify-otp/_components/VerifyOtpContent";
 
 export default function VerifyOtpPage() {
   return (

@@ -1,10 +1,7 @@
 import crypto from "node:crypto";
 
-import { eq } from "drizzle-orm";
-
-import { db } from "../utils/drizzle";
-import { userTable } from "../db/schema";
 import { generateAccessToken, generateRefreshToken, hashPassword } from "../utils/jwt";
+import { prisma } from "../utils/prisma";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -78,38 +75,23 @@ export async function handleGoogleCallback(code: string, state?: string): Promis
     const email: string = profile.email;
     const name: string = profile.name ?? profile.given_name ?? "Google User";
 
-    const existingUsers = await db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.email, email))
-        .limit(1);
-
-    let user = existingUsers[0];
+    let user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
         const randomPassword = crypto.randomBytes(32).toString("hex");
         const hashedPassword = await hashPassword(randomPassword);
 
-        const insertedUsers = await db
-            .insert(userTable)
-            .values({
+        user = await prisma.user.create({
+            data: {
+                id: crypto.randomUUID(),
                 name,
                 email,
                 password: hashedPassword,
                 credits: 5,
-            })
-            .returning();
-
-        user = insertedUsers[0];
+            },
+        });
     } else if (!user.name && name) {
-        // Optionally update missing name information
-        const updatedUsers = await db
-            .update(userTable)
-            .set({ name })
-            .where(eq(userTable.id, user.id))
-            .returning();
-
-        user = updatedUsers[0] ?? user;
+        user = await prisma.user.update({ where: { id: user.id }, data: { name } });
     }
 
     const accessToken = generateAccessToken({

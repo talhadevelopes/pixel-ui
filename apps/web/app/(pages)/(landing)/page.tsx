@@ -1,8 +1,8 @@
-import { HeroSection } from "../components/landing/HeroSection"
-import { DashboardPreview } from "../components/landing/DashboardPreview"
-import { BentoSection } from "../components/landing/BentoSection"
-import { AnimatedSection } from "../components/landing/AnimatedSection"
-import { Footer } from "../components/landing/Footer"
+import { HeroSection } from "./_components/HeroSection"
+import { DashboardPreview } from "./_components/DashboardPreview"
+import { BentoSection } from "./_components/BentoSection"
+import { AnimatedSection } from "./_components/AnimatedSection"
+import { Footer } from "./_components/Footer"
 
 export default function LandingPage() {
   return (
