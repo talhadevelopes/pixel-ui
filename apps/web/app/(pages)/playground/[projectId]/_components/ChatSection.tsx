@@ -62,7 +62,7 @@ function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
     }, [loading]);
 
     return (
-        <div className="flex h-[70%] mt-[20%] flex-col rounded-lg overflow-hidden shadow-2xl font-mono text-sm bg-card border border-border/70">
+        <div className="flex h-[87%] mt-[19%] flex-col rounded-lg overflow-hidden shadow-2xl font-mono text-sm bg-card border border-border/70">
             {/* Terminal Header */}
             <div className="bg-muted/30 px-4 py-2 flex items-center gap-2 border-b border-border/70">
                 <div className="flex gap-2">

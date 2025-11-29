@@ -13,7 +13,7 @@ import {
   stripTrailingMetadata,
 } from "@/lib/code-processors";
 import { useAIGeneration } from "@/hooks/useAIGeneration";
-import { WebPageTools, ElementSettingsSection } from "./index";
+import { WebPageTools, ElementSettingsSection, ImageSettingsAction } from "./index";
 
 export function WebsiteDesignSection({
   generatedCode,

@@ -236,20 +236,20 @@ export function WebPageTools({
               Diff
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[90vw]">
+          <DialogContent className="max-w-[95vw] sm:max-w-[95vw]">
             <DialogHeader>
               <DialogTitle>Diff: Current vs Selected Version</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 max-h-[70vh] overflow-auto">
               <div>
-                <h4 className="text-sm mb-2">Current</h4>
-                <pre className="bg-muted p-2 rounded-md whitespace-pre-wrap text-xs">
+                <h4 className="text-sm font-semibold mb-2">Current</h4>
+                <pre className="bg-muted p-4 rounded-md whitespace-pre-wrap text-xs overflow-x-auto">
                   {currentCode}
                 </pre>
               </div>
               <div>
-                <h4 className="text-sm mb-2">Selected</h4>
-                <pre className="bg-muted p-2 rounded-md whitespace-pre-wrap text-xs">
+                <h4 className="text-sm font-semibold mb-2">Selected</h4>
+                <pre className="bg-muted p-4 rounded-md whitespace-pre-wrap text-xs overflow-x-auto">
                   {compareCode}
                 </pre>
               </div>

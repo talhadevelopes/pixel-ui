@@ -52,7 +52,7 @@ export function ViewCodeBlock({ children, code, nextJsCode }: any) {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-[95vw] sm:max-w-[95vw] max-h-[90vh]">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Source Code</DialogTitle>
@@ -116,9 +116,17 @@ export function ViewCodeBlock({ children, code, nextJsCode }: any) {
           </button>
         </div>
 
-        <div className="overflow-auto max-h-[60vh]">
+        <div className="overflow-auto max-h-[70vh]">
           {currentCode ? (
-            <SyntaxHighlighter language={currentLanguage} style={prism}>
+            <SyntaxHighlighter 
+              language={currentLanguage} 
+              style={prism}
+              customStyle={{
+                margin: 0,
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem'
+              }}
+            >
               {currentCode}
             </SyntaxHighlighter>
           ) : (
