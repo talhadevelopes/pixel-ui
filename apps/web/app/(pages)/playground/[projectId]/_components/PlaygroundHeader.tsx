@@ -1,4 +1,4 @@
-import { Button } from "@workspace/ui/components/button"
+import { Button } from "@workspace/ui"
 import { BookAIcon, Loader2, Save } from "lucide-react"
 import { useDesignStore } from '@/store/useDesignStore';
 import { PlaygroundHeaderProps } from "@workspace/types";

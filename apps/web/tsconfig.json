@@ -4,8 +4,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@workspace/ui": ["../../packages/ui/src"],
-      "@workspace/ui/*": ["../../packages/ui/src/*"],
       "@workspace/types": ["../../packages/types/src"],
       "@workspace/types/*": ["../../packages/types/src/*"]
     },

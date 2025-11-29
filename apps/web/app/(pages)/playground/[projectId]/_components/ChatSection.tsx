@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@workspace/ui";
 import { ArrowUpRight, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { FrameMessage } from "@workspace/types";

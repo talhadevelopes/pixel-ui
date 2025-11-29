@@ -1,7 +1,4 @@
-import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@workspace/ui/components/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
+import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@workspace/ui";
 import { Copy, Check, Download } from "lucide-react";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { prism } from "react-syntax-highlighter/dist/cjs/styles/prism";
