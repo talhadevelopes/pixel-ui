@@ -12,13 +12,16 @@ COPY packages/server/package.json ./packages/server/
 COPY packages/types/package.json ./packages/types/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 
-# Install dependencies
+# Install dependencies (including Prisma)
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY packages/server ./packages/server
 COPY packages/types ./packages/types
 COPY packages/typescript-config ./packages/typescript-config
+
+# Generate Prisma Client
+RUN cd packages/server && npx prisma generate
 
 # Build types first, then server
 RUN pnpm --filter @workspace/types build
@@ -30,7 +33,6 @@ WORKDIR /app
 # Copy built files
 COPY --from=builder /app/packages/server/dist ./dist
 COPY --from=builder /app/packages/server/package.json ./package.json
-COPY --from=builder /app/packages/types/dist ./node_modules/@workspace/types/dist
 COPY --from=builder /app/node_modules ./node_modules
 
 ENV NODE_ENV=production
