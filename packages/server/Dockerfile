@@ -20,7 +20,8 @@ COPY packages/server ./packages/server
 COPY packages/types ./packages/types
 COPY packages/typescript-config ./packages/typescript-config
 
-# Build
+# Build types first, then server
+RUN pnpm --filter @workspace/types build
 RUN pnpm --filter server build
 
 FROM base AS runner
@@ -29,6 +30,7 @@ WORKDIR /app
 # Copy built files
 COPY --from=builder /app/packages/server/dist ./dist
 COPY --from=builder /app/packages/server/package.json ./package.json
+COPY --from=builder /app/packages/types/dist ./node_modules/@workspace/types/dist
 COPY --from=builder /app/node_modules ./node_modules
 
 ENV NODE_ENV=production
