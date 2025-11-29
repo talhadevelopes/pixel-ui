@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove transpilePackages - it's forcing Next.js to use src files
+  transpilePackages: ["@workspace/ui"],
   experimental: {
     externalDir: true,
   },
