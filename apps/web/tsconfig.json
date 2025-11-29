@@ -4,7 +4,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@workspace/ui/*": ["../../packages/ui/src/*"]
+      "@workspace/ui/*": ["../../packages/ui/src/*"],
+      "@workspace/types": ["../../packages/types/src"],
+      "@workspace/types/*": ["../../packages/types/src/*"]
     },
     "plugins": [
       {
@@ -18,6 +20,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-, "../../packages/server/src/validation/authValidation.ts", "../../packages/ui/src/templates/html-template.ts", "components/layout/Sidebar.tsx", "components/layout/ThemeToggle.tsx", "../../packages/server/src/utils/prompt-template.ts", "../../packages/types/src/client/chat.types.ts", "../../packages/types/src/client/frames.types.ts", "../../packages/types/src/client/projects.types.ts", "../../packages/types/src/client/subscription.types.ts"  ],
+  ],
   "exclude": ["node_modules"]
 }
