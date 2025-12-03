@@ -59,7 +59,7 @@ app.use((req, res, next) => {
 app.use('/health', (req, res) => {
     res.json({ status: "OK", message: "Server is working" });
 });
-app.get('/health', async (req, res) => {
+app.get('/healthz', async (req, res) => {
     try {
         // Simple DB connectivity check
         // @ts-ignore
