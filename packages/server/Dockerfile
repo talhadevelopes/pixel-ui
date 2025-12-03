@@ -7,47 +7,38 @@ WORKDIR /app
 # Copy root files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
-# Copy all package.json files first
+# Copy all package.json files
 COPY packages/server/package.json ./packages/server/
 COPY packages/types/package.json ./packages/types/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 
-# Install dependencies (including Prisma)
-RUN pnpm install --frozen-lockfile
+# Install ALL dependencies with shamefully-hoist to flatten everything
+RUN pnpm install --frozen-lockfile --shamefully-hoist
 
 # Copy source code
 COPY packages/server ./packages/server
 COPY packages/types ./packages/types
 COPY packages/typescript-config ./packages/typescript-config
 
-# Generate Prisma Client
+# Generate Prisma Client (will be in node_modules now)
 RUN cd packages/server && npx prisma generate
 
-# Build types first, then server
+# Build
 RUN pnpm --filter @workspace/types build
 RUN pnpm --filter server build
 
 FROM base AS runner
 WORKDIR /app
 
-# Copy package files for production install
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages/server/package.json ./packages/server/
-
-# Install ONLY production dependencies
-RUN pnpm install --prod --frozen-lockfile
-
-# Copy Prisma client from builder
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
-# Copy built application
-COPY --from=builder /app/packages/server/dist ./packages/server/dist
-COPY --from=builder /app/packages/server/package.json ./packages/server/package.json
+# Copy everything from builder - dependencies are already flattened
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/server/dist ./dist
+COPY --from=builder /app/packages/server/package.json ./package.json
+COPY --from=builder /app/packages/server/prisma ./prisma
 
 ENV NODE_ENV=production
 ENV PORT=4000
 
 EXPOSE 4000
 
-CMD ["node", "packages/server/dist/index.js"]
+CMD ["node", "dist/index.js"]
