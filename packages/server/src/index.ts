@@ -1,5 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import express from 'express';
 import hpp from 'hpp';
 import helmet from 'helmet';
