@@ -1,4 +1,5 @@
-import { GoogleCallbackInput, LoginInput, RegisterInput, googleCallbackSchema, verifyOtpSchema, resendOtpSchema } from "../validation/authValidation";
+import { GoogleCallbackInput, LoginInput, RegisterInput, googleCallbackSchema, verifyOtpSchema, resendOtpSchema, loginSchema, registerSchema } from "../validation/authValidation";
+
 import { AuthRequest } from "../middleware/authMiddleware";
 import { Response, NextFunction } from "express";
 import z from "zod";
@@ -13,7 +14,7 @@ import { prisma } from "../utils/prisma";
 export class AuthController {
     static async register(req: AuthRequest, res: Response, next: NextFunction) {
         try {
-            const { name, email, password } = req.body as RegisterInput;
+            const { name, email, password } = registerSchema.parse(req.body);
             const emailLower = email.trim().toLowerCase();
 
             const existingUser = await prisma.user.findUnique({ where: { email: emailLower } });
@@ -54,32 +55,16 @@ export class AuthController {
 
     static async login(req: AuthRequest, res: Response, next: NextFunction) {
         try {
-            const { email, password } = req.body as LoginInput;
+            const { email, password } = loginSchema.parse(req.body);
             const emailLower = email.trim().toLowerCase();
 
             console.log(`[Auth] Login attempt for ${emailLower}`);
 
-            let user = await prisma.user.findUnique({ where: { email: emailLower } });
+            const user = await prisma.user.findUnique({ where: { email: emailLower } });
 
             if (!user) {
-                console.log(`[Auth] No existing user for ${emailLower}. Creating new user.`);
-                const hashed = await hashPassword(password);
-                user = await prisma.user.create({
-                    data: {
-                        id: crypto.randomUUID(),
-                        name: emailLower.split("@")[0],
-                        email: emailLower,
-                        password: hashed,
-                        credits: 5,
-                        tier: "free",
-                        dailyCreditsLimit: 5,
-                        lastCreditReset: new Date(),
-                        subscriptionStatus: "inactive",
-                    },
-                });
-                console.log(`[Auth] User created with id ${user.id}`);
-            } else {
-                console.log(`[Auth] Existing user ${user.id} found for ${emailLower}`);
+                console.warn(`[Auth] Login failed - user not found for ${emailLower}`);
+                return sendError(res, "Invalid credentials", 401);
             }
 
             const isPasswordValid = await verifyPassword(password, user.password);

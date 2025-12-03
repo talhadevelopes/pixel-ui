@@ -21,7 +21,11 @@ import { prisma } from './utils/prisma'
 const app = express();
 
 const corsOrigin = process.env.CLIENT_URL || "http://localhost:3000";
-console.log('🔥 CORS ORIGIN BEING USED:', corsOrigin);
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || corsOrigin)
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+console.log('🔥 CORS ALLOWED ORIGINS:', allowedOrigins);
 
 // Middlewares
 app.use(express.json());
@@ -29,7 +33,12 @@ app.use(hpp());
 app.use(helmet());
 
 app.use(cors({
-    origin: corsOrigin,
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        console.warn('❌ CORS blocked origin:', origin);
+        return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
 }));
 
@@ -50,11 +59,31 @@ app.use((req, res, next) => {
 app.use('/health', (req, res) => {
     res.json({ status: "OK", message: "Server is working" });
 });
+app.get('/health', async (req, res) => {
+    try {
+        // Simple DB connectivity check
+        // @ts-ignore
+        await prisma.$queryRaw`SELECT 1`;
+        res.json({ status: 'ok', db: true });
+    } catch (e: any) {
+        console.error('❌ Healthz DB check failed:', e);
+        res.status(500).json({ status: 'degraded', db: false, error: e?.message || 'db_error' });
+    }
+});
 app.use('/api/auth', authRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/frames', frameRoutes)
 app.use('/api/chat', chatRoute)
 app.use('/api/subscriptions', subscriptionRoutes)
+
+// Global error handler
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const status = err?.status || 500;
+  const message = err?.message || 'Internal Server Error';
+  console.error('🔥 Unhandled error:', { status, message, stack: err?.stack });
+  res.status(status).json({ success: false, message });
+});
 
 const PORT = process.env.PORT || 4000;
 //@ts-ignore
