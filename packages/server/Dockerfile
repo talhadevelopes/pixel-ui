@@ -34,8 +34,6 @@ WORKDIR /app
 COPY --from=builder /app/packages/server/dist ./dist
 COPY --from=builder /app/packages/server/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/server/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/packages/types/dist ./node_modules/@workspace/types/dist
 
 ENV NODE_ENV=production
 ENV PORT=4000
