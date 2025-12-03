@@ -30,14 +30,25 @@ RUN pnpm --filter server build
 FROM base AS runner
 WORKDIR /app
 
-# Copy built files
-COPY --from=builder /app/packages/server/dist ./dist
-COPY --from=builder /app/packages/server/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
+# Copy package files for production install
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/server/package.json ./packages/server/
+COPY packages/types/package.json ./packages/types/
+
+# Install ONLY production dependencies in the runner stage
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy built artifacts
+COPY --from=builder /app/packages/server/dist ./packages/server/dist
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
+
+# Copy Prisma files and regenerate client in runner
+COPY --from=builder /app/packages/server/prisma ./packages/server/prisma
+RUN cd packages/server && npx prisma generate
 
 ENV NODE_ENV=production
 ENV PORT=4000
-
 EXPOSE 4000
 
+WORKDIR /app/packages/server
 CMD ["node", "dist/index.js"]
