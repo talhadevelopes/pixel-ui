@@ -1,5 +1,5 @@
 FROM node:18-alpine AS base
-RUN apk add --no-cache openssl
+RUN apk add --no-cache libc6-compat openssl
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 FROM base AS builder
@@ -21,7 +21,10 @@ COPY packages/server ./packages/server
 COPY packages/types ./packages/types
 COPY packages/typescript-config ./packages/typescript-config
 
-# Generate Prisma Client (will be in node_modules now)
+# Set Prisma binary target for Alpine
+ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
+
+# Generate Prisma Client with correct binary target
 RUN cd packages/server && npx prisma generate
 
 # Build
@@ -39,6 +42,7 @@ COPY --from=builder /app/packages/server/prisma ./prisma
 
 ENV NODE_ENV=production
 ENV PORT=4000
+ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
 
 EXPOSE 4000
 
