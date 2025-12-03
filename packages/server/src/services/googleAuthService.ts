@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
-
+import dotenv from 'dotenv';
+dotenv.config();
 import { generateAccessToken, generateRefreshToken, hashPassword } from "../utils/jwt";
 import { prisma } from "../utils/prisma";
 import { GoogleLoginData } from "@workspace/types"

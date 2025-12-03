@@ -1,4 +1,4 @@
-export const BASE_URL = "https://pixel-ui.fly.dev";
+ export const BASE_URL = "https://pixel-ui.fly.dev";
 
  // export const BASE_URL = "http://localhost:4000";
 
