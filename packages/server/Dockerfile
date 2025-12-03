@@ -30,15 +30,13 @@ RUN pnpm --filter server build
 FROM base AS runner
 WORKDIR /app
 
-# Copy built files
-COPY --from=builder /app/packages/server/dist ./dist
-COPY --from=builder /app/packages/server/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
+# Copy the ENTIRE workspace structure
+COPY --from=builder /app ./
 
 ENV NODE_ENV=production
 ENV PORT=4000
 
 EXPOSE 4000
 
+WORKDIR /app/packages/server
 CMD ["node", "dist/index.js"]
