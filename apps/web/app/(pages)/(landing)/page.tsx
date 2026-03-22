@@ -1,12 +1,12 @@
-import HeroSection from "./_components/HeroSection";
-import  DashboardPreview  from "./_components/DashboardPreview";
+import { HeroSection } from "./_components/HeroSection";
+import DashboardPreview from "./_components/DashboardPreview";
 import { AnimatedSection } from "./_components/AnimatedSection";
 import { Footer } from "./_components/Footer";
 import { PricingSection } from "./_components/PricingSection";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 relative overflow-hidden pb-0">
+    <div className="min-h-screen bg-neutral-50 da rk:bg-neutral-900 relative overflow-hidden pb-0">
       {/* Abstract Squares Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Top right squares */}
@@ -28,17 +28,12 @@ export default function LandingPage() {
         <main className="relative w-full mb-54">
           <HeroSection />
           <div className="w-full flex justify-center px-4 md:px-8 lg:px-12 mt-8 md:mt-12 lg:mt-16 relative z-30">
-            <AnimatedSection className="w-full flex justify-center">
-              <DashboardPreview />
-            </AnimatedSection>
+            
           </div>
-          
+
           {/* Pricing Section */}
-          <AnimatedSection>
-            <PricingSection />
-          </AnimatedSection>
+
         </main>
-        <Footer />
       </div>
     </div>
   );

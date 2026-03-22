@@ -1,436 +1,244 @@
 "use client";
 
-import { ChangeEvent, useEffect, useState } from 'react';
-import { SwatchBook, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { ChangeEvent, useEffect, useState } from "react";
+import { SwatchBook, AlignLeft, AlignCenter, AlignRight, X } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Input, Button } from "@workspace/ui";
-import { useDesignStore } from '@/store/useDesignStore';
+import { useDesignStore } from "@/store/useDesignStore";
 
 interface Props {
-    selectedElement: any; // This is now just element data, not DOM element
+    selectedElement: any;
     clearSelection: () => void;
 }
 
+const C = {
+    navy: "#0B1740", primary: "#2563EB", primaryBg: "#EBF2FF",
+    border: "#E0E8FA", muted: "#8A9AC0", bg: "#ffffff", pageBg: "#F8FAFF",
+    error: "#EF4444", errorBg: "#FEE2E2",
+};
+
+const label = (text: string) => (
+    <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 6 }}>{text}</div>
+);
+
 const ElementSettingsSection: React.FC<Props> = ({ selectedElement, clearSelection }) => {
-    // Local state for all style properties
-    const [align, setAlign] = useState('left');
-    const [fontSize, setFontSize] = useState('16px');
-    const [color, setColor] = useState('#000000');
-    const [backgroundColor, setBackgroundColor] = useState('#ffffff');
-    const [borderRadius, setBorderRadius] = useState('0px');
-    const [paddingValues, setPaddingValues] = useState({ top: '0', right: '0', bottom: '0', left: '0' });
-    const [marginValues, setMarginValues] = useState({ top: '0', right: '0', bottom: '0', left: '0' });
+    const [align, setAlign] = useState("left");
+    const [fontSize, setFontSize] = useState("16px");
+    const [color, setColor] = useState("#000000");
+    const [backgroundColor, setBackgroundColor] = useState("#ffffff");
+    const [borderRadius, setBorderRadius] = useState("0px");
+    const [paddingValues, setPaddingValues] = useState({ top: "0", right: "0", bottom: "0", left: "0" });
+    const [marginValues, setMarginValues] = useState({ top: "0", right: "0", bottom: "0", left: "0" });
     const [elementClasses, setElementClasses] = useState<string[]>([]);
-    const [newClass, setNewClass] = useState('');
-    
+    const [newClass, setNewClass] = useState("");
+
     const { iframeRef } = useDesignStore();
-    
-    // Get the actual DOM element from iframe
+
     const getIframeElement = () => {
         if (!iframeRef?.current?.contentWindow?.document || !selectedElement) return null;
-        
         const doc = iframeRef.current.contentWindow.document;
-        
-        // Try to find by ID first
-        if (selectedElement.id) {
-            const el = doc.getElementById(selectedElement.id);
-            if (el) return el;
-        }
-        
-        // Fallback: Find by tag and class
-        const elements = doc.getElementsByTagName(selectedElement.tagName);
-        for (let i = 0; i < elements.length; i++) {
-            if (elements[i].className === selectedElement.className) {
-                return elements[i];
-            }
-        }
-        
+        if (selectedElement.id) { const el = doc.getElementById(selectedElement.id); if (el) return el; }
+        const els = doc.getElementsByTagName(selectedElement.tagName);
+        for (let i = 0; i < els.length; i++) { if (els[i].className === selectedElement.className) return els[i]; }
         return null;
     };
-    
-    // Initialize all values from selected element
+
     useEffect(() => {
         if (!selectedElement) {
-            // Reset to defaults when no element selected
-            setAlign('left');
-            setFontSize('16px');
-            setColor('#000000');
-            setBackgroundColor('#ffffff');
-            setBorderRadius('0px');
-            setPaddingValues({ top: '0', right: '0', bottom: '0', left: '0' });
-            setMarginValues({ top: '0', right: '0', bottom: '0', left: '0' });
+            setAlign("left"); setFontSize("16px"); setColor("#000000");
+            setBackgroundColor("#ffffff"); setBorderRadius("0px");
+            setPaddingValues({ top: "0", right: "0", bottom: "0", left: "0" });
+            setMarginValues({ top: "0", right: "0", bottom: "0", left: "0" });
             setElementClasses([]);
             return;
         }
-        
-        // Get actual DOM element from iframe
-        const iframeElement = getIframeElement();
-        if (!iframeElement) {
-            console.warn('Could not find element in iframe');
-            return;
-        }
-        
-        // Get styles from the actual DOM element
-        const view = iframeElement.ownerDocument?.defaultView;
-        const computed = view?.getComputedStyle(iframeElement);
-        const styles = iframeElement.style || {};
-
-        setAlign(styles.textAlign || computed?.textAlign || 'left');
-        setFontSize(styles.fontSize || computed?.fontSize || '16px');
-        setColor(styles.color || computed?.color || '#000000');
-        setBackgroundColor(styles.backgroundColor || computed?.backgroundColor || '#ffffff');
-        setBorderRadius(styles.borderRadius || computed?.borderRadius || '0px');
-        
+        const el = getIframeElement();
+        if (!el) return;
+        const view = el.ownerDocument?.defaultView;
+        const cs = view?.getComputedStyle(el);
+        const st = el.style || {};
+        setAlign(st.textAlign || cs?.textAlign || "left");
+        setFontSize(st.fontSize || cs?.fontSize || "16px");
+        setColor(st.color || cs?.color || "#000000");
+        setBackgroundColor(st.backgroundColor || cs?.backgroundColor || "#ffffff");
+        setBorderRadius(st.borderRadius || cs?.borderRadius || "0px");
         setPaddingValues({
-            top: (styles.paddingTop || computed?.paddingTop || '0px').replace('px', ''),
-            right: (styles.paddingRight || computed?.paddingRight || '0px').replace('px', ''),
-            bottom: (styles.paddingBottom || computed?.paddingBottom || '0px').replace('px', ''),
-            left: (styles.paddingLeft || computed?.paddingLeft || '0px').replace('px', ''),
+            top: (st.paddingTop || cs?.paddingTop || "0px").replace("px", ""),
+            right: (st.paddingRight || cs?.paddingRight || "0px").replace("px", ""),
+            bottom: (st.paddingBottom || cs?.paddingBottom || "0px").replace("px", ""),
+            left: (st.paddingLeft || cs?.paddingLeft || "0px").replace("px", ""),
         });
-        
         setMarginValues({
-            top: (styles.marginTop || computed?.marginTop || '0px').replace('px', ''),
-            right: (styles.marginRight || computed?.marginRight || '0px').replace('px', ''),
-            bottom: (styles.marginBottom || computed?.marginBottom || '0px').replace('px', ''),
-            left: (styles.marginLeft || computed?.marginLeft || '0px').replace('px', ''),
+            top: (st.marginTop || cs?.marginTop || "0px").replace("px", ""),
+            right: (st.marginRight || cs?.marginRight || "0px").replace("px", ""),
+            bottom: (st.marginBottom || cs?.marginBottom || "0px").replace("px", ""),
+            left: (st.marginLeft || cs?.marginLeft || "0px").replace("px", ""),
         });
-        
-        // Update classes from the data
-        const classes = (selectedElement.className || '')
-            .split(' ')
-            .filter((c: string) => c.trim() !== '');
-        setElementClasses(classes);
+        setElementClasses((selectedElement.className || "").split(" ").filter((c: string) => c.trim() !== ""));
     }, [selectedElement, iframeRef]);
-    
-    // Handle style changes and send to iframe
-    const handleStyleChange = (property: string, value: string) => {
-        if (!selectedElement || !iframeRef?.current?.contentWindow) {
-            console.error('No element selected or iframe not available');
-            return;
+
+    const send = (property: string, value: string) => {
+        if (!selectedElement || !iframeRef?.current?.contentWindow) return;
+        switch (property) {
+            case "textAlign": setAlign(value); break;
+            case "fontSize": setFontSize(value); break;
+            case "color": setColor(value); break;
+            case "backgroundColor": setBackgroundColor(value); break;
+            case "borderRadius": setBorderRadius(value); break;
         }
-
-        try {
-            // Update local state for UI feedback
-            switch (property) {
-                case 'textAlign':
-                    setAlign(value);
-                    break;
-                case 'fontSize':
-                    setFontSize(value);
-                    break;
-                case 'color':
-                    setColor(value);
-                    break;
-                case 'backgroundColor':
-                    setBackgroundColor(value);
-                    break;
-                case 'borderRadius':
-                    setBorderRadius(value);
-                    break;
-            }
-
-            // Send message to iframe to update the selected element
-            iframeRef.current.contentWindow.postMessage({
-                type: 'updateStyle',
-                property: property,
-                value: value
-            }, '*');
-
-            console.log('✅ Sent style update:', property, value);
-
-        } catch (error) {
-            console.error('Error applying style:', error);
-        }
+        iframeRef.current.contentWindow.postMessage({ type: "updateStyle", property, value }, "*");
     };
 
-    type BoxSide = 'top' | 'right' | 'bottom' | 'left';
+    type BoxSide = "top" | "right" | "bottom" | "left";
 
-    const handleSpacingInput = (
-        type: 'padding' | 'margin',
-        side: BoxSide,
-        event: ChangeEvent<HTMLInputElement>,
-    ) => {
-        if (!selectedElement || !iframeRef?.current?.contentWindow) {
-            return;
-        }
-
-        const numeric = event.target.value.replace(/[^0-9.]/g, '');
-        const sanitized = numeric === '' ? '0' : numeric;
-        const property = `${type}${side.charAt(0).toUpperCase()}${side.slice(1)}`;
-        const valueWithUnit = `${sanitized}px`;
-
-        if (type === 'padding') {
-            setPaddingValues((prev) => ({ ...prev, [side]: sanitized }));
-        } else {
-            setMarginValues((prev) => ({ ...prev, [side]: sanitized }));
-        }
-
-        iframeRef.current.contentWindow.postMessage({
-            type: 'updateStyle',
-            property,
-            value: valueWithUnit,
-        }, '*');
+    const handleSpacing = (type: "padding" | "margin", side: BoxSide, e: ChangeEvent<HTMLInputElement>) => {
+        if (!selectedElement || !iframeRef?.current?.contentWindow) return;
+        const num = e.target.value.replace(/[^0-9.]/g, "") || "0";
+        const prop = `${type}${side.charAt(0).toUpperCase()}${side.slice(1)}`;
+        if (type === "padding") setPaddingValues(p => ({ ...p, [side]: num }));
+        else setMarginValues(p => ({ ...p, [side]: num }));
+        iframeRef.current.contentWindow.postMessage({ type: "updateStyle", property: prop, value: `${num}px` }, "*");
     };
-    
-    // Add a new class
+
     const addClass = () => {
         if (!selectedElement || !newClass.trim() || !iframeRef?.current?.contentWindow) return;
-        
-        const updatedClasses = [...new Set([...elementClasses, newClass.trim()])];
-        
-        // Send to iframe
-        iframeRef.current.contentWindow.postMessage({
-            type: 'addClass',
-            className: newClass.trim()
-        }, '*');
-
-        setElementClasses(updatedClasses);
-        setNewClass('');
+        const updated = [...new Set([...elementClasses, newClass.trim()])];
+        iframeRef.current.contentWindow.postMessage({ type: "addClass", className: newClass.trim() }, "*");
+        setElementClasses(updated);
+        setNewClass("");
     };
-    
-    // Remove a class
+
     const removeClass = (cls: string) => {
         if (!selectedElement || !iframeRef?.current?.contentWindow) return;
-        
-        const updatedClasses = elementClasses.filter(c => c !== cls);
-        
-        // Send to iframe
-        iframeRef.current.contentWindow.postMessage({
-            type: 'removeClass',
-            className: cls
-        }, '*');
-
-        setElementClasses(updatedClasses);
+        iframeRef.current.contentWindow.postMessage({ type: "removeClass", className: cls }, "*");
+        setElementClasses(prev => prev.filter(c => c !== cls));
     };
 
     if (!selectedElement) {
         return (
-            <div className="p-4 text-center text-gray-500">
+            <div style={{ padding: 16, textAlign: "center", color: C.muted, fontSize: 13 }}>
                 <p>No element selected</p>
-                <p className="text-xs mt-2">Click any element in the preview to edit it</p>
+                <p style={{ fontSize: 11, marginTop: 6 }}>Click any element in the preview to edit it</p>
             </div>
         );
     }
 
+    const alignBtn = (val: string, Icon: React.FC<any>) => (
+        <button onClick={() => send("textAlign", val)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, border: `1px solid ${align === val ? C.primary : C.border}`, background: align === val ? C.primaryBg : C.bg, color: align === val ? C.primary : C.muted, cursor: "pointer" }}>
+            <Icon size={15} />
+        </button>
+    );
+
     return (
-        <div className="space-y-4 p-4">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium flex items-center gap-2">
-                    <SwatchBook className="h-4 w-4" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 18, fontFamily: "'DM Sans', sans-serif" }}>
+
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, color: C.navy }}>
+                    <SwatchBook size={14} color={C.primary} />
                     {selectedElement.tagName} Settings
-                </h3>
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={clearSelection}
-                    className="text-xs"
-                >
-                    Clear Selection
-                </Button>
+                </div>
+                <button onClick={clearSelection}
+                    style={{ fontSize: 11, fontWeight: 500, color: C.muted, background: "transparent", border: `1px solid ${C.border}`, borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>
+                    Clear
+                </button>
             </div>
 
-            <div className="space-y-4">
-                {/* Text Alignment */}
+            {/* Text Alignment */}
+            <div>
+                {label("Text alignment")}
+                <div style={{ display: "flex", gap: 6 }}>
+                    {alignBtn("left", AlignLeft)}
+                    {alignBtn("center", AlignCenter)}
+                    {alignBtn("right", AlignRight)}
+                </div>
+            </div>
+
+            {/* Font size + Text color */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "end" }}>
                 <div>
-                    <label className="text-sm block mb-2">Text Alignment</label>
-                    <div className="flex gap-2">
-                        <Button 
-                            type="button" 
-                            variant={align === 'left' ? 'default' : 'outline'} 
-                            size="sm" 
-                            onClick={() => handleStyleChange('textAlign', 'left')}
-                        >
-                            <AlignLeft className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                            type="button" 
-                            variant={align === 'center' ? 'default' : 'outline'} 
-                            size="sm" 
-                            onClick={() => handleStyleChange('textAlign', 'center')}
-                        >
-                            <AlignCenter className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                            type="button" 
-                            variant={align === 'right' ? 'default' : 'outline'} 
-                            size="sm" 
-                            onClick={() => handleStyleChange('textAlign', 'right')}
-                        >
-                            <AlignRight className="h-4 w-4" />
-                        </Button>
-                    </div>
+                    {label("Font size")}
+                    <Select value={fontSize} onValueChange={(v) => send("fontSize", v)}>
+                        <SelectTrigger><SelectValue placeholder="Size" /></SelectTrigger>
+                        <SelectContent>
+                            {["12px", "16px", "20px", "24px", "32px"].map(s => (
+                                <SelectItem key={s} value={s}>{s === "12px" ? "Small" : s === "16px" ? "Normal" : s === "20px" ? "Large" : s === "24px" ? "X-Large" : "XX-Large"}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
-
-                {/* Font Size + Text Color */}
-                <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                        <label className="text-sm block mb-1">Font Size</label>
-                        <Select 
-                            value={fontSize}
-                            onValueChange={(value: string) => handleStyleChange('fontSize', value)}
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select Size" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="12px">Small</SelectItem>
-                                <SelectItem value="16px">Normal</SelectItem>
-                                <SelectItem value="20px">Large</SelectItem>
-                                <SelectItem value="24px">X-Large</SelectItem>
-                                <SelectItem value="32px">XX-Large</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    
-                    <div>
-                        <label className='text-sm block mb-1'>Text Color</label>
-                        <input 
-                            type='color'
-                            className='w-10 h-10 rounded-lg cursor-pointer'
-                            value={color}
-                            onChange={(e) => handleStyleChange('color', e.target.value)}
-                        />
-                    </div>
-                </div>
-
-                {/* Background + Border Radius */}
-                <div className="flex items-center gap-4">
-                    <div>
-                        <label className='text-sm block mb-1'>Background</label>
-                        <input 
-                            type='color'
-                            className='w-10 h-10 rounded-lg cursor-pointer'
-                            value={backgroundColor}
-                            onChange={(e) => handleStyleChange('backgroundColor', e.target.value)}
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <label className='text-sm block mb-1'>Border Radius</label>
-                        <Select 
-                            value={borderRadius}
-                            onValueChange={(value: string) => handleStyleChange('borderRadius', value)}
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select Border Radius" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="0px">None</SelectItem>
-                                <SelectItem value="4px">Small</SelectItem>
-                                <SelectItem value="8px">Medium</SelectItem>
-                                <SelectItem value="16px">Large</SelectItem>
-                                <SelectItem value="9999px">Full</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-
-                {/* Padding + Margin */}
-                <div className="space-y-4">
-                    <div>
-                        <label className='text-sm block mb-1'>Padding (px)</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input
-                                type="number"
-                                min={0}
-                                value={paddingValues.top}
-                                onChange={(event) => handleSpacingInput('padding', 'top', event)}
-                                placeholder="Top"
-                            />
-                            <Input
-                                type="number"
-                                min={0}
-                                value={paddingValues.right}
-                                onChange={(event) => handleSpacingInput('padding', 'right', event)}
-                                placeholder="Right"
-                            />
-                            <Input
-                                type="number"
-                                min={0}
-                                value={paddingValues.bottom}
-                                onChange={(event) => handleSpacingInput('padding', 'bottom', event)}
-                                placeholder="Bottom"
-                            />
-                            <Input
-                                type="number"
-                                min={0}
-                                value={paddingValues.left}
-                                onChange={(event) => handleSpacingInput('padding', 'left', event)}
-                                placeholder="Left"
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className='text-sm block mb-1'>Margin (px)</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input
-                                type="number"
-                                value={marginValues.top}
-                                onChange={(event) => handleSpacingInput('margin', 'top', event)}
-                                placeholder="Top"
-                            />
-                            <Input
-                                type="number"
-                                value={marginValues.right}
-                                onChange={(event) => handleSpacingInput('margin', 'right', event)}
-                                placeholder="Right"
-                            />
-                            <Input
-                                type="number"
-                                value={marginValues.bottom}
-                                onChange={(event) => handleSpacingInput('margin', 'bottom', event)}
-                                placeholder="Bottom"
-                            />
-                            <Input
-                                type="number"
-                                value={marginValues.left}
-                                onChange={(event) => handleSpacingInput('margin', 'left', event)}
-                                placeholder="Left"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Custom Classes */}
                 <div>
-                    <label className='text-sm font-medium block mb-2'>Custom Classes</label>
-                    <div className='flex flex-wrap gap-2 mb-2 min-h-8'>
-                        {elementClasses.length > 0 ? (
-                            elementClasses.map((cls) => (
-                                <span
-                                    key={cls}
-                                    className='flex items-center gap-1 px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800'
-                                >
-                                    {cls}
-                                    <button
-                                        type="button"
-                                        onClick={() => removeClass(cls)}
-                                        className='ml-1 text-gray-500 hover:text-red-500 rounded-full hover:bg-gray-200 p-0.5'
-                                        aria-label={`Remove ${cls}`}
-                                    >
-                                        ×
-                                    </button>
-                                </span>
-                            ))
-                        ) : (
-                            <span className='text-gray-400 text-sm'>No classes applied</span>
-                        )}
-                    </div>
-                    <div className='flex gap-2'>
-                        <Input
-                            value={newClass}
-                            onChange={(e) => setNewClass(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && addClass()}
-                            placeholder='e.g. text-blue-500'
-                            className='flex-1'
-                        />
-                        <Button 
-                            type="button" 
-                            onClick={addClass}
-                            disabled={!newClass.trim()}
-                            variant="outline"
-                        >
-                            Add
-                        </Button>
-                    </div>
+                    {label("Text color")}
+                    <input type="color" value={color} onChange={(e) => send("color", e.target.value)}
+                        style={{ width: 40, height: 36, borderRadius: 8, border: `1px solid ${C.border}`, cursor: "pointer", padding: 2 }} />
+                </div>
+            </div>
+
+            {/* Background + Border radius */}
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 12, alignItems: "end" }}>
+                <div>
+                    {label("Background")}
+                    <input type="color" value={backgroundColor} onChange={(e) => send("backgroundColor", e.target.value)}
+                        style={{ width: 40, height: 36, borderRadius: 8, border: `1px solid ${C.border}`, cursor: "pointer", padding: 2 }} />
+                </div>
+                <div>
+                    {label("Border radius")}
+                    <Select value={borderRadius} onValueChange={(v) => send("borderRadius", v)}>
+                        <SelectTrigger><SelectValue placeholder="Radius" /></SelectTrigger>
+                        <SelectContent>
+                            {([["0px", "None"], ["4px", "Small"], ["8px", "Medium"], ["16px", "Large"], ["9999px", "Full"]] as [string, string][]).map(([v, l]) => (
+                                <SelectItem key={v} value={v}>{l}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            {/* Padding */}
+            <div>
+                {label("Padding (px)")}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {(["top", "right", "bottom", "left"] as BoxSide[]).map(side => (
+                        <Input key={side} type="number" min={0} value={paddingValues[side]}
+                            onChange={(e) => handleSpacing("padding", side, e)}
+                            placeholder={side.charAt(0).toUpperCase() + side.slice(1)} />
+                    ))}
+                </div>
+            </div>
+
+            {/* Margin */}
+            <div>
+                {label("Margin (px)")}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {(["top", "right", "bottom", "left"] as BoxSide[]).map(side => (
+                        <Input key={side} type="number" value={marginValues[side]}
+                            onChange={(e) => handleSpacing("margin", side, e)}
+                            placeholder={side.charAt(0).toUpperCase() + side.slice(1)} />
+                    ))}
+                </div>
+            </div>
+
+            {/* Custom classes */}
+            <div>
+                {label("Custom classes")}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10, minHeight: 28 }}>
+                    {elementClasses.length > 0 ? elementClasses.map(cls => (
+                        <span key={cls} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", background: C.primaryBg, color: C.primary, borderRadius: 999, fontSize: 11, fontWeight: 500 }}>
+                            {cls}
+                            <button onClick={() => removeClass(cls)}
+                                style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", color: C.primary, padding: 0, marginLeft: 2 }}>
+                                <X size={11} />
+                            </button>
+                        </span>
+                    )) : (
+                        <span style={{ fontSize: 12, color: C.muted }}>No classes applied</span>
+                    )}
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                    <Input value={newClass} onChange={(e) => setNewClass(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && addClass()}
+                        placeholder="e.g. text-blue-500" />
+                    <Button type="button" onClick={addClass} disabled={!newClass.trim()} variant="outline">Add</Button>
                 </div>
             </div>
         </div>

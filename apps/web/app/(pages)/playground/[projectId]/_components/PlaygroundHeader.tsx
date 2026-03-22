@@ -19,34 +19,36 @@ export function PlaygroundHeader({
   return (
     <div
       style={{
-        background: "var(--color-bg-white)",
-        border: "1px solid var(--color-border)",
+        background: "#ffffff",
+        border: "1px solid #E0E8FA",
         borderRadius: 16,
-        padding: "16px 24px",
+        padding: "14px 24px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         flexWrap: "wrap",
         gap: 16,
+        fontFamily: "'DM Sans', sans-serif",
       }}
     >
       {/* Left — project info */}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div
           style={{
-            width: 40, height: 40,
-            background: "var(--color-primary-bg)",
+            width: 38, height: 38,
+            background: "#EBF2FF",
             borderRadius: 10,
             display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
           }}
         >
-          <BookAIcon size={18} color="var(--color-primary)" />
+          <BookAIcon size={17} color="#2563EB" />
         </div>
         <div>
-          <p style={{ fontSize: 10, fontWeight: 700, color: "var(--color-text-ghost)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 2 }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: "#C4D0E8", letterSpacing: 1.5, textTransform: "uppercase", margin: 0, marginBottom: 2 }}>
             Playground
           </p>
-          <h1 style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text-heading)" }}>
+          <h1 style={{ fontSize: 14, fontWeight: 600, color: "#0B1740", margin: 0 }}>
             Project {projectId ?? "—"}
           </h1>
         </div>
@@ -55,33 +57,44 @@ export function PlaygroundHeader({
       {/* Right — meta + save */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         {[
-          ["Frame", frameId ?? "Not selected"],
+          ["Frame",    frameId ?? "Not selected"],
           ["Messages", String(messageCount)],
         ].map(([label, value]) => (
           <div
             key={label}
             style={{
-              border: "1px solid var(--color-border)",
+              border: "1px solid #E0E8FA",
               borderRadius: 999,
               padding: "4px 14px",
               fontSize: 12,
-              color: "var(--color-text-muted)",
+              color: "#8A9AC0",
+              background: "#F8FAFF",
             }}
           >
             {label}&nbsp;
-            <span style={{ fontWeight: 600, color: "var(--color-text-heading)" }}>{value}</span>
+            <span style={{ fontWeight: 600, color: "#0B1740" }}>{value}</span>
           </div>
         ))}
 
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="btn-primary"
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
             padding: "8px 20px",
             fontSize: 13,
-            opacity: isSaving ? 0.7 : 1,
+            fontWeight: 700,
+            fontFamily: "'DM Sans', sans-serif",
+            background: "#2563EB",
+            color: "#fff",
+            border: "none",
+            borderRadius: 10,
             cursor: isSaving ? "not-allowed" : "pointer",
+            opacity: isSaving ? 0.7 : 1,
+            boxShadow: "0 4px 12px rgba(37,99,235,0.25)",
+            transition: "opacity 0.15s",
           }}
         >
           {isSaving ? (
