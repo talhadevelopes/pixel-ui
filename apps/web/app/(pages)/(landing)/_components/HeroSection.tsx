@@ -4,7 +4,7 @@ import { LandingHeader } from "./LandingHeader";
 import Link from "next/link";
 import { ArrowRight, Waves, Sparkles } from "lucide-react";
 
-export function HeroSection() {
+export default function HeroSection() {
   return (
     <section className="flex flex-col items-center text-center relative w-full min-h-screen overflow-hidden py-0 px-0">
       {/* Ocean Gradient Background */}

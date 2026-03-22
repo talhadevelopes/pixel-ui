@@ -8,8 +8,10 @@ import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
 import { useAuthToken } from "@/services/auth.api";
 import { useProfileQuery } from "@/queries/"
+import { useAuthModal } from "@/contexts/AuthModalContext";
 
 export function LandingHeader() {
+  const { openLogin } = useAuthModal();
   const navItems = [
     { name: "Features", href: "#features-section" },
     { name: "Pricing", href: "#pricing-section" },
@@ -80,13 +82,19 @@ export function LandingHeader() {
           </Button>
 
           {profile ? (
-            <span className="text-sm md:text-base text-foreground">{`Welcome, ${profile.name?.split(" ")[0] || "User"}`}</span>
+            <Link href="/workspace">
+              <span className="text-sm md:text-base text-foreground cursor-pointer hover:text-primary transition-colors">{`Welcome, ${profile.name?.split(" ")[0] || "User"}`}</span>
+            </Link>
           ) : (
-            <Link href="/login" className="hidden md:block">
-              <Button variant="outline" className="px-4 py-2 rounded-full font-semibold">
+            <div className="hidden md:block">
+              <Button 
+                variant="outline" 
+                className="px-4 py-2 rounded-full font-semibold"
+                onClick={openLogin}
+              >
                 Login
               </Button>
-            </Link>
+            </div>
           )}
 
          

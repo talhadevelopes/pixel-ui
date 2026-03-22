@@ -1,4 +1,4 @@
-import { HeroSection } from "./_components/HeroSection";
+import HeroSection from "./_components/HeroSection";
 import  DashboardPreview  from "./_components/DashboardPreview";
 import { AnimatedSection } from "./_components/AnimatedSection";
 import { Footer } from "./_components/Footer";

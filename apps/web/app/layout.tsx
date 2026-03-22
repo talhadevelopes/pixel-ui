@@ -2,7 +2,15 @@ import { Inter, Space_Grotesk, Sora, Urbanist, Plus_Jakarta_Sans, Manrope, Outfi
 import "@workspace/ui/globals.css"
 import { Providers } from "@/components/global/ProviderWrapper"
 import { Toaster } from "sonner"
-import { RequireAuth } from "@/components/global/ProtectedRoutes"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Pixel UI - AI-Powered Design-to-Code",
+  description: "Generate modern user interfaces with AI",
+  icons: {
+    icon: "/favicon.ico",
+  },
+}
 
 // const fontSans = Sora({
 //   subsets: ["latin"],
@@ -33,9 +41,7 @@ export default function RootLayout({
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
         <Providers>
-          <RequireAuth>
-            {children}
-          </RequireAuth>
+          {children}
           <Toaster />
         </Providers>
       </body>

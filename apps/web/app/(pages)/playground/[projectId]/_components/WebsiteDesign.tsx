@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { X, Sparkles } from "lucide-react";
+import { X, Sparkles, Monitor, Tablet, Smartphone, Code, Share2, Download } from "lucide-react";
 import { htmlShell } from "@/lib/code-templates";
 import { useAuthToken } from "@/services/auth.api";
 import { Input, Button } from "@workspace/ui";
@@ -23,8 +23,7 @@ export function WebsiteDesignSection({
   onCodeChange,
 }: WebsiteDesignSectionProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const { selectedElement, setSelectedElement, setIframeRef } =
-    useDesignStore();
+  const { selectedElement, setSelectedElement, setIframeRef } = useDesignStore();
   const {
     selectedScreenSize,
     setSelectedScreenSize,
@@ -44,11 +43,12 @@ export function WebsiteDesignSection({
     lastQuickAction,
     setLastQuickAction,
   } = useWebsiteDesignStore();
-  const shellLoadedRef = useRef(false);
-  const pendingCodeRef = useRef<string | null>(null);
-  const skipNextFullRenderRef = useRef(false);
 
+  const shellLoadedRef          = useRef(false);
+  const pendingCodeRef          = useRef<string | null>(null);
+  const skipNextFullRenderRef   = useRef(false);
   const [isViewingSnapshot, setIsViewingSnapshot] = useState(false);
+
   const accessToken = useAuthToken();
   const { streamReplaceSelected, handleQuickAction, handleTryAnother } =
     useAIGeneration(
@@ -60,25 +60,22 @@ export function WebsiteDesignSection({
       onCodeChange
     );
 
+  // ── All original logic — untouched ──────────────────────────────────────
+
   useEffect(() => {
     if (iframeRef.current) {
       //@ts-ignore
       setIframeRef(iframeRef);
     }
-
-    return () => {
-      setSelectedElement(null);
-    };
+    return () => { setSelectedElement(null); };
   }, [setIframeRef, setSelectedElement]);
 
-  // Initialize a persistent iframe shell once to avoid reloading libs on every update
   useEffect(() => {
     if (!iframeRef.current || shellLoadedRef.current) return;
     iframeRef.current.srcdoc = htmlShell();
     iframeRef.current.onload = () => {
       shellLoadedRef.current = true;
       setIsIframeReady(true);
-      // Flush any pending code captured before the shell was ready
       if (pendingCodeRef.current && iframeRef.current?.contentWindow) {
         iframeRef.current.contentWindow.postMessage(
           { type: "setCode", code: pendingCodeRef.current },
@@ -90,37 +87,17 @@ export function WebsiteDesignSection({
   }, []);
 
   useEffect(() => {
-    if (selectedElement) {
-      setShowSettings(true);
-    }
+    if (selectedElement) setShowSettings(true);
   }, [selectedElement]);
 
   useEffect(() => {
-    // Notify parent when settings panel visibility changes
     onSettingsToggle?.(!showSettings);
   }, [showSettings, onSettingsToggle]);
 
-  const getScreenSizeClass = (size: string) => {
-    switch (size) {
-      case "mobile":
-        return "max-w-md";
-      case "tablet":
-        return "max-w-2xl";
-      case "laptop":
-        return "max-w-5xl";
-      default:
-        return "w-full";
-    }
-  };
-
   useEffect(() => {
-    // Only update if we're not viewing a snapshot
     if (!isViewingSnapshot) {
-      const timer = window.setTimeout(() => {
-        setRenderedCode(generatedCode);
-      }, 150);
+      const timer = window.setTimeout(() => setRenderedCode(generatedCode), 150);
       setIsViewingSnapshot(false);
-
       return () => window.clearTimeout(timer);
     }
   }, [generatedCode, isViewingSnapshot]);
@@ -128,53 +105,24 @@ export function WebsiteDesignSection({
   const [lastCode, setLastCode] = useState("");
 
   useEffect(() => {
-    console.log("=== IFRAME UPDATE EFFECT ===");
-    console.log("renderedCode:", renderedCode?.substring(0, 100));
-    console.log("iframeRef.current:", iframeRef.current);
-
-    if (!iframeRef.current) {
-      console.log("No iframe ref, returning");
-      return;
-    }
+    if (!iframeRef.current) return;
 
     let processedCode = "";
-
-    if (
-      renderedCode &&
-      renderedCode.length > 0 &&
-      renderedCode !== "undefined"
-    ) {
-      console.log("Processing code, length:", renderedCode.length);
+    if (renderedCode && renderedCode.length > 0 && renderedCode !== "undefined") {
       try {
         processedCode = stripTrailingMetadata(renderedCode);
-        console.log(
-          "After stripTrailingMetadata, length:",
-          processedCode.length
-        );
-
         processedCode = stripFences(processedCode);
-        console.log("After stripFences, length:", processedCode.length);
-
         processedCode = sanitizeScripts(processedCode);
-        console.log("After sanitizeScripts, length:", processedCode.length);
-        console.log("Final processedCode:", processedCode?.substring(0, 200));
       } catch (error) {
         console.error("Error processing code:", error);
         processedCode = "";
       }
-    } else {
-      console.log("No code or empty code, showing placeholder");
-      processedCode = "";
     }
 
-    if (processedCode === lastCode) {
-      console.log("Code hasn't changed, skipping update");
-      return;
-    }
+    if (processedCode === lastCode) return;
     setLastCode(processedCode);
-    // Send incremental update if shell is ready; otherwise queue it
+
     if (skipNextFullRenderRef.current) {
-      // Skip one full render to avoid flicker after in-place patch
       skipNextFullRenderRef.current = false;
     } else if (shellLoadedRef.current && iframeRef.current.contentWindow) {
       iframeRef.current.contentWindow.postMessage(
@@ -186,11 +134,8 @@ export function WebsiteDesignSection({
     }
 
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === "elementSelected") {
-        setSelectedElement(event.data.element);
-      }
+      if (event.data?.type === "elementSelected") setSelectedElement(event.data.element);
     };
-
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [renderedCode, setSelectedElement]);
@@ -218,54 +163,114 @@ export function WebsiteDesignSection({
     }
   }, [renderedCode, popRedo, pushUndo, setRenderedCode]);
 
-  return (
-    <div className="flex flex-col h-full w-full">
-      <WebPageTools
-        selectedScreenSize={selectedScreenSize}
-        onScreenSizeChange={setSelectedScreenSize}
-        generatedCode={generatedCode}
-        currentCode={renderedCode}
-        projectId={projectId}
-        frameId={frameId}
-        onQuickAction={handleQuickAction}
-        onTryAnother={handleTryAnother}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        onPreviewHtml={(code: string) => {
-          console.log("📥 Received preview code:", code?.substring(0, 100));
-          setRenderedCode(code);
-          setIsViewingSnapshot(true);
-        }}
-      />
+  // ── Screen size → viewport class ────────────────────────────────────────
+  const getScreenSizeClass = (size: string) => {
+    switch (size) {
+      case "mobile":  return "max-w-md";
+      case "tablet":  return "max-w-2xl";
+      case "laptop":  return "max-w-5xl";
+      default:        return "w-full";
+    }
+  };
 
-      <div className="flex flex-1 overflow-hidden relative bg-background">
-        {/* Left Settings Panel */}
+  // ── NEW UI ───────────────────────────────────────────────────────────────
+  return (
+    <div className="preview-panel" style={{ height: "100%" }}>
+
+      {/* Toolbar */}
+      <div className="preview-toolbar">
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+
+          {/* Viewport toggle */}
+          <div className="viewport-toggle">
+            {[
+              { key: "desktop", Icon: Monitor },
+              { key: "tablet",  Icon: Tablet },
+              { key: "mobile",  Icon: Smartphone },
+            ].map(({ key, Icon }) => (
+              <button
+                key={key}
+                className={`viewport-btn ${selectedScreenSize === key ? "viewport-active" : ""}`}
+                onClick={() => setSelectedScreenSize(key)}
+              >
+                <Icon size={17} />
+              </button>
+            ))}
+          </div>
+
+          {/* WebPageTools (undo/redo/quick actions — unchanged) */}
+          <WebPageTools
+            selectedScreenSize={selectedScreenSize}
+            onScreenSizeChange={setSelectedScreenSize}
+            generatedCode={generatedCode}
+            currentCode={renderedCode}
+            projectId={projectId}
+            frameId={frameId}
+            onQuickAction={handleQuickAction}
+            onTryAnother={handleTryAnother}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onPreviewHtml={(code: string) => {
+              setRenderedCode(code);
+              setIsViewingSnapshot(true);
+            }}
+          />
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button className="btn-toolbar"><Code size={18} /></button>
+          <button className="btn-toolbar"><Share2 size={18} /></button>
+          <div className="divider-vertical" />
+          <button className="btn-export">
+            <Download size={16} /> Export
+          </button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
+
+        {/* Element settings panel */}
         <div
-          className={`bg-card shadow-lg transform transition-all duration-300 overflow-y-auto scrollbar ${
-            showSettings ? "w-96" : "w-0"
-          }`}
           style={{
-            height: "calc(100vh - 120px)",
+            width: showSettings ? 360 : 0,
+            overflow: "hidden",
+            transition: "width 0.25s ease",
+            background: "var(--color-bg-white)",
+            borderRight: showSettings ? "1px solid var(--color-border)" : "none",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           {showSettings && (
             <>
-              <div className="sticky top-0 bg-card border-b border-border p-5 flex items-center justify-between z-10">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Sparkles className="h-5 w-5 text-primary" />
+              <div style={{
+                position: "sticky", top: 0,
+                background: "var(--color-bg-white)",
+                borderBottom: "1px solid var(--color-border)",
+                padding: "16px 20px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                zIndex: 10,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 32, height: 32,
+                    background: "var(--color-primary-bg)",
+                    borderRadius: 8,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Sparkles size={15} color="var(--color-primary)" />
                   </div>
-                  <h3 className="font-semibold text-lg">Element Settings</h3>
+                  <span style={{ fontWeight: 600, fontSize: 14, color: "var(--color-text-heading)" }}>
+                    Element Settings
+                  </span>
                 </div>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="p-2 rounded-lg"
-                >
-                  <X className="h-5 w-5 text-muted-foreground" />
+                <button className="btn-icon btn-icon-sm" onClick={() => setShowSettings(false)}>
+                  <X size={15} />
                 </button>
               </div>
 
-              <div className="p-5">
+              <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
                 {selectedElement?.tagName?.toLowerCase() === "img" ? (
                   //@ts-ignore
                   <ImageSettingsAction selectedEl={selectedElement} />
@@ -275,30 +280,30 @@ export function WebsiteDesignSection({
                     clearSelection={handleClearSelection}
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-16 space-y-4">
-                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
-                      <Sparkles className="h-8 w-8 text-primary/50" />
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 0", gap: 12 }}>
+                    <div style={{ width: 56, height: 56, background: "var(--color-primary-bg)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Sparkles size={24} color="var(--color-primary)" style={{ opacity: 0.5 }} />
                     </div>
-                    <p className="text-muted-foreground text-sm text-center">
+                    <p style={{ fontSize: 13, color: "var(--color-text-muted)", textAlign: "center" }}>
                       Select an element to customize
                     </p>
                   </div>
                 )}
 
                 {selectedElement && (
-                  <div className="mt-6 space-y-2">
-                    <label className="text-sm">Regenerate this element</label>
-                    <div className="flex gap-2">
+                  <div style={{ marginTop: 24 }}>
+                    <label style={{ fontSize: 12, color: "var(--color-text-muted)", display: "block", marginBottom: 8 }}>
+                      Regenerate this element
+                    </label>
+                    <div style={{ display: "flex", gap: 8 }}>
                       <Input
                         value={regenHint}
                         onChange={(e) => setRegenHint(e.target.value)}
-                        placeholder="Optional hint (e.g. add CTA, 2 columns, dark)"
+                        placeholder="Optional hint…"
                       />
                       <Button
                         type="button"
-                        onClick={() =>
-                          streamReplaceSelected(selectedElement, regenHint)
-                        }
+                        onClick={() => streamReplaceSelected(selectedElement, regenHint)}
                       >
                         Regenerate
                       </Button>
@@ -310,30 +315,34 @@ export function WebsiteDesignSection({
           )}
         </div>
 
-        {/* Center Design Preview */}
-        <div className="flex-1 overflow-auto p-6">
-          <div className={`mx-auto ${getScreenSizeClass(selectedScreenSize)}`}>
-            <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
-              {/* Top decorative bar with dots */}
-              <div className="h-8 bg-muted/30 border-b border-border flex items-center px-4 gap-2">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-destructive/60"></div>
-                  <div className="w-3 h-3 rounded-full bg-accent/60"></div>
-                  <div className="w-3 h-3 rounded-full bg-primary/60"></div>
+        {/* Preview iframe */}
+        <div className="preview-content" style={{ flex: 1, overflow: "auto", padding: 32, background: "rgba(241,245,249,0.5)" }}>
+          <div className={`mx-auto ${getScreenSizeClass(selectedScreenSize)}`} style={{ height: "100%" }}>
+            <div
+              className="browser-frame"
+              style={{ width: "100%", height: "100%", minHeight: "80vh" }}
+            >
+              {/* Browser bar */}
+              <div className="browser-bar">
+                <div className="browser-dots">
+                  <div className="browser-dot" />
+                  <div className="browser-dot" />
+                  <div className="browser-dot" />
                 </div>
-                <div className="flex-1 flex justify-center">
-                  <div className="px-4 py-1 bg-muted/50 rounded-md text-xs text-muted-foreground">
-                    preview.design
-                  </div>
-                </div>
+                <div className="browser-url">preview.design</div>
+                <div className="browser-spacer" />
               </div>
 
+              {/* iframe */}
               <iframe
                 ref={iframeRef}
-                className="w-full bg-white transition-opacity duration-300"
                 style={{
+                  width: "100%",
                   minHeight: "85vh",
+                  background: "#fff",
+                  border: "none",
                   opacity: isIframeReady ? 1 : 0.5,
+                  transition: "opacity 0.3s",
                 }}
                 title="Design Preview"
                 sandbox="allow-same-origin allow-scripts"

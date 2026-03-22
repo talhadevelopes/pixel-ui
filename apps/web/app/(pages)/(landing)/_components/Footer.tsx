@@ -16,12 +16,6 @@ export function Footer() {
               <Link href="https://github.com" target="_blank" className="p-2 rounded-md hover:bg-muted transition-colors">
                 <Github className="h-5 w-5" />
               </Link>
-              <Link href="https://twitter.com" target="_blank" className="p-2 rounded-md hover:bg-muted transition-colors">
-                <Twitter className="h-5 w-5" />
-              </Link>
-              <Link href="https://linkedin.com" target="_blank" className="p-2 rounded-md hover:bg-muted transition-colors">
-                <Linkedin className="h-5 w-5" />
-              </Link>
             </div>
           </div>
 

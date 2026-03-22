@@ -1,19 +1,12 @@
 import axios from "axios";
-
-const MAILJET_API_KEY = process.env.MAILJET_API_KEY || "";
-const MAILJET_API_SECRET = process.env.MAILJET_API_SECRET || "";
-const MAILJET_FROM_EMAIL =
-  process.env.MAILJET_FROM_EMAIL || "trainedbot10k@gmail.com";
-const MAILJET_FROM_NAME = process.env.MAILJET_FROM_NAME || "PixelUI";
+import { MAILJET_API_KEY, MAILJET_API_SECRET, MAILJET_FROM_EMAIL, MAILJET_FROM_NAME } from "../utils/env";
 
 function buildAuthHeader(): string {
   const token = Buffer.from(
-    `${MAILJET_API_KEY}:${MAILJET_API_SECRET}`
+    `${MAILJET_API_KEY}:${MAILJET_API_SECRET}`,
   ).toString("base64");
   return `Basic ${token}`;
 }
-
-export const OTP_EXPIRY_MINUTES = 10;
 
 export function generateOtp(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -22,7 +15,7 @@ export function generateOtp(): string {
 export async function sendVerificationEmail(
   toEmail: string,
   toName: string,
-  otp: string
+  otp: string,
 ) {
   const subject = "Your Verification Code";
   const text = `Hello ${toName},\n\nYour verification code is: ${otp}\n\nCode expires in 10 minutes.\n`;

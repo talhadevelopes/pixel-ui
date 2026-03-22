@@ -1,141 +1,173 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@workspace/ui";
-import { ArrowUpRight, Loader2 } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Sparkles, User, Send, Paperclip } from "lucide-react";
 import { FrameMessage } from "@workspace/types";
 
 interface ChatSectionProps {
-    messages: FrameMessage[];
-    onSend: (input: string) => void;
-    loading: boolean;
+  messages: FrameMessage[];
+  onSend: (input: string) => void;
+  loading: boolean;
 }
 
 function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
-    const [input, setInput] = useState("");
-    const { theme, setTheme } = useTheme();
-    const [loadingStage, setLoadingStage] = useState(0);
+  const [input, setInput]           = useState("");
+  const [loadingStage, setLoadingStage] = useState(0);
 
-    const handleSend = useCallback(() => {
-        const trimmed = input.trim();
-        if (!trimmed) return;
-        onSend(trimmed);
-        setInput("");
-    }, [input, onSend]);
+  const handleSend = useCallback(() => {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    onSend(trimmed);
+    setInput("");
+  }, [input, onSend]);
 
-    const handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            handleSend();
-        }
+  const handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const formattedMessages = useMemo(() => {
+    const extractUserPrompt = (content: string) => {
+      const match = content.match(/userInput:\s*([\s\S]*?)(?:\n\n|$)/i);
+      const extracted = match?.[1]?.trim();
+      return extracted && extracted.length > 0 ? extracted : content;
     };
+    return messages.map((message) => ({
+      ...message,
+      display: message.role === "user" ? extractUserPrompt(message.content) : message.content,
+    }));
+  }, [messages]);
 
-    const formattedMessages = useMemo(() => {
-        const extractUserPrompt = (content: string) => {
-            const match = content.match(/userInput:\s*([\s\S]*?)(?:\n\n|$)/i);
-            const extracted = match?.[1]?.trim();
-            return extracted && extracted.length > 0 ? extracted : content;
-        };
+  useEffect(() => {
+    let t1: ReturnType<typeof setTimeout> | undefined;
+    let t2: ReturnType<typeof setTimeout> | undefined;
+    if (loading) {
+      setLoadingStage(0);
+      t1 = setTimeout(() => setLoadingStage(1), 3000);
+      t2 = setTimeout(() => setLoadingStage(2), 5000);
+    } else {
+      setLoadingStage(0);
+    }
+    return () => {
+      if (t1) clearTimeout(t1);
+      if (t2) clearTimeout(t2);
+    };
+  }, [loading]);
 
-        return messages.map((message) => {
-            const baseContent = message.role === "user" ? extractUserPrompt(message.content) : message.content;
-            return {
-                ...message,
-                display: baseContent,
-            };
-        });
-    }, [messages]);
+  const loadingText =
+    loadingStage === 0 ? "AI is thinking…" :
+    loadingStage === 1 ? "Setting up the template…" :
+    "Generating code…";
 
-    useEffect(() => {
-        let t1: ReturnType<typeof setTimeout> | undefined;
-        let t2: ReturnType<typeof setTimeout> | undefined;
-        if (loading) {
-            setLoadingStage(0);
-            t1 = setTimeout(() => setLoadingStage(1), 3000);
-            t2 = setTimeout(() => setLoadingStage(2), 5000);
-        } else {
-            setLoadingStage(0);
-        }
-        return () => {
-            if (t1) clearTimeout(t1);
-            if (t2) clearTimeout(t2);
-        };
-    }, [loading]);
+  return (
+    <div className="chat-layout" style={{ width: "100%", height: "100%" }}>
 
-    return (
-        <div className="flex h-[87%] mt-[19%] flex-col rounded-lg overflow-hidden shadow-2xl font-mono text-sm bg-card border border-border/70">
-            {/* Terminal Header */}
-            <div className="bg-muted/30 px-4 py-2 flex items-center gap-2 border-b border-border/70">
-                <div className="flex gap-2">
-                    <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                    <div className="w-3 h-3 rounded-full bg-accent"></div>
-                    <div className="w-3 h-3 rounded-full bg-primary"></div>
-                </div>
-                <span className="text-muted-foreground text-xs ml-4">terminal — ai-assistant</span>
-                <div className="ml-auto flex items-center gap-2">
-                    {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-                </div>
-            </div>
-
-            {/* Terminal Content */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-2">
-                {formattedMessages.length === 0 && !loading ? (
-                    <>
-                        <div className="text-primary">AI Assistant v2.0.1 initialized...</div>
-                        <div className="text-primary">Type your message to start the conversation</div>
-                    </>
-                ) : (
-                    formattedMessages.map((message, index) => {
-                        const isUser = message.role === "user";
-                        return (
-                            <div key={`${message.role}-${index}`}>
-                                {isUser ? (
-                                    <div className="text-accent">
-                                        &gt; {message.display}
-                                        <span className="animate-pulse">_</span>
-                                    </div>
-                                ) : (
-                                    <div className="text-foreground whitespace-pre-wrap pl-4 border-l-2 border-primary">
-                                        {message.display}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })
-                )}
-                {loading && (
-                    <div className="text-foreground pl-4 border-l-2 border-primary/70">
-                        {loadingStage === 0 && "AI is thinking..."}
-                        {loadingStage === 1 && "Setting up the template..."}
-                        {loadingStage >= 2 && "Generating code..."}
-                    </div>
-                )}
-            </div>
-
-            {/* Terminal Input */}
-            <div className="bg-muted/30 px-4 py-2 border-t border-border/70">
-                <div className="flex items-center gap-2">
-                    <span className="text-accent">&gt;</span>
-                    <textarea
-                        placeholder="Type command..."
-                        value={input}
-                        onChange={(event) => setInput(event.target.value)}
-                        onKeyDown={handleKeyDown}
-                        rows={1}
-                        className="flex-1 resize-none bg-transparent text-foreground focus:outline-none placeholder:text-muted-foreground"
-                    />
-                    <Button
-                        size="sm"
-                        type="button"
-                        onClick={handleSend}
-                        disabled={loading || !input.trim()}
-                        className="gap-2"
-                    >
-                        <ArrowUpRight className="h-4 w-4" />
-                    </Button>
-                </div>
-            </div>
+      {/* Header */}
+      <div className="chat-header">
+        <div>
+          <div className="chat-header__title">AI Assistant</div>
+          <span className="chat-header__status">v2.0.1 Active</span>
         </div>
-    );
+        {loading && (
+          <div style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: "var(--color-primary)",
+            boxShadow: "0 0 0 3px var(--color-primary-bg)",
+            animation: "pulse 1.2s ease infinite",
+          }} />
+        )}
+      </div>
+
+      {/* Messages */}
+      <div className="chat-messages">
+        {formattedMessages.length === 0 && !loading ? (
+          <div className="chat-msg-ai">
+            <div className="chat-avatar chat-avatar-ai">
+              <Sparkles size={14} />
+            </div>
+            <div className="chat-bubble-ai">
+              AI Assistant initialized. Describe what you want to build and I'll generate it for you.
+            </div>
+          </div>
+        ) : (
+          formattedMessages.map((message, index) => {
+            const isUser = message.role === "user";
+            return isUser ? (
+              <div key={`${message.role}-${index}`} className="chat-msg-user">
+                <div className="chat-avatar chat-avatar-user">
+                  <User size={14} />
+                </div>
+                <div className="chat-bubble-user">{message.display}</div>
+              </div>
+            ) : (
+              <div key={`${message.role}-${index}`} className="chat-msg-ai">
+                <div className="chat-avatar chat-avatar-ai">
+                  <Sparkles size={14} />
+                </div>
+                <div className="chat-bubble-ai" style={{ whiteSpace: "pre-wrap" }}>
+                  {message.display}
+                </div>
+              </div>
+            );
+          })
+        )}
+
+        {loading && (
+          <div className="chat-msg-ai">
+            <div className="chat-avatar chat-avatar-ai">
+              <Sparkles size={14} />
+            </div>
+            <div className="chat-bubble-ai" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span>{loadingText}</span>
+              <span style={{ display: "flex", gap: 3 }}>
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    style={{
+                      width: 5, height: 5, borderRadius: "50%",
+                      background: "var(--color-primary)",
+                      animation: `bounce 1s ease ${i * 0.15}s infinite`,
+                      display: "inline-block",
+                    }}
+                  />
+                ))}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input */}
+      <div className="chat-input-area">
+        <textarea
+          placeholder="Message Assistant..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="textarea-field"
+        />
+        <button
+          className="chat-send-btn"
+          onClick={handleSend}
+          disabled={loading || !input.trim()}
+          style={{ opacity: loading || !input.trim() ? 0.5 : 1 }}
+        >
+          <Send size={16} />
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 export default ChatSection;

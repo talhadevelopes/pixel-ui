@@ -4,9 +4,7 @@ dotenv.config();
 import { generateAccessToken, generateRefreshToken, hashPassword } from "../utils/jwt";
 import { prisma } from "../utils/prisma";
 import { GoogleLoginData } from "@workspace/types"
-
-const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
-const GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo";
+import { GOOGLE_TOKEN_ENDPOINT, GOOGLE_USERINFO_ENDPOINT } from "../utils/env";
 
 class GoogleAuthError extends Error {
     statusCode: number;
@@ -21,8 +19,11 @@ class GoogleAuthError extends Error {
 export async function handleGoogleCallback(code: string, state?: string): Promise<GoogleLoginData> {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const clientUrl = process.env.CLIENT_URL ?? "http://localhost:3000";
-    const redirectUri = `${clientUrl}/auth/google/callback`;
+    const redirectUri =
+        process.env.GOOGLE_CALLBACK_URL ??
+        `${process.env.CLIENT_URL ?? "http://localhost:3000"}/auth/google/callback`;
+
+    console.log(`[GoogleAuth] Handling callback with URI: ${redirectUri}`);
 
     if (!clientId || !clientSecret) {
         throw new GoogleAuthError("Google OAuth is not configured correctly", 500);

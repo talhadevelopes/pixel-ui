@@ -26,7 +26,7 @@ export function useSubscriptionPlansQuery(accessToken: string | null | undefined
 
 export function useSubscriptionStatusQuery(accessToken: string | null | undefined) {
     return useQuery<SubscriptionStatus, Error>({
-        queryKey: subscriptionKeys.status(),
+        queryKey: [...subscriptionKeys.status(), accessToken],
         queryFn: () => {
             if (!accessToken) {
                 throw new Error("Missing access token");

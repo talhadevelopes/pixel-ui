@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@workspace/ui";
 import {
   ImagePlus,
   Send,
+  UserPlus,
+  ArrowRight,
   InfoIcon,
   StarIcon,
   MessageSquareIcon,
@@ -15,46 +16,28 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getAccessToken } from "@/lib/auth-storage";
-import { useCreateProjectMutation , subscriptionKeys} from "@/mutations/";
+import { useAuthToken } from "@/services/auth.api";
+import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useCreateProjectMutation, subscriptionKeys } from "@/mutations/";
 
 type ChatMessage = {
   role: "user" | "assistant" | "system";
   content: string;
 };
 
-const suggestions = [
-  {
-    label: "About Section",
-    prompt: "Create an About Section",
-    icon: InfoIcon,
-  },
-  {
-    label: "Features Section",
-    prompt: "Create a Features Section",
-    icon: StarIcon,
-  },
-  {
-    label: "Testimonials",
-    prompt: "Create a Testimonials Section",
-    icon: MessageSquareIcon,
-  },
-  {
-    label: "Pricing Section",
-    prompt: "Create a Pricing Section",
-    icon: DollarSignIcon,
-  },
-  {
-    label: "FAQ Section",
-    prompt: "Create an FAQ Section",
-    icon: HelpCircleIcon,
-  },
-];
+const TABS = ["All", "Landing", "App", "Auth", "Commerce", "Forms"];
+
+const CHIPS_BY_TAB: Record<string, string[]> = {
+  All:      ["Pricing page", "Analytics dashboard", "Login screen", "Landing hero", "Checkout", "Onboarding"],
+  Landing:  ["Hero section", "Features block", "Pricing table", "Footer", "Testimonials", "CTA banner"],
+  App:      ["Dashboard", "Data table", "Settings page", "Profile page", "Notifications", "Activity feed"],
+  Auth:     ["Login screen", "Sign up form", "Forgot password", "Two-factor auth", "Magic link", "SSO screen"],
+  Commerce: ["Product grid", "Product detail", "Cart page", "Checkout", "Order summary", "Order history"],
+  Forms:    ["Contact form", "Multi-step wizard", "Survey", "Feedback form", "Booking form", "Upload form"],
+};
 
 const generateProjectId = () => {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
   return `project-${Date.now()}`;
@@ -63,33 +46,31 @@ const generateProjectId = () => {
 const generateFrameId = () => `frame-${Math.random().toString(36).slice(2, 8)}`;
 
 function HeroSection() {
-  const [userInput, setUserInput] = useState<string>("");
-  const router = useRouter();
+  const [userInput, setUserInput] = useState("");
+  const [focused, setFocused]     = useState(false);
+  const [tab, setTab]             = useState("All");
+
+  const router               = useRouter();
+  const { openSignup }       = useAuthModal();
   const createProjectMutation = useCreateProjectMutation();
-  const queryClient = useQueryClient();
+  const queryClient          = useQueryClient();
+  const token                = useAuthToken();
 
   const handleGenerate = async () => {
+    if (!token) {
+      openSignup();
+      return;
+    }
+
     const trimmedInput = userInput.trim();
     if (!trimmedInput) {
       toast.error("Please describe what you want to design.");
       return;
     }
 
-    const token = getAccessToken();
-
-    if (!token) {
-      toast.error("Please log in to create a project.");
-      return;
-    }
-
     const projectId = generateProjectId();
-    const frameId = generateFrameId();
-    const messages: ChatMessage[] = [
-      {
-        role: "user",
-        content: trimmedInput,
-      },
-    ];
+    const frameId   = generateFrameId();
+    const messages: ChatMessage[] = [{ role: "user", content: trimmedInput }];
 
     try {
       await createProjectMutation.mutateAsync({
@@ -98,14 +79,11 @@ function HeroSection() {
       });
 
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.status() });
-
       toast.success("Project created successfully");
       router.push(`/playground/${projectId}?frameId=${frameId}`);
     } catch (error) {
       console.error("Create project failed", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create project"
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to create project");
     }
   };
 
@@ -113,92 +91,147 @@ function HeroSection() {
     toast.info("Image upload coming soon");
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-muted/20 px-4 py-12">
-      <div className="w-full max-w-3xl space-y-8">
-        {/* Header Section */}
-        <div className="space-y-3 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-            What will you create today?
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Design, refine, and build stunning UIs with AI — instantly.
-          </p>
-        </div>
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleGenerate();
+    }
+  };
 
-        {/* Input Section */}
-        <div className="space-y-3">
-          {/* Textarea */}
-          <div className="relative rounded-xl border border-input bg-card shadow-sm hover:border-primary/50 transition-colors overflow-hidden">
-            <textarea
-              placeholder="Describe your page design... e.g., 'A modern SaaS landing page with hero section'"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              className="w-full h-32 px-4 py-3 bg-transparent resize-none focus:outline-none text-base placeholder:text-muted-foreground"
-            />
-            {/* Action Buttons in Textarea */}
-            <div className="flex items-center justify-between border-t border-input bg-muted/30 px-4 py-3">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleImageUpload}
-                  title="Upload image reference"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <ImagePlus className="h-5 w-5" />
-                </Button>
-              </div>
-              <Button
-                size="sm"
-                onClick={handleGenerate}
-                disabled={!userInput.trim() || createProjectMutation.isPending}
-                className="gap-2"
-              >
-                {createProjectMutation.isPending ? (
+  return (
+    <div className="min-h-screen bg-white font-base flex flex-col relative overflow-hidden">
+
+      {/* Watermark */}
+      <div  style={{ color: 'lightBlue' }} className="watermark watermark-center watermark-xl">BUILD - DESIGN - DEVELOP</div>
+
+      {/* Hero */}
+      <div className="landing-hero">
+        <h1 className="landing-title">
+          From prompt to<br />pixel-perfect UI
+        </h1>
+
+        {/* Search / Input bar */}
+        <div
+          className={`search-bar ${focused ? "focused" : ""}`}
+          style={{ alignItems: "flex-start", padding: "12px 8px 8px 18px" }}
+        >
+          <textarea
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onKeyDown={handleKeyDown}
+            disabled={!token}
+            placeholder={!token ? "Please sign up to build interfaces..." : "Describe any UI… e.g. 'A modern SaaS landing page with hero section'"}
+            rows={3}
+            style={{
+              flex: 1,
+              border: "none",
+              outline: "none",
+              fontSize: 15,
+              color: "var(--color-text-heading)",
+              background: "transparent",
+              fontFamily: "var(--font-base)",
+              resize: "none",
+              lineHeight: 1.5,
+              paddingTop: 4,
+            }}
+          />
+          {/* Bottom row: image upload + generate */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              gap: 8,
+              paddingLeft: 8,
+              height: "100%",
+              minHeight: 72,
+            }}
+          >
+            <button
+              className="btn-icon"
+              onClick={handleImageUpload}
+              title="Upload image reference"
+              style={{ padding: 6 }}
+            >
+              <ImagePlus size={18} />
+            </button>
+
+            <button
+              className="search-btn"
+              onClick={handleGenerate}
+              disabled={token ? (!userInput.trim() || createProjectMutation.isPending) : false}
+              style={{
+                opacity: token && (!userInput.trim() || createProjectMutation.isPending) ? 0.6 : 1,
+                cursor: token && (!userInput.trim() || createProjectMutation.isPending) ? "not-allowed" : "pointer",
+              }}
+            >
+              {createProjectMutation.isPending ? (
+                <>
+                  <div
+                    style={{
+                      width: 14,
+                      height: 14,
+                      borderRadius: "50%",
+                      border: "2px solid rgba(255,255,255,0.4)",
+                      borderTopColor: "#fff",
+                      animation: "spin 0.7s linear infinite",
+                    }}
+                  />
+                  Generating...
+                </>
+              ) : (
+                !token ? (
                   <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Generating...
+                    <UserPlus size={14} /> Sign up to Build
                   </>
                 ) : (
                   <>
-                    <Send className="h-4 w-4" />
-                    Generate
+                    <Send size={14} /> Generate
                   </>
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {/* Suggestions */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground px-1">
-              Quick Suggestions
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {suggestions.map((suggestion, index) => {
-                const Icon = suggestion.icon;
-                return (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    onClick={() => setUserInput(suggestion.prompt)}
-                    className="h-auto py-3 px-4 justify-start hover:bg-primary/5 hover:border-primary transition-colors"
-                  >
-                    <Icon className="h-5 w-5 mr-3 text-muted-foreground" />
-                    <div className="text-left">
-                      <p className="font-medium text-sm">{suggestion.label}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {suggestion.prompt}
-                      </p>
-                    </div>
-                  </Button>
-                );
-              })}
-            </div>
+                )
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Tabs */}
+        <div className="tab-group">
+          {TABS.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`tab-btn ${tab === t ? "tab-active" : ""}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {/* Chips */}
+        <div className="chip-row">
+          {(CHIPS_BY_TAB[tab] || []).map((c) => (
+            <button
+              key={c}
+              className="chip"
+              onClick={() => setUserInput(c)}
+              disabled={!token}
+              style={{
+                opacity: !token ? 0.6 : 1,
+                cursor: !token ? "not-allowed" : "pointer",
+              }}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

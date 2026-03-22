@@ -13,8 +13,8 @@ export type ProfileQueryOptions = Omit<
 >;
 
 export function useProfileQuery(accessToken?: string | null, options?: ProfileQueryOptions) {
-    return useQuery<UserProfile, Error, UserProfile, typeof authProfileQueryKey>({
-        queryKey: authProfileQueryKey,
+    return useQuery<UserProfile, Error, UserProfile, any>({
+        queryKey: [...authProfileQueryKey, accessToken],
         queryFn: async () => {
             if (!accessToken) {
                 throw new Error("Missing access token");
