@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String    @id @db.Text
+  name                 String
+  email                String    @unique
+  password             String
+  credits              Int       @default(5)
+  tier                 String?   @default("free")
+  dailyCreditsLimit    Int?      @default(5)
+  lastCreditReset      DateTime? @default(now())
+  subscriptionId       String?
+  subscriptionStatus   String?   @default("inactive")
+  subscriptionEndDate  DateTime?
+  createdAt            DateTime? @default(now())
+  updatedAt            DateTime? @default(now())
+
+  @@map("users")
+}
+
+model TempRegistration {
+  id         String    @id @db.Text
+  name       String
+  email      String    @unique
+  password   String
+  otpCode    String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+
+  @@map("temp_register")
+}
+
+model Project {
+  id         Int       @id @default(autoincrement())
+  projectId  String    @unique
+  createdBy  String
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @default(now())
+
+  @@index([createdBy])
+  @@map("projects")
+}
+
+model Frame {
+  id         Int       @id @default(autoincrement())
+  frameId    String
+  designCode String?   @db.Text
+  projectId  String
+  createdAt  DateTime? @default(now())
+
+  @@index([projectId])
+  @@index([frameId])
+  @@map("frames")
+}
+
+model Chat {
+  id          Int       @id @default(autoincrement())
+  chatMessage Json?
+  frameId     String?
+  createdBy   String
+  createdAt   DateTime? @default(now())
+
+  @@index([frameId])
+  @@map("chats")
+}
+
+model FrameHistory {
+  id         Int       @id @default(autoincrement())
+  projectId  String
+  frameId    String
+  designCode String
+  label      String?
+  createdAt  DateTime? @default(now())
+
+  @@index([projectId])
+  @@index([frameId])
+  @@map("frame_history")
+}
+
+model SubscriptionHistory {
+  id                     Int       @id @default(autoincrement())
+  userId                 String
+  tier                   String
+  razorpaySubscriptionId String    @unique
+  razorpayPaymentId      String?
+  razorpaySignature      String?
+  status                 String?   @default("created")
+  amount                 Int
+  startDate              DateTime? @default(now())
+  endDate                DateTime?
+  createdAt              DateTime? @default(now())
+  updatedAt              DateTime? @default(now())
+
+  @@index([userId])
+  @@map("subscription_history")
+}

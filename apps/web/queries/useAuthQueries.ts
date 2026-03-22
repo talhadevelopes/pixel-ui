@@ -3,18 +3,18 @@
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 
 import { getProfile } from "@/services/auth.api";
-import { UserProfile } from "@/types/auth.types";
+import { UserProfile } from "@workspace/types";
 
-const authProfileQueryKey = ["auth", "profile"] as const;
+export const authProfileQueryKey = ["auth", "profile"] as const;
 
-type ProfileQueryOptions = Omit<
+export type ProfileQueryOptions = Omit<
     UseQueryOptions<UserProfile, Error, UserProfile, typeof authProfileQueryKey>,
     "queryKey" | "queryFn"
 >;
 
 export function useProfileQuery(accessToken?: string | null, options?: ProfileQueryOptions) {
-    return useQuery<UserProfile, Error, UserProfile, typeof authProfileQueryKey>({
-        queryKey: authProfileQueryKey,
+    return useQuery<UserProfile, Error, UserProfile, any>({
+        queryKey: [...authProfileQueryKey, accessToken],
         queryFn: async () => {
             if (!accessToken) {
                 throw new Error("Missing access token");

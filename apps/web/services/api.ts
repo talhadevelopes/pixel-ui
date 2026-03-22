@@ -1,4 +1,5 @@
-export const BASE_URL = "https://pixel-ui.fly.dev";
+// Backend base URL. Configure via NEXT_PUBLIC_API_BASE_URL in envs.
+export const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 export const API = {
     auth: {

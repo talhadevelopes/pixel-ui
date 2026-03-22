@@ -5,9 +5,8 @@ import { useMutation, type UseMutationOptions } from "@tanstack/react-query";
 import {
     updateFrameDesign,
     saveFrameMessages,
-    type UpdateFrameDesignPayload,
-    type SaveFrameMessagesPayload,
 } from "@/services/frames.api";
+import { SaveFrameMessagesPayload, UpdateFrameDesignPayload } from "@workspace/types";
 
 export type UpdateFrameDesignVariables = {
     payload: UpdateFrameDesignPayload;

@@ -1,0 +1,39 @@
+name: Deploy Server to Fly
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'packages/server/**'
+      - 'packages/types/**'
+      - 'packages/typescript-config/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'packages/server/fly.toml'
+      - '.github/workflows/fly-deploy-server.yml'
+
+concurrency:
+  group: fly-deploy-server
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@v1
+
+      - name: Deploy server to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy . \
+            --config packages/server/fly.toml \
+            --app pixel-ui-server \
+            --dockerfile packages/server/Dockerfile \
+            --remote-only

@@ -1,13 +1,10 @@
 import crypto from "node:crypto";
-
-import { eq } from "drizzle-orm";
-
-import { db } from "../utils/drizzle";
-import { userTable } from "../db/schema";
+import dotenv from 'dotenv';
+dotenv.config();
 import { generateAccessToken, generateRefreshToken, hashPassword } from "../utils/jwt";
-
-const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
-const GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo";
+import { prisma } from "../utils/prisma";
+import { GoogleLoginData } from "@workspace/types"
+import { GOOGLE_TOKEN_ENDPOINT, GOOGLE_USERINFO_ENDPOINT } from "../utils/env";
 
 class GoogleAuthError extends Error {
     statusCode: number;
@@ -19,20 +16,14 @@ class GoogleAuthError extends Error {
     }
 }
 
-export type GoogleLoginData = {
-    id: string;
-    name: string;
-    email: string;
-    credits: number | null;
-    accessToken: string;
-    refreshToken: string;
-};
-
 export async function handleGoogleCallback(code: string, state?: string): Promise<GoogleLoginData> {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const clientUrl = process.env.CLIENT_URL ?? "http://localhost:3000";
-    const redirectUri = `${clientUrl}/auth/google/callback`;
+    const redirectUri =
+        process.env.GOOGLE_CALLBACK_URL ??
+        `${process.env.CLIENT_URL ?? "http://localhost:3000"}/auth/google/callback`;
+
+    console.log(`[GoogleAuth] Handling callback with URI: ${redirectUri}`);
 
     if (!clientId || !clientSecret) {
         throw new GoogleAuthError("Google OAuth is not configured correctly", 500);
@@ -78,38 +69,23 @@ export async function handleGoogleCallback(code: string, state?: string): Promis
     const email: string = profile.email;
     const name: string = profile.name ?? profile.given_name ?? "Google User";
 
-    const existingUsers = await db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.email, email))
-        .limit(1);
-
-    let user = existingUsers[0];
+    let user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
         const randomPassword = crypto.randomBytes(32).toString("hex");
         const hashedPassword = await hashPassword(randomPassword);
 
-        const insertedUsers = await db
-            .insert(userTable)
-            .values({
+        user = await prisma.user.create({
+            data: {
+                id: crypto.randomUUID(),
                 name,
                 email,
                 password: hashedPassword,
                 credits: 5,
-            })
-            .returning();
-
-        user = insertedUsers[0];
+            },
+        });
     } else if (!user.name && name) {
-        // Optionally update missing name information
-        const updatedUsers = await db
-            .update(userTable)
-            .set({ name })
-            .where(eq(userTable.id, user.id))
-            .returning();
-
-        user = updatedUsers[0] ?? user;
+        user = await prisma.user.update({ where: { id: user.id }, data: { name } });
     }
 
     const accessToken = generateAccessToken({

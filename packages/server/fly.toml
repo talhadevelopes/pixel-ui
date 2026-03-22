@@ -2,7 +2,7 @@ app = "pixel-ui"
 primary_region = "bom"
 
 [build]
-  image = "talhadevelopes/pixel-ui-server:latest"
+  dockerfile = "Dockerfile"
 
 [env]
   NODE_ENV = "production"

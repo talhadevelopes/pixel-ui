@@ -9,7 +9,7 @@ import {
     fetchSubscriptionStatus,
     verifySubscription,
 } from "@/services/subscriptions.api";
-import { CreateSubscriptionPayload, CreateSubscriptionResult, SubscriptionPlansResponse, SubscriptionStatus, VerifySubscriptionPayload } from "@/types/subscription.types";
+import { CreateSubscriptionPayload, CreateSubscriptionResult, SubscriptionPlansResponse, SubscriptionStatus, VerifySubscriptionPayload } from "@workspace/types"
 
 export const subscriptionKeys = {
     plans: () => ["subscriptions", "plans"] as const,
@@ -26,7 +26,7 @@ export function useSubscriptionPlansQuery(accessToken: string | null | undefined
 
 export function useSubscriptionStatusQuery(accessToken: string | null | undefined) {
     return useQuery<SubscriptionStatus, Error>({
-        queryKey: subscriptionKeys.status(),
+        queryKey: [...subscriptionKeys.status(), accessToken],
         queryFn: () => {
             if (!accessToken) {
                 throw new Error("Missing access token");

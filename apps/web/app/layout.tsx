@@ -1,15 +1,30 @@
-import { Outfit } from "next/font/google"
+import { Inter, Space_Grotesk, Sora, Urbanist, Plus_Jakarta_Sans, Manrope, Outfit, Lexend, Figtree, Karla } from "next/font/google"
 import "@workspace/ui/globals.css"
 import { Providers } from "@/components/global/ProviderWrapper"
 import { Toaster } from "sonner"
-import { RequireAuth } from "@/components/global/ProtectedRoutes"
+import type { Metadata } from "next"
 
-const fontSans = Outfit({
+export const metadata: Metadata = {
+  title: "Pixel UI - AI-Powered Design-to-Code",
+  description: "Generate modern user interfaces with AI",
+  icons: {
+    icon: "/favicon.ico",
+  },
+}
+
+// const fontSans = Sora({
+//   subsets: ["latin"],
+//   variable: "--font-sans",
+// })
+
+
+const fontSans = Lexend({
   subsets: ["latin"],
   variable: "--font-sans",
 })
 
-const fontMono = Outfit({
+
+const fontMono = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-mono",
 })
@@ -23,12 +38,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}
+        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
         <Providers>
-          <RequireAuth>
-            {children}
-          </RequireAuth>
+          {children}
           <Toaster />
         </Providers>
       </body>
