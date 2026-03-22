@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   fetchFrameDetails,
@@ -17,7 +17,7 @@ import { useAuthToken } from "@/services/auth.api";
 import { FrameMessage } from "@workspace/types";
 import { ChatSection, WebsiteDesignSection, PlaygroundHeader } from "./_components/index";
 
-export default function PlaygroundPage() {
+function PlaygroundContent() {
   const params         = useParams();
   const projectIdParam = params?.projectId as string | string[] | undefined;
   const projectId      = Array.isArray(projectIdParam) ? projectIdParam[0] : projectIdParam;
@@ -258,5 +258,17 @@ export default function PlaygroundPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PlaygroundPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    }>
+      <PlaygroundContent />
+    </Suspense>
   );
 }

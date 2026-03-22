@@ -13,12 +13,12 @@ export default function LogoutPage() {
       clearAuthTokens();
       queryClient.clear();
       toast.success("Logged out successfully");
-    } catch (e) {
+    } catch (_e) {
       // ignore
     } finally {
       router.replace("/workspace");
     }
-  }, []);
+  }, [queryClient, router]);
   return (
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-sm text-muted-foreground">Signing you out...</p>

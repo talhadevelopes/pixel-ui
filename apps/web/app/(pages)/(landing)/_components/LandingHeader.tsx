@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { Button, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@workspace/ui"
-import { Menu, Zap, Sun, Moon } from "lucide-react"
+import { Menu, Zap, Sun, Moon, Sparkle, SparkleIcon, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
@@ -13,9 +13,9 @@ import { useAuthModal } from "@/contexts/AuthModalContext";
 export function LandingHeader() {
   const { openLogin } = useAuthModal();
   const navItems = [
-    { name: "Features", href: "#features-section" },
-    { name: "Pricing", href: "#pricing-section" },
-    { name: "Testimonials", href: "#testimonials-section" },
+    { name: "", href: "" },
+    { name: "", href: "" },
+    { name: "", href: "" },
   ]
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -42,8 +42,8 @@ export function LandingHeader() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 bg-gradient-to-br rounded-lg flex items-center justify-center" style={{ backgroundColor: 'blue' }}>
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <span className="text-foreground text-xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
             Pixel UI
@@ -71,7 +71,7 @@ export function LandingHeader() {
         </nav>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             className="text-foreground hover:bg-primary/10"
@@ -79,7 +79,7 @@ export function LandingHeader() {
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
           >
             {resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
+          </Button> */}
 
           {profile ? (
             <Link href="/workspace">
@@ -87,13 +87,8 @@ export function LandingHeader() {
             </Link>
           ) : (
             <div className="hidden md:block">
-              <Button 
-                variant="outline" 
-                className="px-4 py-2 rounded-full font-semibold"
-                onClick={openLogin}
-              >
-                Login
-              </Button>
+              <>
+              </>
             </div>
           )}
 

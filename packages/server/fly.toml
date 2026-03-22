@@ -1,4 +1,4 @@
-app = "pixel-ui"
+app = "pixel-ui-server"
 primary_region = "bom"
 
 [build]

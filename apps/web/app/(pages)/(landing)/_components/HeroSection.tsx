@@ -4,7 +4,7 @@ import { LandingHeader } from "./LandingHeader";
 import Link from "next/link";
 import { ArrowRight, Waves, Sparkles } from "lucide-react";
 
-export default function HeroSection() {
+export function HeroSection() {
   return (
     <section className="flex flex-col items-center text-center relative w-full min-h-screen overflow-hidden py-0 px-0">
       {/* Ocean Gradient Background */}
@@ -47,12 +47,12 @@ export default function HeroSection() {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen w-full px-4 md:px-8 lg:px-12 space-y-8 md:space-y-10">
         {/* Badge */}
-        <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-md border border-white/60 dark:border-white/20">
+        {/* <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-md border border-white/60 dark:border-white/20">
           <Sparkles className="w-4 h-4 text-blue-600 dark:text-cyan-400" />
           <span className="text-sm font-semibold text-blue-700 dark:text-cyan-300">
             AI-Powered Design Studio
           </span>
-        </div>
+        </div> */}
 
         {/* Headline */}
         <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-tight w-full max-w-6xl">
@@ -69,7 +69,7 @@ export default function HeroSection() {
 
         {/* CTA Buttons - MOVED UP */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2 w-full -mb-4">
-          <Link href={"/workspace"} target="_blank" rel="noopener noreferrer">
+          <Link href={"/workspace"} target="_self" rel="noopener noreferrer">
             <button className="c-button c-button--gooey">
               Workspace <ArrowRight className="inline-block w-4 h-4 ml-1" />
               <div className="c-button__blobs">

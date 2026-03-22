@@ -2,7 +2,7 @@
 export const MAILJET_API_KEY = process.env.MAILJET_API_KEY || "";
 export const MAILJET_API_SECRET = process.env.MAILJET_API_SECRET || "";
 export const MAILJET_FROM_EMAIL =
-  process.env.MAILJET_FROM_EMAIL || "trainedbot10k@gmail.com";
+  process.env.MAILJET_FROM_EMAIL || "";
 export const MAILJET_FROM_NAME = process.env.MAILJET_FROM_NAME || "PixelUI";
 export const OTP_EXPIRY_MINUTES = 10;
 

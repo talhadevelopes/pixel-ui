@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@workspace/ui";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useAuthToken } from "@/services/auth.api";
 import { useVerifySubscriptionMutation } from "@/mutations/useSubscription";
 
-export default function VerifySubscriptionPage() {
+function VerifySubscriptionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const accessToken = useAuthToken();
@@ -100,5 +100,17 @@ export default function VerifySubscriptionPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function VerifySubscriptionPage() {
+  return (
+    <Suspense fallback={
+      <div className="mx-auto flex min-h-[60vh] w-full max-w-lg items-center justify-center p-6">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    }>
+      <VerifySubscriptionContent />
+    </Suspense>
   );
 }
