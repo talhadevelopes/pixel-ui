@@ -3,9 +3,6 @@
 AI-powered UI generation with real-time streaming and in-place visual editing.
 
 **Live Demo:** [pixel-ui-web.vercel.app](https://pixel-ui-web.vercel.app)
-
-Built end-to-end as a solo project.
-
 ---
 
 ## The Problem
