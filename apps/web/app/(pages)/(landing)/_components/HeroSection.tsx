@@ -47,15 +47,15 @@ export function HeroSection() {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen w-full px-4 md:px-8 lg:px-12 space-y-8 md:space-y-10">
         {/* Badge */}
-        <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-md border border-white/60 dark:border-white/20">
+        {/* <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-md border border-white/60 dark:border-white/20">
           <Sparkles className="w-4 h-4 text-blue-600 dark:text-cyan-400" />
           <span className="text-sm font-semibold text-blue-700 dark:text-cyan-300">
             AI-Powered Design Studio
           </span>
-        </div>
+        </div> */}
 
         {/* Headline */}
-        <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-tight w-full max-w-6xl">
+        <h1 className="text-5xl md:text-6xl lg:text-7xl mt-20  xl:text-8xl font-black leading-tight w-full max-w-6xl">
           <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
             Design Interfaces with AI
           </span>
@@ -68,15 +68,10 @@ export function HeroSection() {
         </p>
 
         {/* CTA Buttons - MOVED UP */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2 w-full -mb-4">
-          <Link href={"/workspace"} target="_blank" rel="noopener noreferrer">
-            <button className="c-button c-button--gooey">
-              Workspace <ArrowRight className="inline-block w-4 h-4 ml-1" />
-              <div className="c-button__blobs">
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>
+        <div className="flex   flex-col sm:flex-row gap-4 justify-center pt-2 w-full -mb-4">
+          <Link href="/workspace">
+            <button className="inline-flex  cursor-pointer items-center gap-2 px-8 py-4 bg-[#2563EB] text-white text-base font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:scale-105 active:scale-95">
+              Try it free <ArrowRight className="w-5 h-5" />
             </button>
           </Link>
 

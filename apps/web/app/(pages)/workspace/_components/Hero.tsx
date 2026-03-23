@@ -3,202 +3,222 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@workspace/ui";
-import {
-  ImagePlus,
-  Send,
-  InfoIcon,
-  StarIcon,
-  MessageSquareIcon,
-  DollarSignIcon,
-  HelpCircleIcon,
-} from "lucide-react";
+import { ImagePlus, Send, UserPlus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getAccessToken } from "@/lib/auth-storage";
-import { useCreateProjectMutation , subscriptionKeys} from "@/mutations/";
+import { useAuthToken } from "@/services/auth.api";
+import { useAuthModal } from "@/components/global/AuthModalContext";
+import { useCreateProjectMutation, subscriptionKeys } from "@/mutations/";
 
-type ChatMessage = {
-  role: "user" | "assistant" | "system";
-  content: string;
+type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
+
+const TABS = ["All", "Landing", "App", "Auth", "Commerce", "Forms"];
+
+const CHIPS_BY_TAB: Record<string, string[]> = {
+  All:      ["Pricing page", "Analytics dashboard", "Login screen", "Landing hero", "Checkout", "Onboarding"],
+  Landing:  ["Hero section", "Features block", "Pricing table", "Footer", "Testimonials", "CTA banner"],
+  App:      ["Dashboard", "Data table", "Settings page", "Profile page", "Notifications", "Activity feed"],
+  Auth:     ["Login screen", "Sign up form", "Forgot password", "Two-factor auth", "Magic link", "SSO screen"],
+  Commerce: ["Product grid", "Product detail", "Cart page", "Checkout", "Order summary", "Order history"],
+  Forms:    ["Contact form", "Multi-step wizard", "Survey", "Feedback form", "Booking form", "Upload form"],
 };
 
-const suggestions = [
-  {
-    label: "About Section",
-    prompt: "Create an About Section",
-    icon: InfoIcon,
-  },
-  {
-    label: "Features Section",
-    prompt: "Create a Features Section",
-    icon: StarIcon,
-  },
-  {
-    label: "Testimonials",
-    prompt: "Create a Testimonials Section",
-    icon: MessageSquareIcon,
-  },
-  {
-    label: "Pricing Section",
-    prompt: "Create a Pricing Section",
-    icon: DollarSignIcon,
-  },
-  {
-    label: "FAQ Section",
-    prompt: "Create an FAQ Section",
-    icon: HelpCircleIcon,
-  },
-];
-
-const generateProjectId = () => {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return crypto.randomUUID();
-  }
-  return `project-${Date.now()}`;
-};
+const generateProjectId = () =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `project-${Date.now()}`;
 
 const generateFrameId = () => `frame-${Math.random().toString(36).slice(2, 8)}`;
 
 function HeroSection() {
-  const [userInput, setUserInput] = useState<string>("");
-  const router = useRouter();
+  const [userInput, setUserInput] = useState("");
+  const [focused, setFocused]     = useState(false);
+  const [tab, setTab]             = useState("All");
+  const [hoveredChip, setHoveredChip] = useState<string | null>(null);
+
+  const router                = useRouter();
+  const { openSignup }        = useAuthModal();
   const createProjectMutation = useCreateProjectMutation();
-  const queryClient = useQueryClient();
+  const queryClient           = useQueryClient();
+  const token                 = useAuthToken();
 
   const handleGenerate = async () => {
+    if (!token) { openSignup(); return; }
     const trimmedInput = userInput.trim();
-    if (!trimmedInput) {
-      toast.error("Please describe what you want to design.");
-      return;
-    }
-
-    const token = getAccessToken();
-
-    if (!token) {
-      toast.error("Please log in to create a project.");
-      return;
-    }
-
+    if (!trimmedInput) { toast.error("Please describe what you want to design."); return; }
     const projectId = generateProjectId();
-    const frameId = generateFrameId();
-    const messages: ChatMessage[] = [
-      {
-        role: "user",
-        content: trimmedInput,
-      },
-    ];
-
+    const frameId   = generateFrameId();
+    const messages: ChatMessage[] = [{ role: "user", content: trimmedInput }];
     try {
-      await createProjectMutation.mutateAsync({
-        payload: { projectId, frameId, messages },
-        accessToken: token,
-      });
-
+      await createProjectMutation.mutateAsync({ payload: { projectId, frameId, messages }, accessToken: token });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.status() });
-
       toast.success("Project created successfully");
       router.push(`/playground/${projectId}?frameId=${frameId}`);
     } catch (error) {
-      console.error("Create project failed", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create project"
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to create project");
     }
   };
 
-  const handleImageUpload = () => {
-    toast.info("Image upload coming soon");
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleGenerate(); }
   };
 
+  const isPending = createProjectMutation.isPending;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-muted/20 px-4 py-12">
-      <div className="w-full max-w-3xl space-y-8">
-        {/* Header Section */}
-        <div className="space-y-3 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-            What will you create today?
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Design, refine, and build stunning UIs with AI — instantly.
-          </p>
+    <div style={{ minHeight: "100vh", background: "#ffffff", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+
+      {/* Watermark */}
+      <div style={{
+        position: "absolute",
+        bottom: -30, left: "50%", transform: "translateX(-50%)",
+        fontSize: 240, fontWeight: 900,
+        color: "rgba(37,99,235,0.035)",
+        letterSpacing: -12,
+        userSelect: "none", pointerEvents: "none",
+        whiteSpace: "nowrap", zIndex: 0,
+      }}>
+        BUILD - DESIGN - DEVELOP
+      </div>
+
+      {/* Hero */}
+      <div style={{
+        flex: 1,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        position: "relative", zIndex: 2,
+        padding: "0 24px 12vh",
+      }}>
+
+        {/* Title */}
+        <h1 style={{
+          fontSize: 56, fontWeight: 700,
+          color: "#0B1740",
+          letterSpacing: -2.2, lineHeight: 1.1,
+          textAlign: "center",
+          marginBottom: 42, maxWidth: 680,
+        }}>
+          From prompt to<br />pixel-perfect UI
+        </h1>
+
+        {/* Search bar */}
+        <div style={{
+          width: "100%", maxWidth: 720,
+          background: "#ffffff",
+          border: `1.5px solid ${focused ? "#2563EB" : "#D1DCFA"}`,
+          borderRadius: 18,
+          display: "flex", alignItems: "flex-start",
+          padding: "16px 12px 12px 24px",
+          boxShadow: focused
+            ? "0 0 0 5px rgba(37,99,235,0.08), 0 12px 36px rgba(37,99,235,0.12)"
+            : "0 6px 24px rgba(37,99,235,0.07)",
+          transition: "all 0.22s",
+          marginBottom: 24,
+        }}>
+          <textarea
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onKeyDown={handleKeyDown}
+            disabled={!token}
+            placeholder={!token ? "Please sign up to build interfaces..." : "Describe any UI… e.g. 'A modern SaaS landing page with hero section'"}
+            rows={3}
+            style={{
+              flex: 1, border: "none", outline: "none",
+              fontSize: 17, color: "#0B1740",
+              background: "transparent",
+              resize: "none", lineHeight: 1.6, paddingTop: 4,
+            }}
+          />
+
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", gap: 12, paddingLeft: 12, height: "100%", minHeight: 84 }}>
+            {/* Image upload */}
+            <button
+              onClick={() => toast.info("Image upload coming soon")}
+              title="Upload image reference"
+              style={{ padding: 8, background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex", borderRadius: 10, transition: "color 0.15s" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#2563EB")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#94A3B8")}
+            >
+              <ImagePlus size={20} />
+            </button>
+
+            {/* Generate button */}
+            <button
+              onClick={!token ? openSignup : handleGenerate}
+              disabled={token ? (!userInput.trim() || isPending) : false}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "14px 28px", background: "#2563EB", color: "#fff",
+                border: "none", borderRadius: 12, fontSize: 16, fontWeight: 600,
+                cursor: token && (!userInput.trim() || isPending) ? "not-allowed" : "pointer",
+                opacity: token && (!userInput.trim() || isPending) ? 0.6 : 1,
+                boxShadow: "0 6px 16px rgba(37,99,235,0.30)",
+                transition: "all 0.15s",
+              }}
+            >
+              {isPending ? (
+                <>
+                  <div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", animation: "spin 0.7s linear infinite" }} />
+                  Generating...
+                </>
+              ) : !token ? (
+                <><UserPlus size={18} /> Sign up to Build</>
+              ) : (
+                <><Send size={18} /> Generate</>
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Input Section */}
-        <div className="space-y-3">
-          {/* Textarea */}
-          <div className="relative rounded-xl border border-input bg-card shadow-sm hover:border-primary/50 transition-colors overflow-hidden">
-            <textarea
-              placeholder="Describe your page design... e.g., 'A modern SaaS landing page with hero section'"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              className="w-full h-32 px-4 py-3 bg-transparent resize-none focus:outline-none text-base placeholder:text-muted-foreground"
-            />
-            {/* Action Buttons in Textarea */}
-            <div className="flex items-center justify-between border-t border-input bg-muted/30 px-4 py-3">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleImageUpload}
-                  title="Upload image reference"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <ImagePlus className="h-5 w-5" />
-                </Button>
-              </div>
-              <Button
-                size="sm"
-                onClick={handleGenerate}
-                disabled={!userInput.trim() || createProjectMutation.isPending}
-                className="gap-2"
-              >
-                {createProjectMutation.isPending ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Generate
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 18, background: "#F4F7FF", borderRadius: 14, padding: 6 }}>
+          {TABS.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              style={{
+                background: tab === t ? "#ffffff" : "transparent",
+                border: "none", borderRadius: 10,
+                padding: "8px 20px", fontSize: 15,
+                fontWeight: tab === t ? 600 : 400,
+                color: tab === t ? "#2563EB" : "#8A9AC0",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                boxShadow: tab === t ? "0 2px 6px rgba(0,0,0,0.07)" : "none",
+              }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
 
-          {/* Suggestions */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground px-1">
-              Quick Suggestions
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {suggestions.map((suggestion, index) => {
-                const Icon = suggestion.icon;
-                return (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    onClick={() => setUserInput(suggestion.prompt)}
-                    className="h-auto py-3 px-4 justify-start hover:bg-primary/5 hover:border-primary transition-colors"
-                  >
-                    <Icon className="h-5 w-5 mr-3 text-muted-foreground" />
-                    <div className="text-left">
-                      <p className="font-medium text-sm">{suggestion.label}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {suggestion.prompt}
-                      </p>
-                    </div>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
+        {/* Chips */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", maxWidth: 720 }}>
+          {(CHIPS_BY_TAB[tab] || []).map((c) => (
+            <button
+              key={c}
+              onClick={() => { if (token) setUserInput(c); else openSignup(); }}
+              onMouseEnter={() => setHoveredChip(c)}
+              onMouseLeave={() => setHoveredChip(null)}
+              style={{
+                background: hoveredChip === c ? "#DBEAFE" : "#ffffff",
+                border: `1px solid ${hoveredChip === c ? "#93C5FD" : "#E0E8FA"}`,
+                color: hoveredChip === c ? "#1D4ED8" : "#4B68B0",
+                borderRadius: 999, padding: "10px 22px",
+                fontSize: 14, cursor: "pointer",
+                fontWeight: 500,
+                opacity: !token ? 0.6 : 1,
+                transition: "all 0.15s",
+              }}
+            >
+              {c}
+            </button>
+          ))}
         </div>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

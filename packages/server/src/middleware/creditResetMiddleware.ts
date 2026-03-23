@@ -16,7 +16,6 @@ export async function creditResetMiddleware(
       return next(); 
     }
 
-    // Fetch user
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
@@ -43,7 +42,7 @@ export async function creditResetMiddleware(
         req.user.credits = updatedUser.credits;
       }
 
-      console.log(`✅ Credits reset for user ${userId}: ${updatedUser.credits} credits`);
+      console.log(`Credits reset for user ${userId}: ${updatedUser.credits} credits`);
     }
 
     next();

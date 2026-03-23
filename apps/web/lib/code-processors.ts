@@ -1,11 +1,24 @@
 
 export const stripFences = (code: string): string => {
-  console.log("stripFences input:", code?.substring(0, 100));
-  const result = code
+  if (!code) return "";
+  let result = code
     .replace(/```\s*html/gi, "")
     .replace(/```/g, "")
+    .replace(/<\/?(html|head|body|title)[^>]*>/gi, "")
     .trim();
-  console.log("stripFences output:", result?.substring(0, 100));
+
+  // REPAIR LOGIC: Close unclosed attributes and tags
+  // 1. Close unclosed quotes in classes/styles
+  const openQuotes = (result.match(/"/g) || []).length;
+  if (openQuotes % 2 !== 0) {
+    result += '"';
+  }
+
+  // 2. Ensure the last tag is closed if it looks like an opening tag
+  if (result.endsWith(">") === false && result.includes("<")) {
+    result += ">";
+  }
+
   return result;
 };
 

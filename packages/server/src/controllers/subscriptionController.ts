@@ -1,7 +1,7 @@
 import { Response, NextFunction } from "express";
 import crypto from "crypto";
 import { AuthRequest } from "../middleware/authMiddleware";
-import { sendError, sendSuccess } from "../utils/response.utils";
+import { sendError, sendSuccess } from "../utils/response";
 import {
   SUBSCRIPTION_PLANS,
   isValidPaidTier,

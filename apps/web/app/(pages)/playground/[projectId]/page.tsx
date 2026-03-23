@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   fetchFrameDetails,
@@ -17,44 +17,35 @@ import { useAuthToken } from "@/services/auth.api";
 import { FrameMessage } from "@workspace/types";
 import { ChatSection, WebsiteDesignSection, PlaygroundHeader } from "./_components/index";
 
-export default function PlaygroundPage() {
-  const params = useParams();
+function PlaygroundContent() {
+  const params         = useParams();
   const projectIdParam = params?.projectId as string | string[] | undefined;
-  const projectId = Array.isArray(projectIdParam)
-    ? projectIdParam[0]
-    : projectIdParam;
-  const searchParams = useSearchParams();
-  const frameId = searchParams.get("frameId");
-  const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<FrameMessage[]>([]);
+  const projectId      = Array.isArray(projectIdParam) ? projectIdParam[0] : projectIdParam;
+  const searchParams   = useSearchParams();
+  const frameId        = searchParams.get("frameId");
+
+  const [loading, setLoading]             = useState(false);
+  const [messages, setMessages]           = useState<FrameMessage[]>([]);
   const [isChatVisible, setIsChatVisible] = useState(true);
   const [generatedCode, setGeneratedCode] = useState<string>("");
-  const accessToken = useAuthToken();
-  const autoTriggerRef = useRef(false);
-  const sendMessageRef = useRef<
-    | ((
-        msg: string,
-        options?: { appendUserMessage?: boolean; presetMessages?: FrameMessage[] }
-      ) => Promise<void>)
+  const [isSaving, setIsSaving]           = useState(false);
+
+  const accessToken      = useAuthToken();
+  const autoTriggerRef   = useRef(false);
+  const sendMessageRef   = useRef<
+    | ((msg: string, options?: { appendUserMessage?: boolean; presetMessages?: FrameMessage[] }) => Promise<void>)
     | null
   >(null);
-
-  const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
+
+  // ── All original logic — untouched ──────────────────────────────────────
 
   const saveGeneratedCode = useCallback(
     async (code: string) => {
       if (!frameId || !projectId) return;
-      if (!accessToken) {
-        toast.error("Please log in again");
-        return;
-      }
-
+      if (!accessToken) { toast.error("Please log in again"); return; }
       try {
-        await updateFrameDesign(
-          { frameId, projectId, designCode: code },
-          accessToken
-        );
+        await updateFrameDesign({ frameId, projectId, designCode: code }, accessToken);
         toast.success("Website is ready");
       } catch (error) {
         console.error("Failed to save generated code", error);
@@ -66,16 +57,9 @@ export default function PlaygroundPage() {
 
   const saveMessages = useCallback(
     async (updatedMessages: FrameMessage[]) => {
-      if (!frameId) return;
-      if (!accessToken) {
-        return;
-      }
-
+      if (!frameId || !accessToken) return;
       try {
-        await saveFrameMessages(
-          { frameId, messages: updatedMessages },
-          accessToken
-        );
+        await saveFrameMessages({ frameId, messages: updatedMessages }, accessToken);
       } catch (error) {
         console.error("Failed to save messages", error);
       }
@@ -88,16 +72,11 @@ export default function PlaygroundPage() {
       userInput: string,
       options?: { appendUserMessage?: boolean; presetMessages?: FrameMessage[] }
     ) => {
-      if (!frameId) {
-        toast.error("Select a frame to continue");
-        return;
-      }
-
+      if (!frameId) { toast.error("Select a frame to continue"); return; }
       const trimmedInput = userInput.trim();
       if (!trimmedInput) return;
 
       setLoading(true);
-
       let workingMessages = options?.presetMessages ?? messages;
 
       if (options?.appendUserMessage !== false) {
@@ -108,61 +87,40 @@ export default function PlaygroundPage() {
         setMessages(options.presetMessages);
       }
 
-      const messagesForApi = workingMessages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      }));
+      const messagesForApi = workingMessages.map((m) => ({ role: m.role, content: m.content }));
 
       try {
-        if (!accessToken) {
-          toast.error("Please log in again");
-          return;
-        }
+        if (!accessToken) { toast.error("Please log in again"); return; }
 
         const generationId =
-          globalThis.crypto &&
-          typeof globalThis.crypto.randomUUID === "function"
+          globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
             ? globalThis.crypto.randomUUID()
             : `${frameId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
-        const response = await createChatCompletion({
-          accessToken,
-          frameId,
-          messages: messagesForApi,
-          generationId,
+        const response = await createChatCompletion({ accessToken, frameId, messages: messagesForApi, generationId });
+        const { code: cleanedCode, raw } = await parseChatCompletionStream(response, {
+          onPartialCode: (partial) => {
+            console.log("Partial code:", partial?.substring(0, 50));
+            setGeneratedCode(partial);
+          },
         });
 
-        const { code: cleanedCode, raw } = await parseChatCompletionStream(
-          response,
-          {
-            onPartialCode: (partial) => setGeneratedCode(partial),
-          }
-        );
-
-        let finalCode =
-          cleanedCode && cleanedCode !== "undefined" ? cleanedCode : "";
-        let effectiveRaw = raw;
+        let finalCode     = cleanedCode && cleanedCode !== "undefined" ? cleanedCode : "";
+        let effectiveRaw  = raw;
 
         if (!finalCode) {
-          const strictHint = `${trimmedInput}\nStrictOutput: Return ONLY HTML Tailwind CSS code inside a single markdown fenced code block labeled html. No explanations.`;
+          const strictHint    = `${trimmedInput}\nStrictOutput: Return ONLY HTML Tailwind CSS code inside a single markdown fenced code block labeled html. No explanations.`;
           const strictMessages = [{ role: "user", content: strictHint }];
-          const response2 = await createChatCompletion({
-            accessToken,
-            frameId,
-            messages: strictMessages,
-            generationId,
+          const response2 = await createChatCompletion({ accessToken, frameId, messages: strictMessages, generationId });
+          const { code: cleaned2, raw: raw2 } = await parseChatCompletionStream(response2, {
+            onPartialCode: (partial) => setGeneratedCode(partial),
           });
-          const { code: cleaned2, raw: raw2 } = await parseChatCompletionStream(
-            response2,
-            { onPartialCode: (partial) => setGeneratedCode(partial) }
-          );
-          finalCode = cleaned2 && cleaned2 !== "undefined" ? cleaned2 : "";
+          finalCode    = cleaned2 && cleaned2 !== "undefined" ? cleaned2 : "";
           effectiveRaw = raw2 ?? raw;
         }
 
-        if (finalCode) {
-          setGeneratedCode(finalCode);
-        }
+        if (finalCode) setGeneratedCode(finalCode);
+
         const assistantMessage: FrameMessage = finalCode
           ? { role: "assistant", content: "Your Code is Ready" }
           : { role: "assistant", content: effectiveRaw };
@@ -183,77 +141,44 @@ export default function PlaygroundPage() {
         console.error("Error sending message", error);
         const typedError = error as Error & { status?: number; data?: unknown };
         if (typedError?.status === 403) {
-          const info =
-            (typedError.data as {
-              nextReset?: string | null;
-              credits?: number | null;
-            } | null) ?? null;
-          const nextReset = info?.nextReset ? new Date(info.nextReset) : null;
-          const nextResetText = nextReset ? nextReset.toLocaleString() : null;
+          const info       = (typedError.data as { nextReset?: string | null; credits?: number | null } | null) ?? null;
+          const nextReset  = info?.nextReset ? new Date(info.nextReset) : null;
+          const resetText  = nextReset ? nextReset.toLocaleString() : null;
           const assistantMessage: FrameMessage = {
             role: "assistant",
-            content: nextResetText
-              ? `You are out of credits. Your credits will reset around ${nextResetText}.`
+            content: resetText
+              ? `You are out of credits. Your credits will reset around ${resetText}.`
               : "You are out of credits. Your daily credits will reset soon.",
           };
           setMessages((prev) => [...prev, assistantMessage]);
-          queryClient.invalidateQueries({
-            queryKey: subscriptionKeys.status(),
-          });
+          queryClient.invalidateQueries({ queryKey: subscriptionKeys.status() });
         } else {
-          toast.error(
-            typedError instanceof Error
-              ? typedError.message
-              : "Failed to process message"
-          );
+          toast.error(typedError instanceof Error ? typedError.message : "Failed to process message");
         }
       } finally {
         setLoading(false);
       }
     },
-    [
-      accessToken,
-      frameId,
-      messages,
-      saveGeneratedCode,
-      saveMessages,
-      queryClient,
-    ]
+    [accessToken, frameId, messages, saveGeneratedCode, saveMessages, queryClient]
   );
 
-  useEffect(() => {
-    sendMessageRef.current = sendMessage;
-  }, [sendMessage]);
+  useEffect(() => { sendMessageRef.current = sendMessage; }, [sendMessage]);
 
   useEffect(() => {
-    if (!frameId || !projectId) {
-      setMessages([]);
-      setGeneratedCode("");
-      return;
-    }
+    if (!frameId || !projectId) { setMessages([]); setGeneratedCode(""); return; }
 
     const loadFrame = async () => {
       try {
-        if (!accessToken) {
-          toast.error("Please log in again");
-          return;
-        }
-
-        const data = await fetchFrameDetails(
-          { frameId, projectId },
-          accessToken
-        );
-
+        if (!accessToken) { toast.error("Please log in again"); return; }
+        const data            = await fetchFrameDetails({ frameId, projectId }, accessToken);
         const existingMessages = data.chatMessages ?? [];
         setMessages(existingMessages);
-
         const designCode = data.designCode ?? "";
         if (designCode) {
           setGeneratedCode(stripCodeFences(designCode));
         } else {
           setGeneratedCode("");
         }
-
         const firstMessage = existingMessages[0];
         if (!autoTriggerRef.current && firstMessage?.content && !designCode) {
           autoTriggerRef.current = true;
@@ -264,71 +189,68 @@ export default function PlaygroundPage() {
         }
       } catch (error) {
         console.error("Error fetching frame details", error);
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load frame details";
-        toast.error(message);
+        toast.error(error instanceof Error ? error.message : "Failed to load frame details");
       }
     };
 
     void loadFrame();
   }, [accessToken, frameId, projectId]);
 
-  useEffect(() => {
-    autoTriggerRef.current = false;
-  }, [frameId, projectId]);
+  useEffect(() => { autoTriggerRef.current = false; }, [frameId, projectId]);
 
   const handleManualSave = useCallback(async () => {
-    if (!generatedCode) {
-      toast.info("Generate a design before saving");
-      return;
-    }
-
-    if (!frameId || !projectId) {
-      toast.error("Frame details unavailable");
-      return;
-    }
-
+    if (!generatedCode) { toast.info("Generate a design before saving"); return; }
+    if (!frameId || !projectId) { toast.error("Frame details unavailable"); return; }
     setIsSaving(true);
     try {
       await saveGeneratedCode(generatedCode);
     } catch (error) {
       console.error("Manual save failed", error);
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to save generated code";
-      toast.error(message);
+      toast.error(error instanceof Error ? error.message : "Failed to save generated code");
     } finally {
       setIsSaving(false);
     }
   }, [frameId, generatedCode, projectId, saveGeneratedCode]);
 
+  // ── NEW LAYOUT ───────────────────────────────────────────────────────────
   return (
-    <div className="flex">
+    <div style={{ display: "flex", height: "100vh", width: "100%", overflow: "hidden", fontFamily: "var(--font-base)" }}>
+
+      {/* Sidebar */}
       <Sidebar />
 
-      <div className="flex-1 px-6 py-8 min-h-screen  ml-16">
-        <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-6">
-          <div
-            className={`grid gap-6 ${isChatVisible ? "lg:grid-cols-[0.8fr_2fr]" : "lg:grid-cols-1"} lg:min-h-[calc(100vh-18rem)]`}
-          >
-            {isChatVisible && (
-              <ChatSection
-                loading={loading}
-                messages={messages ?? []}
-                onSend={(msg) => sendMessage(msg)}
-              />
-            )}
-            <WebsiteDesignSection
-              generatedCode={generatedCode}
-              projectId={projectId}
-              frameId={frameId ?? undefined}
-              onSettingsToggle={setIsChatVisible}
-              onCodeChange={setGeneratedCode}
-            />
-          </div>
+      {/* Chat column */}
+      {isChatVisible && (
+        <div
+          style={{
+            width: 420,
+            flexShrink: 0,
+            borderRight: "1px solid var(--color-border)",
+            display: "flex",
+            flexDirection: "column",
+            height: "100vh",
+          }}
+        >
+          <ChatSection
+            loading={loading}
+            messages={messages ?? []}
+            onSend={(msg) => sendMessage(msg)}
+          />
+        </div>
+      )}
+
+      {/* Preview column */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", height: "100vh" }}>
+        <WebsiteDesignSection
+          generatedCode={generatedCode}
+          projectId={projectId}
+          frameId={frameId ?? undefined}
+          onSettingsToggle={setIsChatVisible}
+          onCodeChange={setGeneratedCode}
+        />
+
+        {/* Footer header */}
+        <div style={{ padding: "0 24px 16px", flexShrink: 0 }}>
           <PlaygroundHeader
             projectId={projectId}
             frameId={frameId}
@@ -339,5 +261,17 @@ export default function PlaygroundPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PlaygroundPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    }>
+      <PlaygroundContent />
+    </Suspense>
   );
 }

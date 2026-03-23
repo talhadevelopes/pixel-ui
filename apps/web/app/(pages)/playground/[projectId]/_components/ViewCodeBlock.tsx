@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@workspace/ui";
 import { Copy, Check, Download } from "lucide-react";
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { prism } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { toast } from "sonner";
 import { useState } from "react";
 import { getNextJsCode } from "@/lib/code-templates";
@@ -117,7 +117,7 @@ export function ViewCodeBlock({ children, code, nextJsCode }: any) {
           {currentCode ? (
             <SyntaxHighlighter 
               language={currentLanguage} 
-              style={prism}
+              style={vscDarkPlus}
               customStyle={{
                 margin: 0,
                 borderRadius: '0.5rem',

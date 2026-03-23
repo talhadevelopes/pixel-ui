@@ -1,6 +1,6 @@
 import { NextFunction, Response } from "express";
 import { AuthRequest } from "../middleware/authMiddleware";
-import { sendError, sendSuccess } from "../utils/response.utils";
+import { sendError, sendSuccess } from "../utils/response";
 import { prisma } from "../utils/prisma";
 
 export class FrameController {

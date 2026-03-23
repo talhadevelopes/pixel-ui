@@ -2,32 +2,34 @@
 
 import type React from "react"
 import { Button, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@workspace/ui"
-import { Menu, Zap, Sun, Moon } from "lucide-react"
+import { Menu, Zap, Sun, Moon, Sparkle, SparkleIcon, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
 import { useAuthToken } from "@/services/auth.api";
 import { useProfileQuery } from "@/queries/"
+import { useAuthModal } from "@/components/global/AuthModalContext";
 
 export function LandingHeader() {
+  const { openLogin } = useAuthModal();
   const navItems = [
-    { name: "Features", href: "#features-section" },
-    { name: "Pricing", href: "#pricing-section" },
-    { name: "Testimonials", href: "#testimonials-section" },
+    { name: "", href: "" },
   ]
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault()
-    const targetId = href.substring(1)
-    const targetElement = document.getElementById(targetId)
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth" })
+    if (href.startsWith("#")) {
+      e.preventDefault()
+      const targetId = href.substring(1)
+      const targetElement = document.getElementById(targetId)
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: "smooth" })
+      }
     }
   }
 
   const { resolvedTheme, setTheme } = useTheme()
   const token = useAuthToken()
-  const { data: profile } = useProfileQuery(token, { enabled: Boolean(token) })
+  const { data: profile } = useProfileQuery(token);
 
   return (
     <header
@@ -40,8 +42,8 @@ export function LandingHeader() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 bg-gradient-to-br rounded-lg flex items-center justify-center" style={{ backgroundColor: 'blue' }}>
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <span className="text-foreground text-xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
             Pixel UI
@@ -69,28 +71,22 @@ export function LandingHeader() {
         </nav>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-foreground hover:bg-primary/10"
-            aria-label="Toggle theme"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          >
-            {resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
-
           {profile ? (
-            <span className="text-sm md:text-base text-foreground">{`Welcome, ${profile.name?.split(" ")[0] || "User"}`}</span>
-          ) : (
-            <Link href="/login" className="hidden md:block">
-              <Button variant="outline" className="px-4 py-2 rounded-full font-semibold">
-                Login
-              </Button>
+            <Link href="/workspace">
+              <span className="text-sm md:text-base text-foreground cursor-pointer hover:text-primary transition-colors">
+                {`Welcome, ${profile.name?.split(" ")[0] || "User"}`}
+              </span>
             </Link>
+          ) : (
+            <div className="hidden md:block">
+              <button
+                onClick={() => openLogin()}
+                className="text-sm md:text-base text-foreground cursor-pointer hover:text-primary transition-colors"
+              >
+                Please SignIn to continue
+              </button>
+            </div>
           )}
-
-         
-
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon" className="text-foreground hover:bg-primary/10">
