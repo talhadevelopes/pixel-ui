@@ -5,7 +5,7 @@ import { Toaster } from "sonner"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Pixel UI - AI-Powered Design-to-Code",
+  title: "Pixel UI",
   description: "Generate modern user interfaces with AI",
   icons: {
     icon: "/favicon.ico",
