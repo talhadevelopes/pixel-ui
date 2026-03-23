@@ -99,7 +99,10 @@ function PlaygroundContent() {
 
         const response = await createChatCompletion({ accessToken, frameId, messages: messagesForApi, generationId });
         const { code: cleanedCode, raw } = await parseChatCompletionStream(response, {
-          onPartialCode: (partial) => setGeneratedCode(partial),
+          onPartialCode: (partial) => {
+            console.log("Partial code:", partial?.substring(0, 50));
+            setGeneratedCode(partial);
+          },
         });
 
         let finalCode     = cleanedCode && cleanedCode !== "undefined" ? cleanedCode : "";

@@ -13,23 +13,23 @@ import { useAuthModal } from "@/components/global/AuthModalContext";
 export function LandingHeader() {
   const { openLogin } = useAuthModal();
   const navItems = [
-    { name: "Features", href: "#features" },
-    { name: "Pricing", href: "/payments" },
-    { name: "Testimonials", href: "#testimonials" },
+    { name: "", href: "" },
   ]
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault()
-    const targetId = href.substring(1)
-    const targetElement = document.getElementById(targetId)
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth" })
+    if (href.startsWith("#")) {
+      e.preventDefault()
+      const targetId = href.substring(1)
+      const targetElement = document.getElementById(targetId)
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: "smooth" })
+      }
     }
   }
 
   const { resolvedTheme, setTheme } = useTheme()
   const token = useAuthToken()
-  const { data: profile } = useProfileQuery(token, { enabled: Boolean(token) })
+  const { data: profile } = useProfileQuery(token);
 
   return (
     <header
@@ -71,30 +71,22 @@ export function LandingHeader() {
         </nav>
 
         <div className="flex items-center gap-2 md:gap-4">
-          {/* <Button
-            variant="ghost"
-            size="icon"
-            className="text-foreground hover:bg-primary/10"
-            aria-label="Toggle theme"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          >
-            {resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button> */}
-
           {profile ? (
             <Link href="/workspace">
-              <span className="text-sm md:text-base text-foreground cursor-pointer hover:text-primary transition-colors">{`Welcome, ${profile.name?.split(" ")[0] || "User"}`}</span>
+              <span className="text-sm md:text-base text-foreground cursor-pointer hover:text-primary transition-colors">
+                {`Welcome, ${profile.name?.split(" ")[0] || "User"}`}
+              </span>
             </Link>
           ) : (
             <div className="hidden md:block">
-             <Link href="/workspace">
-              <span className="text-sm md:text-base text-foreground cursor-pointer hover:text-primary transition-colors">{`Welcome, please signup to continue`}</span>
-            </Link>
+              <button
+                onClick={() => openLogin()}
+                className="text-sm md:text-base text-foreground cursor-pointer hover:text-primary transition-colors"
+              >
+                Please SignIn to continue
+              </button>
             </div>
           )}
-
-         
-
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon" className="text-foreground hover:bg-primary/10">

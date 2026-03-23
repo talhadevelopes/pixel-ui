@@ -12,6 +12,8 @@ const SHOWCASE_IMAGES = [
   "/img4.png",
   "/img5.png",
   "/img6.png",
+  "/img7.png",
+  "/img8.png",
 ];
 
 export function ShowcaseSection() {
@@ -25,8 +27,8 @@ export function ShowcaseSection() {
   }, []);
 
   return (
-    <section className="w-full px-4 md:px-12 lg:px-24 py-24 bg-[#FAFBFF]">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+    <section className="w-full px-4 md:px-12 lg:px-24 py-24 bg-[#FAFBFF]" style={{ overflow: "hidden" }}>
+      <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">
 
         {/* Left — text */}
         <motion.div
@@ -34,6 +36,7 @@ export function ShowcaseSection() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
+          style={{ flex: "0 0 auto", width: "100%", maxWidth: "500px" }}
         >
           <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-bold px-4 py-2 rounded-full mb-6 uppercase tracking-widest border border-blue-100/50">
             <Sparkles className="w-3.5 h-3.5" /> Live preview
@@ -43,14 +46,14 @@ export function ShowcaseSection() {
             Build stunning UIs<br />with AI in seconds
           </h2>
 
-          <p className="text-lg text-[#5570A8] leading-relaxed mb-10 max-w-md">
+          <p className="text-lg text-[#5570A8] leading-relaxed mb-10">
             Describe your UI, watch it come to life. Edit elements, tweak styles, and export clean production-ready code.
           </p>
 
           <div className="flex flex-col gap-4 mb-12">
             {[
               "Describe your UI in plain text",
-              "AI generates production-ready HTML",
+              "AI generates production-ready Code",
               "Export and ship in minutes",
             ].map((step, i) => (
               <motion.div 
@@ -69,27 +72,24 @@ export function ShowcaseSection() {
             ))}
           </div>
 
-          <Link href="/workspace">
-            <button className="inline-flex items-center gap-2 px-8 py-4 bg-[#2563EB] text-white text-base font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:scale-105 active:scale-95">
-              Try it free <ArrowRight className="w-5 h-5" />
-            </button>
-          </Link>
+          
         </motion.div>
 
         {/* Right — image frame */}
         <motion.div 
-          className="relative lg:h-[540px] flex items-center"
+          className="relative flex items-center"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
+          style={{ flex: "1 1 auto", width: "100%", minWidth: 0 }}
         >
           {/* Decorative background shadow/glow */}
           <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-200/20 blur-3xl rounded-full" />
           <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-200/20 blur-3xl rounded-full" />
           
           {/* Main frame */}
-          <div className="relative w-full rounded-2xl border border-[#E0E8FA] overflow-hidden shadow-2xl shadow-blue-100/80 bg-white">
+          <div className="relative w-full rounded-2xl border border-[#E0E8FA] overflow-hidden shadow-2xl shadow-blue-100/80 bg-white" style={{ width: "100%" }}>
             {/* Browser bar */}
             <div className="h-10 bg-[#F8FAFF] border-b border-[#E0E8FA] flex items-center px-5 gap-2.5">
               <div className="flex gap-1.5">
@@ -106,17 +106,17 @@ export function ShowcaseSection() {
             </div>
 
             {/* Image Preview Area */}
-            <div className="relative overflow-hidden bg-[#F4F7FF] aspect-[16/10] md:aspect-auto md:min-h-[460px]">
+            <div className="relative bg-white" style={{ width: "100%", height: "auto", overflow: "hidden" }}>
               <AnimatePresence mode="wait">
                 <motion.img
                   key={currentIndex}
                   src={SHOWCASE_IMAGES[currentIndex]}
                   alt={`Pixel UI Showcase ${currentIndex + 1}`}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  className="w-full h-full object-cover object-top"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  style={{ width: "100%", height: "auto", display: "block" }}
                 />
               </AnimatePresence>
 
@@ -126,8 +126,8 @@ export function ShowcaseSection() {
                   <button
                     key={i}
                     onClick={() => setCurrentIndex(i)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === currentIndex ? "w-8 bg-blue-600" : "w-2 bg-blue-200"
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      i === currentIndex ? "w-6 bg-blue-600" : "w-1.5 bg-blue-200"
                     }`}
                   />
                 ))}

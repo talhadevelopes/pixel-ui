@@ -239,6 +239,36 @@ export function WebsiteDesignSection({
       />
 
       <div className="flex flex-1 overflow-hidden relative bg-background">
+        {/* DEBUG BLOCK - ENHANCED FOR VISIBILITY */}
+        {/* <div 
+          style={{
+            position: 'absolute',
+            bottom: 20,
+            right: 20,
+            width: '450px',
+            maxHeight: '400px',
+            backgroundColor: '#1e1e1e',
+            color: '#d4d4d4',
+            padding: '15px',
+            borderRadius: '12px',
+            fontSize: '12px',
+            fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+            overflow: 'auto',
+            zIndex: 9999,
+            border: '1px solid #444',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+            pointerEvents: 'auto'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #444', paddingBottom: '5px' }}>
+            <span style={{ fontWeight: 'bold', color: '#569cd6' }}>RAW CODE DEBUG</span>
+            <span style={{ fontSize: '10px', color: '#888' }}>Length: {renderedCode?.length || 0} chars</span>
+          </div>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0 }}>
+            {renderedCode || "NO CODE RECEIVED"}
+          </pre>
+        </div> */}
+
         {/* Left Settings Panel */}
         <div
           className={`bg-card shadow-lg transform transition-all duration-300 overflow-y-auto scrollbar ${
