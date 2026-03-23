@@ -8,14 +8,14 @@ import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
 import { useAuthToken } from "@/services/auth.api";
 import { useProfileQuery } from "@/queries/"
-import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useAuthModal } from "@/components/global/AuthModalContext";
 
 export function LandingHeader() {
   const { openLogin } = useAuthModal();
   const navItems = [
-    { name: "", href: "" },
-    { name: "", href: "" },
-    { name: "", href: "" },
+    { name: "Features", href: "#features" },
+    { name: "Pricing", href: "/payments" },
+    { name: "Testimonials", href: "#testimonials" },
   ]
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -87,8 +87,9 @@ export function LandingHeader() {
             </Link>
           ) : (
             <div className="hidden md:block">
-              <>
-              </>
+             <Link href="/workspace">
+              <span className="text-sm md:text-base text-foreground cursor-pointer hover:text-primary transition-colors">{`Welcome, please signup to continue`}</span>
+            </Link>
             </div>
           )}
 

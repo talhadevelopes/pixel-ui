@@ -4,7 +4,7 @@ import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import TopLoader from "../custom/Loader"
-import { AuthModalProvider } from "../../contexts/AuthModalContext"
+import { AuthModalProvider } from "./AuthModalContext"
 import { AuthModals } from "../auth/AuthModals"
 
 export function Providers({ children }: { children: React.ReactNode }) {

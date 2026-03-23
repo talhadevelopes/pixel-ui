@@ -7,7 +7,7 @@ import { Mail, Eye, EyeOff, Wand2, ArrowRight, ArrowLeft, CheckCircle2, Clock } 
 import { useRegisterStartMutation, useVerifyOtpMutation, useResendOtpMutation } from "@/mutations/";
 import { setAuthTokens } from "@/lib/auth-storage";
 import { API, BASE_URL } from "@/services/api";
-import { useAuthModal } from "../../contexts/AuthModalContext";
+import { useAuthModal } from "../global/AuthModalContext";
 
 function GoogleIcon() {
   return (

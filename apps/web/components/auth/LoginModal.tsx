@@ -7,7 +7,7 @@ import { Mail, Lock, Eye, EyeOff, Wand2, ArrowRight } from "lucide-react";
 import { useLoginMutation } from "@/mutations/";
 import { setAuthTokens } from "@/lib/auth-storage";
 import { API, BASE_URL } from "@/services/api";
-import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useAuthModal } from "@/components/global/AuthModalContext";
 
 function GoogleIcon() {
   return (
