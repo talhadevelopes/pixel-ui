@@ -231,12 +231,11 @@ function PlaygroundContent() {
         </header>
 
         {/* Content Wrapper */}
-        <main className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+        <main className="flex-1 flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden scrollbar-hide">
           
-          {/* Chat Section */}
           {isChatVisible && (
             <aside
-              className="w-full md:w-[420px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--color-border)] flex flex-col h-[45vh] md:h-full bg-white z-20"
+              className="w-full md:w-[420px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--color-border)] flex flex-col h-screen md:h-full bg-white z-20"
             >
               <ChatSection
                 loading={loading}
@@ -246,8 +245,7 @@ function PlaygroundContent() {
             </aside>
           )}
 
-          {/* Preview Section */}
-          <section className="flex-1 min-h-0 bg-[#F8FAFC] overflow-hidden">
+          <section className="flex-1 min-h-screen md:min-h-0 bg-[#F8FAFC] md:overflow-hidden">
             <WebsiteDesignSection
               generatedCode={generatedCode}
               projectId={projectId}

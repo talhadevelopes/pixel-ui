@@ -93,7 +93,6 @@ Frontend runs on `localhost:3000`. Backend runs on `localhost:4000`.
 - [Frontend](docs/frontend.md)
 - [Backend](docs/backend.md)
 - [Architecture](docs/architecture.md)
-- [Deployment](docs/deployment.md)
 
 ---
 

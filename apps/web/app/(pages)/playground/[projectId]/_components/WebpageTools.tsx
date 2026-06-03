@@ -1,7 +1,7 @@
 import {
   Clock, Code, Download, History, Laptop, Monitor,
   SquareArrowOutUpRight, TabletSmartphone, Undo2, Redo2,
-  Layers, Smartphone,
+  Layers, Smartphone, MoreHorizontal,
 } from "lucide-react";
 import { ViewCodeBlock } from "./ViewCodeBlock";
 import { useEffect, useState } from "react";
@@ -9,6 +9,7 @@ import { baseDocument } from "@/lib/code-templates";
 import {
   Select, Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogTrigger, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Popover, PopoverContent, PopoverTrigger,
 } from "@workspace/ui";
 import { useAuthToken } from "@/services/auth.api";
 import { fetchFrameHistory, fetchFrameSnapshot } from "@/services/frames.api";
@@ -103,12 +104,11 @@ export function WebPageTools({
   ];
 
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: C.bg, borderBottom: `1px solid ${C.border}`, gap: 10, flexWrap: "wrap", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: C.bg, borderBottom: `1px solid ${C.border}`, gap: 10, flexWrap: "nowrap", fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* Left */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        {/* Viewport toggle */}
-        <div style={{ display: "flex", background: C.pageBg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 3, gap: 2 }}>
+      {/* Left Group */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        <div className="hidden md:flex" style={{ display: "flex", background: C.pageBg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 3, gap: 2 }}>
           {screens.map(({ key, Icon, title }) => (
             <button key={key} title={title} onClick={() => onScreenSizeChange(key)}
               style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 7, border: "none", cursor: "pointer", background: selectedScreenSize === key ? C.bg : "transparent", color: selectedScreenSize === key ? C.primary : C.muted, boxShadow: selectedScreenSize === key ? "0 1px 3px rgba(0,0,0,0.08)" : "none", transition: "all 0.15s" }}>
@@ -117,15 +117,38 @@ export function WebPageTools({
           ))}
         </div>
 
-        <div style={{ width: 1, height: 22, background: C.border, margin: "0 2px" }} />
+        <div className="hidden md:block" style={{ width: 1, height: 22, background: C.border, margin: "0 2px" }} />
 
         <Btn onClick={() => onUndo?.()} title="Undo"><Undo2 size={15} /></Btn>
         <Btn onClick={() => onRedo?.()} title="Redo"><Redo2 size={15} /></Btn>
+
+        {/* Mobile Three Dots Toggle */}
+        <div className="md:hidden">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, cursor: "pointer" }}>
+                <MoreHorizontal size={18} color={C.navy} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start" style={{ width: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
+                {screens.map(({ key, Icon }) => (
+                  <button key={key} onClick={() => onScreenSizeChange(key)}
+                    style={{ width: 32, height: 32, borderRadius: 6, border: "none", background: selectedScreenSize === key ? C.primaryBg : "transparent", color: selectedScreenSize === key ? C.primary : C.muted }}>
+                    <Icon size={16} />
+                  </button>
+                ))}
+              </div>
+              <div style={{ height: 1, background: C.border }} />
+              <button onClick={openNewTab} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, padding: "4px 0", border: "none", background: "none", color: C.navy }}><SquareArrowOutUpRight size={14} /> View</button>
+              <button onClick={download} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, padding: "4px 0", border: "none", background: "none", color: C.navy }}><Download size={14} /> Download</button>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
-      {/* Right */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-
+      {/* Right Group - Hidden on mobile, shown in popover above or via original logic if space allows */}
+      <div className="hidden md:flex" style={{ display: "flex", alignItems: "center", gap: 6 }}>
         {(history?.length ?? 0) > 0 && (
           <Select value={selectedVersion} onValueChange={async (v) => {
             await handleVersionChange(v);
