@@ -108,79 +108,95 @@ export function WebPageTools({
 
       {/* Left Group */}
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-        <div className="hidden md:flex" style={{ display: "flex", background: C.pageBg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 3, gap: 2 }}>
-          {screens.map(({ key, Icon, title }) => (
-            <button key={key} title={title} onClick={() => onScreenSizeChange(key)}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 7, border: "none", cursor: "pointer", background: selectedScreenSize === key ? C.bg : "transparent", color: selectedScreenSize === key ? C.primary : C.muted, boxShadow: selectedScreenSize === key ? "0 1px 3px rgba(0,0,0,0.08)" : "none", transition: "all 0.15s" }}>
-              <Icon size={16} />
-            </button>
-          ))}
+        {/* Desktop Viewport Toggle & Undo/Redo */}
+        <div className="hidden md:flex" style={{ alignItems: "center", gap: 6 }}>
+          <div style={{ display: "flex", background: C.pageBg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 3, gap: 2 }}>
+            {screens.map(({ key, Icon, title }) => (
+              <button key={key} title={title} onClick={() => onScreenSizeChange(key)}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 7, border: "none", cursor: "pointer", background: selectedScreenSize === key ? C.bg : "transparent", color: selectedScreenSize === key ? C.primary : C.muted, boxShadow: selectedScreenSize === key ? "0 1px 3px rgba(0,0,0,0.08)" : "none", transition: "all 0.15s" }}>
+                <Icon size={16} />
+              </button>
+            ))}
+          </div>
+          <div style={{ width: 1, height: 22, background: C.border, margin: "0 2px" }} />
+          <Btn onClick={() => onUndo?.()} title="Undo"><Undo2 size={15} /></Btn>
+          <Btn onClick={() => onRedo?.()} title="Redo"><Redo2 size={15} /></Btn>
         </div>
 
-        <div className="hidden md:block" style={{ width: 1, height: 22, background: C.border, margin: "0 2px" }} />
+        {/* Mobile: ONLY Undo/Redo + Three Dots */}
+        <div className="md:hidden" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <Btn onClick={() => onUndo?.()} title="Undo"><Undo2 size={15} /></Btn>
+          <Btn onClick={() => onRedo?.()} title="Redo"><Redo2 size={15} /></Btn>
+          
+          <div style={{ position: "relative" }}>
+            <button 
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              style={{ 
+                display: "flex", alignItems: "center", justifyContent: "center", 
+                width: 32, height: 32, borderRadius: 8, 
+                border: `1px solid ${C.border}`, background: C.bg, cursor: "pointer" 
+              }}
+            >
+              <MoreHorizontal size={18} color={C.navy} />
+            </button>
 
-        <Btn onClick={() => onUndo?.()} title="Undo"><Undo2 size={15} /></Btn>
-        <Btn onClick={() => onRedo?.()} title="Redo"><Redo2 size={15} /></Btn>
-
-        {/* Mobile Three Dots Toggle - CUSTOM IMPLEMENTATION */}
-        <div className="md:hidden" style={{ position: "relative" }}>
-          <button 
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            style={{ 
-              display: "flex", alignItems: "center", justifyContent: "center", 
-              width: 32, height: 32, borderRadius: 8, 
-              border: `1px solid ${C.border}`, background: C.bg, cursor: "pointer" 
-            }}
-          >
-            <MoreHorizontal size={18} color={C.navy} />
-          </button>
-
-          {showMobileMenu && (
-            <>
-              <div 
-                onClick={() => setShowMobileMenu(false)}
-                style={{ position: "fixed", inset: 0, zIndex: 40 }} 
-              />
-              <div 
-                style={{ 
-                  position: "absolute", top: "100%", left: 0, marginTop: 8,
-                  width: 180, background: C.bg, border: `1px solid ${C.border}`,
-                  borderRadius: 12, boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                  padding: 12, zIndex: 50, display: "flex", flexDirection: "column", gap: 10
-                }}
-              >
-                <div style={{ display: "flex", gap: 6, justifyContent: "space-between" }}>
-                  {screens.map(({ key, Icon }) => (
-                    <button 
-                      key={key} 
-                      onClick={() => { onScreenSizeChange(key); setShowMobileMenu(false); }}
-                      style={{ 
-                        flex: 1, height: 32, borderRadius: 6, border: "none", 
-                        background: selectedScreenSize === key ? C.primaryBg : "#F8FAFF", 
-                        color: selectedScreenSize === key ? C.primary : C.muted,
-                        display: "flex", alignItems: "center", justifyContent: "center"
-                      }}
-                    >
-                      <Icon size={14} />
+            {showMobileMenu && (
+              <>
+                <div 
+                  onClick={() => setShowMobileMenu(false)}
+                  style={{ position: "fixed", inset: 0, zIndex: 40 }} 
+                />
+                <div 
+                  style={{ 
+                    position: "absolute", top: "100%", left: "auto", right: 0, marginTop: 8,
+                    width: 200, background: C.bg, border: `1px solid ${C.border}`,
+                    borderRadius: 12, boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                    padding: 12, zIndex: 50, display: "flex", flexDirection: "column", gap: 10
+                  }}
+                >
+                  {/* Viewport Toggles inside dropdown on mobile */}
+                  <div style={{ display: "flex", gap: 6, justifyContent: "space-between" }}>
+                    {screens.map(({ key, Icon }) => (
+                      <button 
+                        key={key} 
+                        onClick={() => { onScreenSizeChange(key); setShowMobileMenu(false); }}
+                        style={{ 
+                          flex: 1, height: 32, borderRadius: 6, border: "none", 
+                          background: selectedScreenSize === key ? C.primaryBg : "#F8FAFF", 
+                          color: selectedScreenSize === key ? C.primary : C.muted,
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}
+                      >
+                        <Icon size={14} />
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ height: 1, background: C.border }} />
+                  
+                  {/* All other tools inside dropdown on mobile */}
+                  <button onClick={() => { openNewTab(); setShowMobileMenu(false); }}
+                    style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "6px 0", border: "none", background: "none", color: C.navy, cursor: "pointer", textAlign: "left" }}>
+                    <SquareArrowOutUpRight size={14} color={C.primary} /> View Project
+                  </button>
+                  <button onClick={() => { download(); setShowMobileMenu(false); }}
+                    style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "6px 0", border: "none", background: "none", color: C.navy, cursor: "pointer", textAlign: "left" }}>
+                    <Download size={14} color={C.primary} /> Download HTML
+                  </button>
+                  
+                  <ViewCodeBlock code={currentCode}>
+                    <button style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "6px 0", border: "none", background: "none", color: C.navy, cursor: "pointer", textAlign: "left" }}>
+                      <Code size={14} color={C.primary} /> View Code
                     </button>
-                  ))}
+                  </ViewCodeBlock>
+
+                  <button onClick={() => { setShowMobileMenu(false); }}
+                    style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "6px 0", border: "none", background: "none", color: C.navy, cursor: "pointer", textAlign: "left" }}>
+                    <Layers size={14} color={C.primary} /> Diff View
+                  </button>
                 </div>
-                <div style={{ height: 1, background: C.border }} />
-                <button 
-                  onClick={() => { openNewTab(); setShowMobileMenu(false); }}
-                  style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "6px 0", border: "none", background: "none", color: C.navy, cursor: "pointer", textAlign: "left" }}
-                >
-                  <SquareArrowOutUpRight size={14} color={C.primary} /> View Project
-                </button>
-                <button 
-                  onClick={() => { download(); setShowMobileMenu(false); }}
-                  style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "6px 0", border: "none", background: "none", color: C.navy, cursor: "pointer", textAlign: "left" }}
-                >
-                  <Download size={14} color={C.primary} /> Download HTML
-                </button>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
