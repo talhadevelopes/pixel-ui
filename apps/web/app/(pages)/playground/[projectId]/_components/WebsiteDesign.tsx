@@ -71,14 +71,12 @@ export function WebsiteDesignSection({
     };
   }, [setIframeRef, setSelectedElement]);
 
-  // Initialize a persistent iframe shell once to avoid reloading libs on every update
   useEffect(() => {
     if (!iframeRef.current || shellLoadedRef.current) return;
     iframeRef.current.srcdoc = htmlShell();
     iframeRef.current.onload = () => {
       shellLoadedRef.current = true;
       setIsIframeReady(true);
-      // Flush any pending code captured before the shell was ready
       if (pendingCodeRef.current && iframeRef.current?.contentWindow) {
         iframeRef.current.contentWindow.postMessage(
           { type: "setCode", code: pendingCodeRef.current },
@@ -96,7 +94,6 @@ export function WebsiteDesignSection({
   }, [selectedElement]);
 
   useEffect(() => {
-    // Notify parent when settings panel visibility changes
     onSettingsToggle?.(!showSettings);
   }, [showSettings, onSettingsToggle]);
 
@@ -114,7 +111,6 @@ export function WebsiteDesignSection({
   };
 
   useEffect(() => {
-    // Only update if we're not viewing a snapshot
     if (!isViewingSnapshot) {
       const timer = window.setTimeout(() => {
         setRenderedCode(generatedCode);
@@ -128,12 +124,7 @@ export function WebsiteDesignSection({
   const [lastCode, setLastCode] = useState("");
 
   useEffect(() => {
-    console.log("=== IFRAME UPDATE EFFECT ===");
-    console.log("renderedCode:", renderedCode?.substring(0, 100));
-    console.log("iframeRef.current:", iframeRef.current);
-
     if (!iframeRef.current) {
-      console.log("No iframe ref, returning");
       return;
     }
 
@@ -144,37 +135,23 @@ export function WebsiteDesignSection({
       renderedCode.length > 0 &&
       renderedCode !== "undefined"
     ) {
-      console.log("Processing code, length:", renderedCode.length);
       try {
         processedCode = stripTrailingMetadata(renderedCode);
-        console.log(
-          "After stripTrailingMetadata, length:",
-          processedCode.length
-        );
-
         processedCode = stripFences(processedCode);
-        console.log("After stripFences, length:", processedCode.length);
-
         processedCode = sanitizeScripts(processedCode);
-        console.log("After sanitizeScripts, length:", processedCode.length);
-        console.log("Final processedCode:", processedCode?.substring(0, 200));
       } catch (error) {
         console.error("Error processing code:", error);
         processedCode = "";
       }
     } else {
-      console.log("No code or empty code, showing placeholder");
       processedCode = "";
     }
 
     if (processedCode === lastCode) {
-      console.log("Code hasn't changed, skipping update");
       return;
     }
     setLastCode(processedCode);
-    // Send incremental update if shell is ready; otherwise queue it
     if (skipNextFullRenderRef.current) {
-      // Skip one full render to avoid flicker after in-place patch
       skipNextFullRenderRef.current = false;
     } else if (shellLoadedRef.current && iframeRef.current.contentWindow) {
       iframeRef.current.contentWindow.postMessage(
@@ -232,44 +209,12 @@ export function WebsiteDesignSection({
         onUndo={handleUndo}
         onRedo={handleRedo}
         onPreviewHtml={(code: string) => {
-          console.log("📥 Received preview code:", code?.substring(0, 100));
           setRenderedCode(code);
           setIsViewingSnapshot(true);
         }}
       />
 
       <div className="flex flex-1 overflow-hidden relative bg-background">
-        {/* DEBUG BLOCK - ENHANCED FOR VISIBILITY */}
-        {/* <div 
-          style={{
-            position: 'absolute',
-            bottom: 20,
-            right: 20,
-            width: '450px',
-            maxHeight: '400px',
-            backgroundColor: '#1e1e1e',
-            color: '#d4d4d4',
-            padding: '15px',
-            borderRadius: '12px',
-            fontSize: '12px',
-            fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
-            overflow: 'auto',
-            zIndex: 9999,
-            border: '1px solid #444',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-            pointerEvents: 'auto'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #444', paddingBottom: '5px' }}>
-            <span style={{ fontWeight: 'bold', color: '#569cd6' }}>RAW CODE DEBUG</span>
-            <span style={{ fontSize: '10px', color: '#888' }}>Length: {renderedCode?.length || 0} chars</span>
-          </div>
-          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0 }}>
-            {renderedCode || "NO CODE RECEIVED"}
-          </pre>
-        </div> */}
-
-        {/* Left Settings Panel */}
         <div
           className={`bg-card shadow-lg transform transition-all duration-300 overflow-y-auto scrollbar ${
             showSettings ? "w-96" : "w-0"

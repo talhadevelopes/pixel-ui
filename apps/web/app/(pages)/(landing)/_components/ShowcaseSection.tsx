@@ -30,7 +30,6 @@ export function ShowcaseSection() {
     <section className="w-full px-4 md:px-12 lg:px-24 py-12 sm:py-16 md:py-24 bg-[#FAFBFF]" style={{ overflow: "hidden" }}>
       <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-8 sm:gap-12 lg:gap-20 items-center">
 
-        {/* Left — text */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -75,7 +74,6 @@ export function ShowcaseSection() {
           
         </motion.div>
 
-        {/* Right — image frame */}
         <motion.div 
           className="relative flex items-center"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -84,13 +82,10 @@ export function ShowcaseSection() {
           transition={{ duration: 0.7 }}
           style={{ flex: "1 1 auto", width: "100%", minWidth: 0 }}
         >
-          {/* Decorative background shadow/glow */}
           <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-200/20 blur-3xl rounded-full" />
           <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-200/20 blur-3xl rounded-full" />
           
-          {/* Main frame */}
           <div className="relative w-full rounded-2xl border border-[#E0E8FA] overflow-hidden shadow-2xl shadow-blue-100/80 bg-white" style={{ width: "100%" }}>
-            {/* Browser bar */}
             <div className="h-8 md:h-10 bg-[#F8FAFF] border-b border-[#E0E8FA] flex items-center px-4 md:px-5 gap-2.5">
               <div className="flex gap-1.5">
                 <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#FF5F57]" />

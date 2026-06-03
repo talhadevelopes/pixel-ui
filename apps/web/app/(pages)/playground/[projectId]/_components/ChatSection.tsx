@@ -79,7 +79,6 @@ function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", borderRight: `1px solid ${C.border}`, background: C.bg, fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* Header */}
       <div style={{ height: 64, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.navy }}>AI Assistant</div>
@@ -90,7 +89,6 @@ function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
         )}
       </div>
 
-      {/* Messages */}
       <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 16, background: "rgba(248,250,252,0.5)" }}>
 
         {formattedMessages.length === 0 && !loading && (
@@ -136,7 +134,6 @@ function ChatSection({ messages, onSend, loading }: ChatSectionProps) {
         )}
       </div>
 
-      {/* Input */}
       <div style={{ padding: "14px 16px", borderTop: `1px solid ${C.border}`, background: C.bg, flexShrink: 0, position: "relative" }}>
         <textarea
           placeholder="Message Assistant..."
