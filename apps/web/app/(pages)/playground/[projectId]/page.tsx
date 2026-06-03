@@ -214,7 +214,7 @@ function PlaygroundContent() {
 
   // ── NEW LAYOUT ───────────────────────────────────────────────────────────
   return (
-    <div style={{ display: "flex", height: "100vh", width: "100%", overflow: "hidden", fontFamily: "var(--font-base)" }}>
+    <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden max-md:pt-0" style={{ fontFamily: "var(--font-base)" }}>
 
       {/* Sidebar */}
       <Sidebar />
@@ -222,14 +222,7 @@ function PlaygroundContent() {
       {/* Chat column */}
       {isChatVisible && (
         <div
-          style={{
-            width: 420,
-            flexShrink: 0,
-            borderRight: "1px solid var(--color-border)",
-            display: "flex",
-            flexDirection: "column",
-            height: "100vh",
-          }}
+          className="w-full md:w-[420px] shrink-0 border-r border-[var(--color-border)] flex flex-col h-[45vh] md:h-screen max-md:border-b max-md:border-r-0"
         >
           <ChatSection
             loading={loading}
@@ -240,7 +233,7 @@ function PlaygroundContent() {
       )}
 
       {/* Preview column */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", height: "100vh" }}>
+      <div className="flex-1 flex flex-col overflow-hidden h-[55vh] md:h-screen min-h-0">
         <WebsiteDesignSection
           generatedCode={generatedCode}
           projectId={projectId}
@@ -250,7 +243,7 @@ function PlaygroundContent() {
         />
 
         {/* Footer header */}
-        <div style={{ padding: "0 24px 16px", flexShrink: 0 }}>
+        <div className="px-4 pb-3 md:px-6 md:pb-4 shrink-0">
           <PlaygroundHeader
             projectId={projectId}
             frameId={frameId}
