@@ -7,7 +7,6 @@ import { ArrowRight, Waves, Sparkles } from "lucide-react";
 export function HeroSection() {
   return (
     <section className="flex flex-col items-center text-center relative w-full min-h-screen overflow-hidden py-0 px-0">
-      {/* Ocean Gradient Background */}
       <div
         className="absolute top-1/3 right-4 w-48 h-48 sm:right-20 sm:w-96 sm:h-96 bg-blue-400/15 dark:bg-blue-500/10 rounded-full blur-3xl animate-float hidden sm:block"
         style={{ animationDelay: "2s" }}
@@ -17,13 +16,11 @@ export function HeroSection() {
         style={{ animationDelay: "4s" }}
       />
 
-      {/* Light rays effect */}
       <div className="absolute inset-0 opacity-30 dark:opacity-20 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-1 h-full bg-gradient-to-b from-white dark:from-white/30 to-transparent blur-2xl" />
         <div className="absolute top-0 right-1/4 w-1 h-full bg-gradient-to-b from-white/60 dark:from-white/20 to-transparent blur-2xl" />
       </div>
 
-      {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(30)].map((_, i) => (
           <div
@@ -39,35 +36,22 @@ export function HeroSection() {
         ))}
       </div>
 
-      {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 w-full">
         <LandingHeader />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen w-full px-4 md:px-8 lg:px-12 space-y-5 sm:space-y-6 md:space-y-10 pt-24 sm:pt-28 md:pt-0">
-        {/* Badge */}
-        {/* <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-md border border-white/60 dark:border-white/20">
-          <Sparkles className="w-4 h-4 text-blue-600 dark:text-cyan-400" />
-          <span className="text-sm font-semibold text-blue-700 dark:text-cyan-300">
-            AI-Powered Design Studio
-          </span>
-        </div> */}
-
-        {/* Headline */}
         <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-tight w-full max-w-6xl">
           <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
             Design Interfaces with AI
           </span>
         </h1>
 
-        {/* Subheadline */}
         <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-muted-foreground font-medium leading-relaxed w-full max-w-4xl px-1">
           Generate responsive Tailwind UI layouts in seconds. Chat-driven
           workflow with real-time previews and seamless integrations.
         </p>
 
-        {/* CTA Buttons - MOVED UP */}
         <div className="flex   flex-col sm:flex-row gap-4 justify-center pt-2 w-full -mb-4">
           <Link href="/workspace">
             <button className="inline-flex w-full sm:w-auto cursor-pointer items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-[#2563EB] text-white text-sm sm:text-base font-bold rounded-xl sm:rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:scale-105 active:scale-95">
@@ -75,7 +59,6 @@ export function HeroSection() {
             </button>
           </Link>
 
-          {/* Add this SVG filter somewhere in your component */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             version="1.1"

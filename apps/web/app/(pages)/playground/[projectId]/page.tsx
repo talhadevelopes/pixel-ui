@@ -38,8 +38,6 @@ function PlaygroundContent() {
   >(null);
   const queryClient = useQueryClient();
 
-  // ── All original logic — untouched ──────────────────────────────────────
-
   const saveGeneratedCode = useCallback(
     async (code: string) => {
       if (!frameId || !projectId) return;
@@ -212,38 +210,14 @@ function PlaygroundContent() {
     }
   }, [frameId, generatedCode, projectId, saveGeneratedCode]);
 
-  // ── NEW LAYOUT ───────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden max-md:pt-0" style={{ fontFamily: "var(--font-base)" }}>
+    <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden" style={{ fontFamily: "var(--font-base)" }}>
 
-      {/* Sidebar */}
       <Sidebar />
 
-      {/* Chat column */}
-      {isChatVisible && (
-        <div
-          className="w-full md:w-[420px] shrink-0 border-r border-[var(--color-border)] flex flex-col h-[45vh] md:h-screen max-md:border-b max-md:border-r-0"
-        >
-          <ChatSection
-            loading={loading}
-            messages={messages ?? []}
-            onSend={(msg) => sendMessage(msg)}
-          />
-        </div>
-      )}
-
-      {/* Preview column */}
-      <div className="flex-1 flex flex-col overflow-hidden h-[55vh] md:h-screen min-h-0">
-        <WebsiteDesignSection
-          generatedCode={generatedCode}
-          projectId={projectId}
-          frameId={frameId ?? undefined}
-          onSettingsToggle={setIsChatVisible}
-          onCodeChange={setGeneratedCode}
-        />
-
-        {/* Footer header */}
-        <div className="px-4 pb-3 md:px-6 md:pb-4 shrink-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        
+        <div className="shrink-0 p-3 md:p-6 bg-white z-10">
           <PlaygroundHeader
             projectId={projectId}
             frameId={frameId}
@@ -251,6 +225,31 @@ function PlaygroundContent() {
             onSave={handleManualSave}
             isSaving={isSaving}
           />
+        </div>
+
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden relative">
+          
+          {isChatVisible && (
+            <div
+              className="w-full md:w-[420px] shrink-0 border-r border-[var(--color-border)] flex flex-col h-[40vh] md:h-full bg-white z-20"
+            >
+              <ChatSection
+                loading={loading}
+                messages={messages ?? []}
+                onSend={(msg) => sendMessage(msg)}
+              />
+            </div>
+          )}
+
+          <div className="flex-1 flex flex-col min-h-0 bg-[#F8FAFC]">
+            <WebsiteDesignSection
+              generatedCode={generatedCode}
+              projectId={projectId}
+              frameId={frameId ?? undefined}
+              onSettingsToggle={setIsChatVisible}
+              onCodeChange={setGeneratedCode}
+            />
+          </div>
         </div>
       </div>
     </div>
