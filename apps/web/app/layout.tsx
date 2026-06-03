@@ -5,7 +5,7 @@ import { Toaster } from "sonner"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Pixel UI - AI-Powered Design-to-Code",
+  title: "Pixel UI",
   description: "Generate modern user interfaces with AI",
   icons: {
     icon: "/favicon.ico",
@@ -29,10 +29,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontSans.variable} ${fontMono.variable} ${fontMono.variable} font-sans antialiased`}
+        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
         <Providers>
           {children}

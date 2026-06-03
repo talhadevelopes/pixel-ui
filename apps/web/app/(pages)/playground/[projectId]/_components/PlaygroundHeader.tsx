@@ -1,5 +1,5 @@
 import { Loader2, Save, BookAIcon } from "lucide-react";
-import { useDesignStore } from "@/store/useDesignStore";
+import { useDesignStore } from "@/store/designStore";
 import { PlaygroundHeaderProps } from "@workspace/types";
 
 export function PlaygroundHeader({

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, Crop, Expand, Image as ImageUpscale, ImageMinus, Loader2 } from "lucide-react";
 import { Tooltip, Input, Button, TooltipContent, TooltipProvider, TooltipTrigger } from "@workspace/ui";
 import ImageKit from "imagekit";
-import { useDesignStore } from "@/store/useDesignStore";
+import { useDesignStore } from "@/store/designStore";
 
 type Props = { selectedEl: HTMLImageElement };
 

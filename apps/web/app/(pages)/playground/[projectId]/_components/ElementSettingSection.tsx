@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { SwatchBook, AlignLeft, AlignCenter, AlignRight, X } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Input, Button } from "@workspace/ui";
-import { useDesignStore } from "@/store/useDesignStore";
+import { useDesignStore } from "@/store/designStore";
 
 interface Props {
     selectedElement: any;

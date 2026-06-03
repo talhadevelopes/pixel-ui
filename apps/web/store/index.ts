@@ -1,2 +1,2 @@
-export { useWebsiteDesignStore } from './useWebsiteDesignStore';
-export { useDesignStore } from './useDesignStore';
+export { useWebsiteDesignStore } from './websiteDesignStore';
+export { useDesignStore } from './designStore';

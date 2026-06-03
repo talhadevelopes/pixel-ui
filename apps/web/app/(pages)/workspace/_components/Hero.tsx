@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { ImagePlus, Send, UserPlus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthToken } from "@/services/auth.api";
-import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useAuthModal } from "@/components/global/AuthModalContext";
 import { useCreateProjectMutation, subscriptionKeys } from "@/mutations/";
 
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
@@ -91,28 +91,28 @@ function HeroSection() {
 
         {/* Title */}
         <h1 style={{
-          fontSize: 48, fontWeight: 700,
+          fontSize: 56, fontWeight: 700,
           color: "#0B1740",
-          letterSpacing: -1.8, lineHeight: 1.1,
+          letterSpacing: -2.2, lineHeight: 1.1,
           textAlign: "center",
-          marginBottom: 36, maxWidth: 540,
+          marginBottom: 42, maxWidth: 680,
         }}>
           From prompt to<br />pixel-perfect UI
         </h1>
 
         {/* Search bar */}
         <div style={{
-          width: "100%", maxWidth: 580,
+          width: "100%", maxWidth: 720,
           background: "#ffffff",
           border: `1.5px solid ${focused ? "#2563EB" : "#D1DCFA"}`,
-          borderRadius: 14,
+          borderRadius: 18,
           display: "flex", alignItems: "flex-start",
-          padding: "12px 8px 8px 18px",
+          padding: "16px 12px 12px 24px",
           boxShadow: focused
-            ? "0 0 0 4px rgba(37,99,235,0.08), 0 8px 28px rgba(37,99,235,0.10)"
-            : "0 4px 20px rgba(37,99,235,0.07)",
+            ? "0 0 0 5px rgba(37,99,235,0.08), 0 12px 36px rgba(37,99,235,0.12)"
+            : "0 6px 24px rgba(37,99,235,0.07)",
           transition: "all 0.22s",
-          marginBottom: 20,
+          marginBottom: 24,
         }}>
           <textarea
             value={userInput}
@@ -125,67 +125,67 @@ function HeroSection() {
             rows={3}
             style={{
               flex: 1, border: "none", outline: "none",
-              fontSize: 15, color: "#0B1740",
+              fontSize: 17, color: "#0B1740",
               background: "transparent",
-              resize: "none", lineHeight: 1.5, paddingTop: 4,
+              resize: "none", lineHeight: 1.6, paddingTop: 4,
             }}
           />
 
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", gap: 8, paddingLeft: 8, height: "100%", minHeight: 72 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", gap: 12, paddingLeft: 12, height: "100%", minHeight: 84 }}>
             {/* Image upload */}
             <button
               onClick={() => toast.info("Image upload coming soon")}
               title="Upload image reference"
-              style={{ padding: 6, background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex", borderRadius: 8, transition: "color 0.15s" }}
+              style={{ padding: 8, background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex", borderRadius: 10, transition: "color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.color = "#2563EB")}
               onMouseLeave={e => (e.currentTarget.style.color = "#94A3B8")}
             >
-              <ImagePlus size={18} />
+              <ImagePlus size={20} />
             </button>
 
             {/* Generate button */}
             <button
-              onClick={handleGenerate}
+              onClick={!token ? openSignup : handleGenerate}
               disabled={token ? (!userInput.trim() || isPending) : false}
               style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "10px 20px", background: "#2563EB", color: "#fff",
-                border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600,
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "14px 28px", background: "#2563EB", color: "#fff",
+                border: "none", borderRadius: 12, fontSize: 16, fontWeight: 600,
                 cursor: token && (!userInput.trim() || isPending) ? "not-allowed" : "pointer",
                 opacity: token && (!userInput.trim() || isPending) ? 0.6 : 1,
-                boxShadow: "0 4px 12px rgba(37,99,235,0.30)",
-                transition: "opacity 0.15s",
+                boxShadow: "0 6px 16px rgba(37,99,235,0.30)",
+                transition: "all 0.15s",
               }}
             >
               {isPending ? (
                 <>
-                  <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", animation: "spin 0.7s linear infinite" }} />
+                  <div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", animation: "spin 0.7s linear infinite" }} />
                   Generating...
                 </>
               ) : !token ? (
-                <><UserPlus size={14} /> Sign up to Build</>
+                <><UserPlus size={18} /> Sign up to Build</>
               ) : (
-                <><Send size={14} /> Generate</>
+                <><Send size={18} /> Generate</>
               )}
             </button>
           </div>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 14, background: "#F4F7FF", borderRadius: 12, padding: 4 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 18, background: "#F4F7FF", borderRadius: 14, padding: 6 }}>
           {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               style={{
                 background: tab === t ? "#ffffff" : "transparent",
-                border: "none", borderRadius: 9,
-                padding: "6px 16px", fontSize: 13,
+                border: "none", borderRadius: 10,
+                padding: "8px 20px", fontSize: 15,
                 fontWeight: tab === t ? 600 : 400,
                 color: tab === t ? "#2563EB" : "#8A9AC0",
                 cursor: "pointer",
                 transition: "all 0.15s",
-                boxShadow: tab === t ? "0 1px 4px rgba(0,0,0,0.07)" : "none",
+                boxShadow: tab === t ? "0 2px 6px rgba(0,0,0,0.07)" : "none",
               }}
             >
               {t}
@@ -194,7 +194,7 @@ function HeroSection() {
         </div>
 
         {/* Chips */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 540 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", maxWidth: 720 }}>
           {(CHIPS_BY_TAB[tab] || []).map((c) => (
             <button
               key={c}
@@ -205,8 +205,8 @@ function HeroSection() {
                 background: hoveredChip === c ? "#DBEAFE" : "#ffffff",
                 border: `1px solid ${hoveredChip === c ? "#93C5FD" : "#E0E8FA"}`,
                 color: hoveredChip === c ? "#1D4ED8" : "#4B68B0",
-                borderRadius: 999, padding: "7px 16px",
-                fontSize: 12, cursor: !token ? "not-allowed" : "pointer",
+                borderRadius: 999, padding: "10px 22px",
+                fontSize: 14, cursor: "pointer",
                 fontWeight: 500,
                 opacity: !token ? 0.6 : 1,
                 transition: "all 0.15s",

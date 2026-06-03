@@ -15,16 +15,16 @@ export class ChatController {
   static async streamChat(
     req: AuthRequest,
     res: Response,
-    _next: NextFunction
+    _next: NextFunction,
   ) {
     try {
       const { frameId, messages, generationId } = streamRequestSchema.parse(
-        req.body
+        req.body,
       );
       const createdBy = req.user?.email;
       const userId = req.user?.userId;
 
-      console.log("🔍 [DEBUG] Starting streamChat");
+      console.log("[DEBUG] Starting streamChat");
 
       if (!createdBy || !userId) {
         return sendError(res, "Authenticated user email missing", 401);
@@ -41,19 +41,19 @@ export class ChatController {
       // Bypassing user check for testing if mock user
       if (!user && userId === "test-user-id") {
         user = {
-            id: "test-user-id",
-            name: "Test User",
-            email: "test@example.com",
-            password: "",
-            credits: 999,
-            tier: "pro",
-            dailyCreditsLimit: 999,
-            lastCreditReset: new Date(),
-            subscriptionId: null,
-            subscriptionStatus: "active",
-            subscriptionEndDate: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+          id: "test-user-id",
+          name: "Test User",
+          email: "test@example.com",
+          password: "",
+          credits: 999,
+          tier: "pro",
+          dailyCreditsLimit: 999,
+          lastCreditReset: new Date(),
+          subscriptionId: null,
+          subscriptionStatus: "active",
+          subscriptionEndDate: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         } as any;
       }
 
@@ -72,7 +72,7 @@ export class ChatController {
           {
             nextReset,
             credits: user.credits,
-          }
+          },
         );
       }
 
@@ -90,15 +90,15 @@ export class ChatController {
         const userInput = lastUserMessage.content;
         const formattedPrompt = PROMPT_TEMPLATE.replace(
           "{userInput}",
-          userInput
+          userInput,
         );
 
         console.log(
           "📝 [DEBUG] Formatted prompt:",
-          formattedPrompt.substring(0, 200)
+          formattedPrompt.substring(0, 200),
         );
-        console.log("📝 [DEBUG] User input was:", userInput);
-        console.log("🔐 [SECURE] Backend formatting prompt for user input");
+        console.log("[DEBUG] User input was:", userInput);
+        console.log("[SECURE] Backend formatting prompt for user input");
 
         let isDuplicate = false;
         const cacheKey =
@@ -139,17 +139,17 @@ export class ChatController {
               "Content-Type": "application/json",
             },
             responseType: "stream",
-          }
+          },
         );
 
-        console.log("✅ [DEBUG] Gemini API request successful");
+        console.log("[DEBUG] Gemini API request successful");
 
         const encoder = new TextEncoder();
         let fullResponse = "";
 
         response.data.on("data", (chunk: Buffer) => {
           const chunkStr = chunk.toString();
-          console.log("🔍 [RAW CHUNK]:", chunkStr.substring(0, 100));
+          console.log("[RAW CHUNK]:", chunkStr.substring(0, 100));
           const lines = chunkStr.split("\n");
 
           for (const line of lines) {
@@ -166,28 +166,28 @@ export class ChatController {
 
                 if (text) {
                   console.log(
-                    "✍️ [DEBUG] Got text chunk:",
-                    text.substring(0, 50)
+                    "[DEBUG] Got text chunk:",
+                    text.substring(0, 50),
                   );
                   fullResponse += text;
                   res.write(encoder.encode(text));
                 }
               } catch (parseErr) {
-                console.log("⚠️ [DEBUG] Parse error (skipping):", parseErr);
+                console.log("[DEBUG] Parse error (skipping):", parseErr);
               }
             }
           }
         });
 
         response.data.on("end", async () => {
-          console.log("🏁 [DEBUG] Stream ended");
-          console.log("📄 [DEBUG] Full response length:", fullResponse.length);
+          console.log("[DEBUG] Stream ended");
+          console.log("[DEBUG] Full response length:", fullResponse.length);
 
           try {
             const trimmed = fullResponse.trim();
             if (trimmed.length === 0) {
               console.log(
-                "❌ [DEBUG] Empty response - no content was streamed"
+                "[DEBUG] Empty response - no content was streamed",
               );
               res.end();
               return;
@@ -196,7 +196,7 @@ export class ChatController {
             const substantialHtml =
               /```/.test(trimmed) ||
               /<\s*(section|div|header|main|footer|nav|ul|ol|article|aside|form|img|h1|h2|h3|h4|h5|h6|button|a|span|p|table|figure|canvas|svg)[\s>]/i.test(
-                trimmed
+                trimmed,
               );
             const meetsLength = trimmed.length >= 200;
             const shouldCharge = !isDuplicate && substantialHtml && meetsLength;
@@ -226,37 +226,38 @@ export class ChatController {
 
             if (shouldCharge) {
               console.log(
-                `✅ [DEBUG] Credit deducted. Response saved successfully`
+                `[DEBUG] Credit deducted. Response saved successfully`,
               );
             } else {
               console.log(
-                `ℹ️ [DEBUG] Skipped credit deduction (duplicate or not substantial)`
+                `[DEBUG] Skipped credit deduction (duplicate or not substantial)`,
               );
             }
           } catch (dbErr) {
-            console.error("❌ [DEBUG] Error saving chat message:", dbErr);
+            console.error("[DEBUG] Error saving chat message:", dbErr);
           }
           res.end();
         });
 
         response.data.on("error", (err: Error) => {
-          console.error("❌ [DEBUG] Stream error:", err);
+          console.error("[DEBUG] Stream error:", err);
           res.status(500).end();
         });
       } catch (apiError: any) {
-        console.error(
-          "❌ [DEBUG] API Error Status:",
-          apiError.response?.status
-        );
-        console.error("❌ [DEBUG] API Error Data:", apiError.response?.data);
-        console.error("❌ [DEBUG] API Error Message:", apiError.message);
+        if (apiError.response?.data) {
+          let errorBody = "";
+          for await (const chunk of apiError.response.data) {
+            errorBody += chunk.toString();
+          }
+          console.error("REAL GEMINI ERROR:", errorBody);
+        }
         return sendError(res, "Failed to connect to AI service", 500);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         return sendError(res, "Invalid request data", 400);
       }
-      console.error("❌ [DEBUG] Chat stream error:", error);
+      console.error("[DEBUG] Chat stream error:", error);
       return sendError(res, "Server Error", 500);
     }
   }
@@ -264,7 +265,7 @@ export class ChatController {
   static async updateChatMessage(
     req: AuthRequest,
     res: Response,
-    _next: NextFunction
+    _next: NextFunction,
   ) {
     try {
       const { frameId } = req.query;
@@ -280,7 +281,7 @@ export class ChatController {
         res,
         { chatMessage },
         "Chat message updated successfully",
-        200
+        200,
       );
     } catch (error) {
       console.error("Update chat message error:", error);

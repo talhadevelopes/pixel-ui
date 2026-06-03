@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { createChatCompletion } from "@/services/chat.api";
 import { parseChatCompletionStream, stripCodeFences } from "@/lib/chat-stream";
 import { patchRenderedCodeForSelection } from "@/lib/code-processors";
-import { useWebsiteDesignStore } from "@/store/useWebsiteDesignStore";
+import { useWebsiteDesignStore } from "@/store/websiteDesignStore";
 
 export const useAIGeneration = (
   frameId: string | undefined,

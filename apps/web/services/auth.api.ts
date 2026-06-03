@@ -7,21 +7,31 @@ import { getAccessToken } from "@/lib/auth-storage";
 
 //this hook to check auth status
 export function useAuthToken() {
-    const [token, setToken] = useState<string | null>(() => getAccessToken());
+    const [token, setToken] = useState<string | null>(() => {
+        if (typeof window === "undefined") return null;
+        const t = getAccessToken();
+        if (!t || t === "null" || t === "undefined" || t === "") return null;
+        return t;
+    });
 
     useEffect(() => {
-        if (typeof window === "undefined") {
-            return;
-        }
+        if (typeof window === "undefined") return;
 
         const handleAuthChange = () => {
-            setToken(getAccessToken());
+            const t = getAccessToken();
+            if (!t || t === "null" || t === "undefined" || t === "") {
+                setToken(null);
+            } else {
+                setToken(t);
+            }
         };
 
         window.addEventListener("auth-change", handleAuthChange);
+        window.addEventListener("storage", handleAuthChange);
 
         return () => {
             window.removeEventListener("auth-change", handleAuthChange);
+            window.removeEventListener("storage", handleAuthChange);
         };
     }, []);
 
