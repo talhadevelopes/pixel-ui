@@ -77,11 +77,11 @@ export default function PaymentsPage() {
 
   return (
     <div style={{ background: C.white, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "5rem 2rem" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "5fr 7fr", gap: 64, alignItems: "start" }}>
+      <div className="max-w-[1100px] mx-auto px-4 pt-20 pb-12 md:px-8 md:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-10 md:gap-16 items-start">
 
           {/* ── LEFT COLUMN ── */}
-          <div style={{ position: "sticky", top: 96 }}>
+          <div className="md:sticky md:top-24">
 
             {/* Status badge */}
             <div style={{
@@ -97,7 +97,7 @@ export default function PaymentsPage() {
             </div>
 
             {/* Headline */}
-            <h1 style={{ fontSize: 52, fontWeight: 900, color: C.navy, lineHeight: 1.05, marginBottom: 20 }}>
+            <h1 className="text-3xl sm:text-4xl md:text-[52px] font-black text-[#0B1740] leading-[1.05] mb-5">
               Scale your <br />
               <span style={{ color: C.primary }}>vision.</span>
             </h1>

@@ -27,8 +27,8 @@ export function ShowcaseSection() {
   }, []);
 
   return (
-    <section className="w-full px-4 md:px-12 lg:px-24 py-24 bg-[#FAFBFF]" style={{ overflow: "hidden" }}>
-      <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">
+    <section className="w-full px-4 md:px-12 lg:px-24 py-12 sm:py-16 md:py-24 bg-[#FAFBFF]" style={{ overflow: "hidden" }}>
+      <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-8 sm:gap-12 lg:gap-20 items-center">
 
         {/* Left — text */}
         <motion.div
@@ -42,11 +42,11 @@ export function ShowcaseSection() {
             <Sparkles className="w-3.5 h-3.5" /> Live preview
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-black text-[#0B1740] leading-tight mb-6 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#0B1740] leading-tight mb-4 sm:mb-6 tracking-tight">
             Build stunning UIs<br />with AI in seconds
           </h2>
 
-          <p className="text-lg text-[#5570A8] leading-relaxed mb-10">
+          <p className="text-sm sm:text-base md:text-lg text-[#5570A8] leading-relaxed mb-6 sm:mb-10">
             Describe your UI, watch it come to life. Edit elements, tweak styles, and export clean production-ready code.
           </p>
 
@@ -91,13 +91,13 @@ export function ShowcaseSection() {
           {/* Main frame */}
           <div className="relative w-full rounded-2xl border border-[#E0E8FA] overflow-hidden shadow-2xl shadow-blue-100/80 bg-white" style={{ width: "100%" }}>
             {/* Browser bar */}
-            <div className="h-10 bg-[#F8FAFF] border-b border-[#E0E8FA] flex items-center px-5 gap-2.5">
+            <div className="h-8 md:h-10 bg-[#F8FAFF] border-b border-[#E0E8FA] flex items-center px-4 md:px-5 gap-2.5">
               <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
-                <div className="w-3 h-3 rounded-full bg-[#FEB22D]" />
-                <div className="w-3 h-3 rounded-full bg-[#28C840]" />
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#FF5F57]" />
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#FEB22D]" />
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#28C840]" />
               </div>
-              <div className="flex-1 flex justify-center pr-14">
+              <div className="hidden md:flex flex-1 justify-center pr-14">
                 <div className="bg-white border border-[#E0E8FA] rounded-md px-6 py-1 text-[11px] font-medium text-[#8A9AC0] flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-blue-500/20" />
                   app.pixel-ui.dev/playground

@@ -9,11 +9,11 @@ export function HeroSection() {
     <section className="flex flex-col items-center text-center relative w-full min-h-screen overflow-hidden py-0 px-0">
       {/* Ocean Gradient Background */}
       <div
-        className="absolute top-1/3 right-20 w-96 h-96 bg-blue-400/15 dark:bg-blue-500/10 rounded-full blur-3xl animate-float"
+        className="absolute top-1/3 right-4 w-48 h-48 sm:right-20 sm:w-96 sm:h-96 bg-blue-400/15 dark:bg-blue-500/10 rounded-full blur-3xl animate-float hidden sm:block"
         style={{ animationDelay: "2s" }}
       />
       <div
-        className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-teal-400/10 dark:bg-teal-500/10 rounded-full blur-3xl animate-float"
+        className="absolute bottom-1/4 left-1/4 w-40 h-40 sm:left-1/3 sm:w-80 sm:h-80 bg-teal-400/10 dark:bg-teal-500/10 rounded-full blur-3xl animate-float"
         style={{ animationDelay: "4s" }}
       />
 
@@ -45,7 +45,7 @@ export function HeroSection() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen w-full px-4 md:px-8 lg:px-12 space-y-8 md:space-y-10">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen w-full px-4 md:px-8 lg:px-12 space-y-5 sm:space-y-6 md:space-y-10 pt-24 sm:pt-28 md:pt-0">
         {/* Badge */}
         {/* <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-md border border-white/60 dark:border-white/20">
           <Sparkles className="w-4 h-4 text-blue-600 dark:text-cyan-400" />
@@ -55,14 +55,14 @@ export function HeroSection() {
         </div> */}
 
         {/* Headline */}
-        <h1 className="text-5xl md:text-6xl lg:text-7xl mt-20  xl:text-8xl font-black leading-tight w-full max-w-6xl">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-tight w-full max-w-6xl">
           <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
             Design Interfaces with AI
           </span>
         </h1>
 
         {/* Subheadline */}
-        <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground font-medium leading-relaxed w-full max-w-4xl">
+        <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-muted-foreground font-medium leading-relaxed w-full max-w-4xl px-1">
           Generate responsive Tailwind UI layouts in seconds. Chat-driven
           workflow with real-time previews and seamless integrations.
         </p>
@@ -70,7 +70,7 @@ export function HeroSection() {
         {/* CTA Buttons - MOVED UP */}
         <div className="flex   flex-col sm:flex-row gap-4 justify-center pt-2 w-full -mb-4">
           <Link href="/workspace">
-            <button className="inline-flex  cursor-pointer items-center gap-2 px-8 py-4 bg-[#2563EB] text-white text-base font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:scale-105 active:scale-95">
+            <button className="inline-flex w-full sm:w-auto cursor-pointer items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-[#2563EB] text-white text-sm sm:text-base font-bold rounded-xl sm:rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:scale-105 active:scale-95">
               Try it free <ArrowRight className="w-5 h-5" />
             </button>
           </Link>

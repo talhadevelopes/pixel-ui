@@ -9,7 +9,7 @@ function PaymentsLayout({
   return (
     <div className="flex h-screen w-full bg-background">
       <Sidebar />
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 min-w-0 w-full overflow-auto">
         <div className="min-h-full w-full">{children}</div>
       </main>
     </div>

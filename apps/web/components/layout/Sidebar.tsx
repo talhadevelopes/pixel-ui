@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import { Progress } from "@workspace/ui";
 import {
-  Sparkles, LogOut, Moon, Sun, FolderOpen, User, X, Home,
+  Sparkles, LogOut, FolderOpen, User, X, Home,
   ChevronRight, PanelLeftClose, UserPlus, LogIn,
 } from "lucide-react";
 import { useSubscriptionStatusQuery } from "@/mutations/";
@@ -47,8 +46,7 @@ function NavBtn({ onClick, active, title, open, icon, label, color }: {
         border: "none", cursor: "pointer", borderRadius: 12,
         background: active ? C.primaryBg : hovered ? "#F0F5FF" : "transparent",
         color: color ?? (active ? C.primary : hovered ? C.primary : C.nav),
-        
-       fontSize: 15,
+        fontSize: 15,
         fontWeight: active ? 600 : 400, textAlign: "left",
         position: "relative", whiteSpace: "nowrap", overflow: "hidden",
         transition: "background 0.15s, color 0.15s",
@@ -71,7 +69,6 @@ export function Sidebar() {
   const accessToken                  = useAuthToken();
   const { openLogin, openSignup }    = useAuthModal();
   const { data: subscriptionStatus } = useSubscriptionStatusQuery(accessToken);
-  const { theme, setTheme }          = useTheme();
   const { data: profile }            = useProfileQuery(accessToken);
 
   const userCredits       = subscriptionStatus?.credits ?? 0;
@@ -81,19 +78,37 @@ export function Sidebar() {
   const avatarLetter      = (profile?.name?.[0] ?? profile?.email?.[0] ?? "U").toUpperCase();
   const W = open ? 260 : 80;
 
+  const closeSidebar = () => setOpen(false);
+  const openSidebar = () => setOpen(true);
+
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
+    <div className="flex h-screen shrink-0 max-md:w-0 max-md:overflow-visible">
+      {/* Mobile backdrop */}
+      {open && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
+      )}
 
       {/* ── SIDEBAR ── */}
-      <div style={{
-        width: W, flexShrink: 0,
-        background: C.sidebar,
-        borderRight: `1px solid ${C.borderAlt}`,
-        display: "flex", flexDirection: "column",
-        padding: "16px 0",
-        transition: "width 0.22s cubic-bezier(.4,0,.2,1)",
-        overflow: "hidden", position: "relative", height: "100vh",
-      }}>
+      <div
+        style={{
+          width: W, flexShrink: 0,
+          background: C.sidebar,
+          borderRight: `1px solid ${C.borderAlt}`,
+          display: "flex", flexDirection: "column",
+          padding: "16px 0",
+          transition: "width 0.22s cubic-bezier(.4,0,.2,1)",
+          overflow: "hidden", position: "relative", height: "100vh",
+        }}
+        className={
+          open
+            ? "max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:!w-[260px] max-md:shadow-xl max-md:pointer-events-auto"
+            : "max-md:fixed max-md:-left-[260px] max-md:!w-[260px] max-md:z-50 max-md:shadow-none max-md:pointer-events-none max-md:!p-0 max-md:!border-r-0 md:pointer-events-auto"
+        }
+      >
 
         {/* Logo row */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: open ? "space-between" : "center", padding: open ? "0 20px 24px" : "0 0 24px", gap: 12 }}>
@@ -104,7 +119,7 @@ export function Sidebar() {
             {open && <span style={{ fontWeight: 700, fontSize: 18, color: C.navy, whiteSpace: "nowrap" }}>BuildAI</span>}
           </div>
           {open && (
-            <button onClick={() => setOpen(false)}
+            <button onClick={closeSidebar}
               style={{ background: "transparent", border: "none", cursor: "pointer", color: C.nav, display: "flex", padding: 6, borderRadius: 8 }}
               onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.color = C.primary; }}
               onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.nav; }}>
@@ -113,12 +128,15 @@ export function Sidebar() {
           )}
         </div>
 
-        {/* Expand tab */}
+        {/* Expand tab — desktop: on sidebar edge when collapsed */}
         {!open && (
-          <button onClick={() => setOpen(true)}
+          <button
+            onClick={openSidebar}
+            className="max-md:hidden"
             style={{ position: "absolute", top: 20, right: -1, width: 24, height: 24, background: C.bg, border: `1px solid ${C.border}`, borderRadius: "0 8px 8px 0", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.nav, padding: 0, zIndex: 10 }}
             onMouseEnter={e => e.currentTarget.style.color = C.primary}
-            onMouseLeave={e => e.currentTarget.style.color = C.nav}>
+            onMouseLeave={e => e.currentTarget.style.color = C.nav}
+          >
             <ChevronRight size={14} />
           </button>
         )}
@@ -126,7 +144,7 @@ export function Sidebar() {
         {/* GROUP 1 */}
         <div style={{ padding: "0 10px", display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
           {open && <p style={{ fontSize: 12, fontWeight: 700, color: C.ghost, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 10px", marginBottom: 6 }}>Main</p>}
-          <Link href="/workspace" style={{ textDecoration: "none" }}>
+          <Link href="/workspace" style={{ textDecoration: "none" }} onClick={closeSidebar}>
             <NavBtn open={open} icon={<Home size={20} />} label="Home" title="Home" />
           </Link>
           {accessToken && (
@@ -156,12 +174,6 @@ export function Sidebar() {
 
         {/* BOTTOM */}
         <div style={{ padding: "0 10px", borderTop: `1px solid ${C.borderAlt}`, paddingTop: 14, display: "flex", flexDirection: "column", gap: 4 }}>
-          <NavBtn open={open}
-            icon={theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-            label={theme === "light" ? "Dark mode" : "Light mode"}
-            title={theme === "light" ? "Dark mode" : "Light mode"}
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")} />
-
           {accessToken && (
             <Link href="/logout" style={{ textDecoration: "none" }}>
               <NavBtn open={open} icon={<LogOut size={20} />} label="Log out" title="Log out" color={C.error} />
@@ -184,9 +196,24 @@ export function Sidebar() {
         </div>
       </div>
 
+      {/* Mobile expand tab — same chevron style, left edge when sidebar hidden */}
+      {!open && (
+        <button
+          type="button"
+          onClick={openSidebar}
+          className="md:hidden fixed top-5 left-0 z-40 flex h-6 w-6 items-center justify-center rounded-r-lg border border-l-0 border-[#E0E8FA] bg-white text-[#94A3B8] shadow-sm"
+          aria-label="Open menu"
+        >
+          <ChevronRight size={14} />
+        </button>
+      )}
+
       {/* ── SLIDE-OUT PANEL ── */}
       {activeTab && (
-        <div style={{ width: 340, height: "100vh", background: C.bg, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", flexShrink: 0, animation: "slideIn 0.18s ease" }}>
+        <div
+          style={{ width: 340, height: "100vh", background: C.bg, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", flexShrink: 0, animation: "slideIn 0.18s ease" }}
+          className="max-md:fixed max-md:inset-0 max-md:!w-full max-md:z-[60] max-md:border-r-0"
+        >
 
           {activeTab === "profile" && (
             <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
