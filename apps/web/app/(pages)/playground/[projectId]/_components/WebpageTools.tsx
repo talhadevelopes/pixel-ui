@@ -9,7 +9,6 @@ import { baseDocument } from "@/lib/code-templates";
 import {
   Select, Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogTrigger, SelectContent, SelectItem, SelectTrigger, SelectValue,
-  Popover, PopoverContent, PopoverTrigger,
 } from "@workspace/ui";
 import { useAuthToken } from "@/services/auth.api";
 import { fetchFrameHistory, fetchFrameSnapshot } from "@/services/frames.api";
@@ -47,6 +46,7 @@ export function WebPageTools({
   const [history, setHistory] = useState<FrameSnapshotMeta[]>([]);
   const [selectedVersion, setSelectedVersion] = useState("current");
   const [compareCode, setCompareCode] = useState("");
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
     const clean = (baseDocument.replace("{code}", currentCode || generatedCode || "") || "")
@@ -122,28 +122,65 @@ export function WebPageTools({
         <Btn onClick={() => onUndo?.()} title="Undo"><Undo2 size={15} /></Btn>
         <Btn onClick={() => onRedo?.()} title="Redo"><Redo2 size={15} /></Btn>
 
-        {/* Mobile Three Dots Toggle */}
-        <div className="md:hidden">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, cursor: "pointer" }}>
-                <MoreHorizontal size={18} color={C.navy} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent side="bottom" align="start" style={{ width: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
-                {screens.map(({ key, Icon }) => (
-                  <button key={key} onClick={() => onScreenSizeChange(key)}
-                    style={{ width: 32, height: 32, borderRadius: 6, border: "none", background: selectedScreenSize === key ? C.primaryBg : "transparent", color: selectedScreenSize === key ? C.primary : C.muted }}>
-                    <Icon size={16} />
-                  </button>
-                ))}
+        {/* Mobile Three Dots Toggle - CUSTOM IMPLEMENTATION */}
+        <div className="md:hidden" style={{ position: "relative" }}>
+          <button 
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            style={{ 
+              display: "flex", alignItems: "center", justifyContent: "center", 
+              width: 32, height: 32, borderRadius: 8, 
+              border: `1px solid ${C.border}`, background: C.bg, cursor: "pointer" 
+            }}
+          >
+            <MoreHorizontal size={18} color={C.navy} />
+          </button>
+
+          {showMobileMenu && (
+            <>
+              <div 
+                onClick={() => setShowMobileMenu(false)}
+                style={{ position: "fixed", inset: 0, zIndex: 40 }} 
+              />
+              <div 
+                style={{ 
+                  position: "absolute", top: "100%", left: 0, marginTop: 8,
+                  width: 180, background: C.bg, border: `1px solid ${C.border}`,
+                  borderRadius: 12, boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                  padding: 12, zIndex: 50, display: "flex", flexDirection: "column", gap: 10
+                }}
+              >
+                <div style={{ display: "flex", gap: 6, justifyContent: "space-between" }}>
+                  {screens.map(({ key, Icon }) => (
+                    <button 
+                      key={key} 
+                      onClick={() => { onScreenSizeChange(key); setShowMobileMenu(false); }}
+                      style={{ 
+                        flex: 1, height: 32, borderRadius: 6, border: "none", 
+                        background: selectedScreenSize === key ? C.primaryBg : "#F8FAFF", 
+                        color: selectedScreenSize === key ? C.primary : C.muted,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}
+                    >
+                      <Icon size={14} />
+                    </button>
+                  ))}
+                </div>
+                <div style={{ height: 1, background: C.border }} />
+                <button 
+                  onClick={() => { openNewTab(); setShowMobileMenu(false); }}
+                  style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "6px 0", border: "none", background: "none", color: C.navy, cursor: "pointer", textAlign: "left" }}
+                >
+                  <SquareArrowOutUpRight size={14} color={C.primary} /> View Project
+                </button>
+                <button 
+                  onClick={() => { download(); setShowMobileMenu(false); }}
+                  style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "6px 0", border: "none", background: "none", color: C.navy, cursor: "pointer", textAlign: "left" }}
+                >
+                  <Download size={14} color={C.primary} /> Download HTML
+                </button>
               </div>
-              <div style={{ height: 1, background: C.border }} />
-              <button onClick={openNewTab} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, padding: "4px 0", border: "none", background: "none", color: C.navy }}><SquareArrowOutUpRight size={14} /> View</button>
-              <button onClick={download} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, padding: "4px 0", border: "none", background: "none", color: C.navy }}><Download size={14} /> Download</button>
-            </PopoverContent>
-          </Popover>
+            </>
+          )}
         </div>
       </div>
 
