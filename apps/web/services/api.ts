@@ -1,5 +1,5 @@
 // Backend base URL. Configure via NEXT_PUBLIC_API_BASE_URL in envs.
-export const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 export const API = {
     auth: {

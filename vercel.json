@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "functions": {
+    "packages/server/src/index.ts": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "packages/server/src/index.ts"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "apps/web/$1"
+    }
+  ]
+}

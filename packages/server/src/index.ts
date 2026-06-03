@@ -18,7 +18,7 @@ import chatRoute from './routes/chatRoute'
 import subscriptionRoutes from './routes/subscriptionRoutes'
 import { prisma } from './utils/prisma'
 
-const app = express();
+export const app = express();
 
 const corsOrigin = process.env.CLIENT_URL || "http://localhost:3000";
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || corsOrigin)
@@ -81,13 +81,18 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 const PORT = process.env.PORT || 4000;
-//@ts-ignore
-app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`Server started on port ${PORT}`);
-  try {
-    await prisma.$connect();
-    console.log('Database connected');
-  } catch (err) {
-    console.error('Database connection failed:', err);
-  }
-});
+
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  //@ts-ignore
+  app.listen(PORT, '0.0.0.0', async () => {
+    console.log(`Server started on port ${PORT}`);
+    try {
+      await prisma.$connect();
+      console.log('Database connected');
+    } catch (err) {
+      console.error('Database connection failed:', err);
+    }
+  });
+}
+
+export default app;
