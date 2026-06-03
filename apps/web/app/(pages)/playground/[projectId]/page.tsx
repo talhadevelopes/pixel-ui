@@ -211,13 +211,16 @@ function PlaygroundContent() {
   }, [frameId, generatedCode, projectId, saveGeneratedCode]);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden" style={{ fontFamily: "var(--font-base)" }}>
+    <div className="flex h-screen w-full overflow-hidden bg-white" style={{ fontFamily: "var(--font-base)" }}>
 
+      {/* Sidebar - Desktop: sits in flow, Mobile: overlaps via w-0 trick */}
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
         
-        <div className="shrink-0 p-3 md:p-6 bg-white z-10">
+        {/* Header - Fixed height */}
+        <header className="shrink-0 p-3 bg-white border-b border-[var(--color-border)] z-30">
           <PlaygroundHeader
             projectId={projectId}
             frameId={frameId}
@@ -225,23 +228,26 @@ function PlaygroundContent() {
             onSave={handleManualSave}
             isSaving={isSaving}
           />
-        </div>
+        </header>
 
-        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden relative">
+        {/* Content Wrapper */}
+        <main className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
           
+          {/* Chat Section */}
           {isChatVisible && (
-            <div
-              className="w-full md:w-[420px] shrink-0 border-r border-[var(--color-border)] flex flex-col h-[40vh] md:h-full bg-white z-20"
+            <aside
+              className="w-full md:w-[420px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--color-border)] flex flex-col h-[45vh] md:h-full bg-white z-20"
             >
               <ChatSection
                 loading={loading}
                 messages={messages ?? []}
                 onSend={(msg) => sendMessage(msg)}
               />
-            </div>
+            </aside>
           )}
 
-          <div className="flex-1 flex flex-col min-h-0 bg-[#F8FAFC]">
+          {/* Preview Section */}
+          <section className="flex-1 min-h-0 bg-[#F8FAFC] overflow-hidden">
             <WebsiteDesignSection
               generatedCode={generatedCode}
               projectId={projectId}
@@ -249,8 +255,8 @@ function PlaygroundContent() {
               onSettingsToggle={setIsChatVisible}
               onCodeChange={setGeneratedCode}
             />
-          </div>
-        </div>
+          </section>
+        </main>
       </div>
     </div>
   );
